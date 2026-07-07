@@ -1,15 +1,16 @@
 import React from "react"
 import type { Metadata } from 'next'
-import { DM_Sans, JetBrains_Mono } from 'next/font/google'
+import { JetBrains_Mono } from 'next/font/google'
+import { GeistSans } from 'geist/font/sans'
 import { Analytics } from '@vercel/analytics/next'
+import { AppShell } from '@/components/maat/AppShell'
 import './globals.css'
 
-const _dmSans = DM_Sans({ subsets: ["latin"], weight: ["400", "500", "600", "700"] });
-const _jetbrainsMono = JetBrains_Mono({ subsets: ["latin"] });
+const _jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains-mono" });
 
 export const metadata: Metadata = {
-  title: 'SalesOps Dashboard',
-  description: 'Sales Operations Dashboard - Analytics & Pipeline Management',
+  title: 'MAAT',
+  description: 'MAAT — Photo-to-Catalog per il resale vintage',
   generator: 'v0.app',
   icons: {
     icon: [
@@ -36,9 +37,9 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${GeistSans.variable} ${_jetbrainsMono.variable}`}>
       <body className={`font-sans antialiased`}>
-        {children}
+        <AppShell>{children}</AppShell>
         <Analytics />
       </body>
     </html>

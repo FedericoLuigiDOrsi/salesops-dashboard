@@ -46,6 +46,26 @@ export interface CatalogEntry {
   createdAt: string;
 }
 
+export interface UserProfile {
+  nome: string;
+  email: string;
+  ruolo: "Admin" | "Operator";
+  iniziali: string;
+  avatarUrl: string | null;
+}
+
+export type BrandTone = "diretto" | "caldo" | "professionale" | "streetwise";
+export type PhotoAesthetic = "pulita" | "editoriale" | "street" | "vintage";
+
+// Profilo brand del reseller (tenant): alimenta il tono del copy e lo stile
+// delle foto suggerito dall'AI in fase di catalogazione.
+export interface TenantBrand {
+  nomeNegozio: string;
+  tono: BrandTone;
+  estetica: PhotoAesthetic;
+  bio: string;
+}
+
 export type NotificationType = "draft_ready" | "local_save";
 
 export interface Notification {

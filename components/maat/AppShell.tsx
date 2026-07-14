@@ -5,13 +5,14 @@ import { usePathname } from "next/navigation";
 import { Home, Shirt, Camera, Bell, Settings, Smartphone } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNotifications } from "@/lib/notifications-store";
+import { mockUserProfile } from "@/lib/tenant-mock";
 
 const NAV_ITEMS = [
   { href: "/", label: "Home", icon: Home },
   { href: "/capi", label: "Capi", icon: Shirt },
   { href: "#", label: "Acquisizione", icon: Camera },
   { href: "/notifiche", label: "Notifiche", icon: Bell },
-  { href: "#", label: "Impostazioni", icon: Settings },
+  { href: "/impostazioni", label: "Impostazioni", icon: Settings },
   { href: "/mobile/maat-shell.html", label: "Anteprima mobile", icon: Smartphone, external: true },
 ] as const;
 
@@ -73,12 +74,17 @@ export function AppShell({ children }: AppShellProps) {
           })}
         </nav>
 
-        <div className="flex items-center gap-2 border-t border-sidebar-border px-4 py-4">
+        <Link
+          href="/impostazioni"
+          className="flex items-center gap-2 border-t border-sidebar-border px-4 py-4 transition-colors hover:bg-sidebar-accent"
+        >
           <div className="flex size-8 items-center justify-center rounded-full bg-[#DBE64C] font-mono text-xs font-semibold text-[#001F3F]">
-            FD
+            {mockUserProfile.iniziali}
           </div>
-          <span className="text-sm text-sidebar-foreground/80">Federico</span>
-        </div>
+          <span className="text-sm text-sidebar-foreground/80">
+            {mockUserProfile.nome.split(" ")[0]}
+          </span>
+        </Link>
       </aside>
 
       <main className="min-h-dvh flex-1 bg-background pl-[240px]">{children}</main>

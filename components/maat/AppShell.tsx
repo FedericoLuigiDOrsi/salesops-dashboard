@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Shirt, Camera, Bell, Settings, Smartphone } from "lucide-react";
+import { Home, Shirt, Camera, Bell, Settings, Smartphone } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNotifications } from "@/lib/notifications-store";
 
 const NAV_ITEMS = [
+  { href: "/", label: "Home", icon: Home },
   { href: "/capi", label: "Capi", icon: Shirt },
   { href: "#", label: "Acquisizione", icon: Camera },
   { href: "/notifiche", label: "Notifiche", icon: Bell },
@@ -35,7 +36,8 @@ export function AppShell({ children }: AppShellProps) {
             const { href, label, icon: Icon } = item;
             const badge = href === "/notifiche" && unreadCount > 0 ? unreadCount : undefined;
             const external = "external" in item ? item.external : false;
-            const isActive = !external && href !== "#" && pathname.startsWith(href);
+            const isActive =
+              !external && href !== "#" && (href === "/" ? pathname === "/" : pathname.startsWith(href));
             const className = cn(
               "relative flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
               isActive

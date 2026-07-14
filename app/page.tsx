@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import { HomeDashboard } from "@/components/maat/HomeDashboard";
 
 export default function RootPage() {
-  redirect("/capi");
+  return <HomeDashboard />;
 }

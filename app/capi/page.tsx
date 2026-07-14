@@ -11,6 +11,7 @@ import { CatalogTable } from "@/components/maat/CatalogTable";
 import { CatalogKanban } from "@/components/maat/CatalogKanban";
 import { EmptyState } from "@/components/maat/EmptyState";
 import { mockCatalogEntries } from "@/lib/maat-mock";
+import { catalogCounts } from "@/lib/catalog-stats";
 import {
   OPERATION_PRESETS,
   DEFAULT_PRESET,
@@ -40,15 +41,7 @@ export default function CapiListPage() {
     setView(getPreset(value).view);
   }
 
-  const counts = useMemo(
-    () => ({
-      totale: mockCatalogEntries.length,
-      bozze: mockCatalogEntries.filter((e) => e.status === "to_be_reviewed").length,
-      confermati: mockCatalogEntries.filter((e) => e.status === "available").length,
-      locali: mockCatalogEntries.filter((e) => e.status === "local_draft").length,
-    }),
-    []
-  );
+  const counts = catalogCounts();
 
   const filteredEntries = useMemo(() => {
     const scoped =

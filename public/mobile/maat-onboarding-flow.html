@@ -156,11 +156,42 @@ svg{display:block}
 .ohub-meta{display:flex;align-items:center;gap:8px;margin-top:4px}
 .ohub-meta .price{font-family:var(--mono);font-size:12.5px;font-weight:500;white-space:nowrap}
 
+/* ── Illustrazioni animate (sostituiscono i PNG hero) ── */
+.oscene{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:1}
+.ogarment{width:54%;max-width:210px;height:auto;overflow:visible;color:var(--ink)}
+.phone.dark .ogarment{color:#F6F7ED}
+.ogarment .zip{stroke-dasharray:3 6}
+.ogarment .seam{opacity:.45}
+.oshoot .ogarment{animation:ogfloat 4.6s cubic-bezier(.22,1,.36,1) infinite}
+@keyframes ogfloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.oframe{position:absolute;width:64%;max-width:224px;aspect-ratio:1;pointer-events:none;z-index:2}
+.oframe b{position:absolute;width:22px;height:22px;border:2.4px solid var(--fluo)}
+.oframe .tl{top:0;left:0;border-right:0;border-bottom:0;border-radius:7px 0 0 0}
+.oframe .tr{top:0;right:0;border-left:0;border-bottom:0;border-radius:0 7px 0 0}
+.oframe .bl{bottom:0;left:0;border-right:0;border-top:0;border-radius:0 0 0 7px}
+.oframe .br{bottom:0;right:0;border-left:0;border-top:0;border-radius:0 0 7px 0}
+.oshoot .oframe{animation:oframepulse 3.6s cubic-bezier(.22,1,.36,1) infinite}
+@keyframes oframepulse{0%,100%{transform:scale(1.07);opacity:.5}42%,58%{transform:scale(1);opacity:1}}
+.oflash{position:absolute;inset:0;background:radial-gradient(circle at 50% 46%,rgba(219,230,76,.5),transparent 58%);opacity:0;pointer-events:none;z-index:1}
+.oshoot .oflash{animation:oflash 3.6s cubic-bezier(.22,1,.36,1) infinite}
+@keyframes oflash{0%,47%{opacity:0}50%{opacity:.9}64%,100%{opacity:0}}
+
+/* ── Variante piattaforma WIP (non ancora collegabile) ── */
+.osel.wip,.oconn.wip{background:rgba(0,31,63,.04);border-color:var(--hairline);cursor:not-allowed;pointer-events:none}
+.phone.dark .oconn.wip{background:rgba(246,247,237,.04);border-color:rgba(246,247,237,.1)}
+.osel.wip .oconn-logo,.oconn.wip .oconn-logo{filter:grayscale(1);opacity:.5}
+.osel.wip .osel-name,.oconn.wip .oconn-name{color:var(--ink-3)}
+.phone.dark .oconn.wip .oconn-name{color:rgba(246,247,237,.5)}
+.wip-badge{flex-shrink:0;display:inline-flex;align-items:center;font-size:10px;font-weight:600;font-family:var(--mono);letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3);background:rgba(0,31,63,.05);border:1px solid var(--hairline);padding:5px 10px;border-radius:var(--r-pill)}
+.phone.dark .wip-badge{color:rgba(246,247,237,.55);background:rgba(246,247,237,.06);border-color:rgba(246,247,237,.14)}
+
 @media (prefers-reduced-motion:reduce){
   .obar i.cur::after,.oillo .oai .pulse,.oscan{animation:none}
   .oscan{display:none}
   .attr.anim .ar{opacity:1;transform:none}
   .step.active{animation:none}
+  .oshoot .ogarment,.oshoot .oframe,.oshoot .oflash{animation:none}
+  .oframe{transform:scale(1);opacity:1}
 }
 </style>
 </head>
@@ -174,7 +205,20 @@ svg{display:block}
 <section class="step phone dark active" data-ostep="welcome" data-dark>
   <div class="pscreen">
     <div class="owm">MAAT<span class="dot"></span></div>
-    <div class="oillo"><img src="assets/onboarding/illo-1-shoot.png" alt="Una persona fotografa un capo vintage appeso a una gruccia"><span class="otag">Scatti tu</span></div>
+    <div class="oillo oshoot" role="img" aria-label="Fotografi un capo: l'inquadratura mette a fuoco e scatta">
+      <div class="oflash"></div>
+      <div class="oscene">
+        <svg class="ogarment" viewBox="0 0 220 200" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round">
+          <path d="M90 40 C96 34 124 34 130 40 L156 52 L172 66 L162 98 L150 93 L156 150 Q156 158 148 160 Q110 170 72 160 Q64 158 64 150 L70 93 L58 98 L48 66 L64 52 Z"/>
+          <path class="seam" d="M90 40 Q110 54 130 40"/>
+          <path class="zip" d="M110 48 L110 162"/>
+          <path class="seam" d="M80 128 L98 132"/>
+          <path class="seam" d="M140 128 L122 132"/>
+        </svg>
+      </div>
+      <div class="oframe"><b class="tl"></b><b class="tr"></b><b class="bl"></b><b class="br"></b></div>
+      <span class="otag">Scatti tu</span>
+    </div>
     <div class="owelcome">Fotografi il capo.<br><em>MAAT fa il resto.</em></div>
     <div class="obsub">Titolo, descrizione, misure e prezzo, pubblicati su tutte le tue piattaforme. Tu scatti, il lavoro è fatto.</div>
     <div class="ofoot">
@@ -194,9 +238,9 @@ svg{display:block}
     <div class="osel-grid">
       <div class="osel sel"><span class="oconn-logo"><img src="assets/onboarding/loghi/vinted.png" alt="Vinted"></span><div class="osel-txt"><div class="osel-name">Vinted</div><div class="osel-sub">Il tuo canale principale</div></div><span class="ck"></span></div>
       <div class="osel sel"><span class="oconn-logo"><img src="assets/onboarding/loghi/depop.png" alt="Depop"></span><div class="osel-txt"><div class="osel-name">Depop</div></div><span class="ck"></span></div>
-      <div class="osel"><span class="oconn-logo"><img src="assets/onboarding/loghi/vestiaire.png" alt="Vestiaire"></span><div class="osel-txt"><div class="osel-name">Vestiaire</div></div><span class="ck"></span></div>
-      <div class="osel"><span class="oconn-logo"><img src="assets/onboarding/loghi/catawiki.png" alt="Catawiki"></span><div class="osel-txt"><div class="osel-name">Catawiki</div></div><span class="ck"></span></div>
-      <div class="osel"><span class="oconn-logo wordmark"><img src="assets/onboarding/loghi/ebay.png" alt="eBay"></span><div class="osel-txt"><div class="osel-name">eBay</div></div><span class="ck"></span></div>
+      <div class="osel wip" aria-disabled="true"><span class="oconn-logo"><img src="assets/onboarding/loghi/vestiaire.png" alt="Vestiaire"></span><div class="osel-txt"><div class="osel-name">Vestiaire</div><div class="osel-sub">Presto disponibile</div></div><span class="wip-badge">Presto</span></div>
+      <div class="osel wip" aria-disabled="true"><span class="oconn-logo"><img src="assets/onboarding/loghi/catawiki.png" alt="Catawiki"></span><div class="osel-txt"><div class="osel-name">Catawiki</div><div class="osel-sub">Presto disponibile</div></div><span class="wip-badge">Presto</span></div>
+      <div class="osel wip" aria-disabled="true"><span class="oconn-logo wordmark"><img src="assets/onboarding/loghi/ebay.png" alt="eBay"></span><div class="osel-txt"><div class="osel-name">eBay</div><div class="osel-sub">Presto disponibile</div></div><span class="wip-badge">Presto</span></div>
     </div>
     <div class="ohelp"><span class="i">i</span>Non ti chiediamo accessi adesso, solo per personalizzare il tuo setup.</div>
     <div class="ofoot"><button class="btn btn-primary obtn" data-next>Continua</button><a data-next>Salta per ora</a></div>
@@ -225,7 +269,19 @@ svg{display:block}
     <div class="oblbl">Step 3 di 4</div>
     <div class="obh1">Una foto,<br>la scheda pronta</div>
     <div class="obsub">Carica lo scatto frontale. MAAT riconosce il capo e compila i campi.</div>
-    <div class="oillo"><img src="assets/onboarding/illo-2-scan.png" alt="Il capo caricato, analizzato dall'AI"><div class="oscan"></div><div class="oai"><span class="pulse"></span>Elaborazione AI</div></div>
+    <div class="oillo" role="img" aria-label="Il capo caricato viene analizzato dall'AI">
+      <div class="oscene">
+        <svg class="ogarment" viewBox="0 0 220 200" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round">
+          <path d="M90 40 C96 34 124 34 130 40 L156 52 L172 66 L162 98 L150 93 L156 150 Q156 158 148 160 Q110 170 72 160 Q64 158 64 150 L70 93 L58 98 L48 66 L64 52 Z"/>
+          <path class="seam" d="M90 40 Q110 54 130 40"/>
+          <path class="zip" d="M110 48 L110 162"/>
+          <path class="seam" d="M80 128 L98 132"/>
+          <path class="seam" d="M140 128 L122 132"/>
+        </svg>
+      </div>
+      <div class="oscan"></div>
+      <div class="oai"><span class="pulse"></span>Elaborazione AI</div>
+    </div>
     <div class="attr">
       <div class="ar check"><span class="k">Brand</span><span class="v">Carhartt WIP<span class="tag">AI</span></span></div>
       <div class="ar check"><span class="k">Categoria</span><span class="v">Bomber<span class="tag">AI</span></span></div>
@@ -248,7 +304,9 @@ svg{display:block}
     <div class="oconn-list">
       <div class="oconn primary on"><span class="oconn-logo"><img src="assets/onboarding/loghi/vinted.png" alt="Vinted"></span><div class="oconn-txt"><div class="oconn-name">Vinted</div><div class="oconn-sub">Sessione attiva</div></div><span class="oconn-state"><svg class="plug" viewBox="0 0 24 24"><g class="ln"><path d="M9 2v5M15 2v5"/><path d="M6 7h12v3a6 6 0 0 1-12 0z"/><path d="M12 16v6"/></g></svg>Collegato</span></div>
       <div class="oconn"><span class="oconn-logo"><img src="assets/onboarding/loghi/depop.png" alt="Depop"></span><div class="oconn-txt"><div class="oconn-name">Depop</div></div><span class="oconn-state"><svg class="plug" viewBox="0 0 24 24"><g class="ln"><path d="M9 2v5M15 2v5"/><path d="M6 7h12v3a6 6 0 0 1-12 0z"/><path d="M12 16v6"/></g></svg>Collega</span></div>
-      <div class="oconn"><span class="oconn-logo"><img src="assets/onboarding/loghi/vestiaire.png" alt="Vestiaire"></span><div class="oconn-txt"><div class="oconn-name">Vestiaire</div></div><span class="oconn-state"><svg class="plug" viewBox="0 0 24 24"><g class="ln"><path d="M9 2v5M15 2v5"/><path d="M6 7h12v3a6 6 0 0 1-12 0z"/><path d="M12 16v6"/></g></svg>Collega</span></div>
+      <div class="oconn wip" aria-disabled="true"><span class="oconn-logo"><img src="assets/onboarding/loghi/vestiaire.png" alt="Vestiaire"></span><div class="oconn-txt"><div class="oconn-name">Vestiaire</div><div class="oconn-sub">Presto disponibile</div></div><span class="wip-badge">Presto</span></div>
+      <div class="oconn wip" aria-disabled="true"><span class="oconn-logo"><img src="assets/onboarding/loghi/catawiki.png" alt="Catawiki"></span><div class="oconn-txt"><div class="oconn-name">Catawiki</div><div class="oconn-sub">Presto disponibile</div></div><span class="wip-badge">Presto</span></div>
+      <div class="oconn wip" aria-disabled="true"><span class="oconn-logo wordmark"><img src="assets/onboarding/loghi/ebay.png" alt="eBay"></span><div class="oconn-txt"><div class="oconn-name">eBay</div><div class="oconn-sub">Presto disponibile</div></div><span class="wip-badge">Presto</span></div>
     </div>
     <div class="ofoot"><button class="btn btn-primary obtn" data-next>Vai alla dashboard</button><a data-next>Lo faccio dopo</a></div>
   </div>
@@ -297,7 +355,7 @@ svg{display:block}
   closeBtn.addEventListener('click', ()=> post('finish'));
 
   // platform selection toggle (step 1)
-  document.querySelectorAll('.osel').forEach(o => o.addEventListener('click', ()=> o.classList.toggle('sel')));
+  document.querySelectorAll('.osel').forEach(o => o.addEventListener('click', ()=>{ if(o.classList.contains('wip')) return; o.classList.toggle('sel'); }));
 
   // Step 3 demo — scan + campi in cascata (loop finché la schermata è attiva)
   const REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;

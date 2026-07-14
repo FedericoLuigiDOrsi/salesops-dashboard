@@ -847,7 +847,7 @@ body.onbov-open .onbov{opacity:1; visibility:visible}
       try{ sessionStorage.setItem('maat_camera_payload', JSON.stringify(d)); }catch(err){}
       const count = Number(d.count || (d.photos && d.photos.length) || 0);
       wzFrame.setAttribute('src', P2C_SRC + '?step=3&from=camera&count=' + encodeURIComponent(count));
-      toast(count ? count + ' foto acquisite · etichettatura' : 'Foto acquisite · etichettatura');
+      toast(count ? count + ' foto acquisite · elaborazione AI' : 'Foto acquisite · elaborazione AI');
     }
   });
 

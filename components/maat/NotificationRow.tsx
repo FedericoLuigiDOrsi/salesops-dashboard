@@ -52,7 +52,7 @@ export function NotificationRow({ notification, entry, onNavigate, onMarkRead, o
         )}
       </div>
 
-      <div className="hidden shrink-0 gap-1 opacity-0 transition-opacity group-hover:opacity-100 sm:flex">
+      <div className="flex shrink-0 gap-1 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
         {!notification.letta && (
           <button
             type="button"

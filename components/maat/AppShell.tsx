@@ -4,11 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Shirt, Camera, Bell, Settings, Smartphone } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useNotifications } from "@/lib/notifications-store";
 
 const NAV_ITEMS = [
   { href: "/capi", label: "Capi", icon: Shirt },
   { href: "#", label: "Acquisizione", icon: Camera },
-  { href: "/notifiche", label: "Notifiche", icon: Bell, badge: 3 },
+  { href: "/notifiche", label: "Notifiche", icon: Bell },
   { href: "#", label: "Impostazioni", icon: Settings },
   { href: "/mobile/maat-shell.html", label: "Anteprima mobile", icon: Smartphone, external: true },
 ] as const;
@@ -19,6 +20,7 @@ interface AppShellProps {
 
 export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
+  const { unreadCount } = useNotifications();
 
   return (
     <div className="flex min-h-dvh">
@@ -31,7 +33,7 @@ export function AppShell({ children }: AppShellProps) {
         <nav className="flex flex-1 flex-col gap-1 px-3 py-2">
           {NAV_ITEMS.map((item) => {
             const { href, label, icon: Icon } = item;
-            const badge = "badge" in item ? item.badge : undefined;
+            const badge = href === "/notifiche" && unreadCount > 0 ? unreadCount : undefined;
             const external = "external" in item ? item.external : false;
             const isActive = !external && href !== "#" && pathname.startsWith(href);
             const className = cn(

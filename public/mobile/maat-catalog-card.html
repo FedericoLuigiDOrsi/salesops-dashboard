@@ -1,0 +1,764 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MAAT · Catalog card</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F6F7ED;
+    --surface:#FFFFFF;
+    --ink:#001F3F;
+    --ink-2:#5B6670;
+    --ink-3:#9AA0A6;
+    --hairline:rgba(0,31,63,.10);
+    --fluo:#DBE64C;
+    --fluo-press:#C8D43B;
+    --green:#00804C;
+    --green-bg:#E4F0E8;
+    --red:#E5484D;
+    --grey-bg:#E9EAE2;
+    --radius:14px;
+    --shadow:0 1px 2px rgba(0,31,63,.04), 0 6px 20px rgba(0,31,63,.06);
+    --font:"Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono:"JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--font);
+    font-size:14px;
+    line-height:1.4;
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+    overflow-x:hidden;
+  }
+
+  .wrap{
+    max-width:1200px;
+    margin:0 auto;
+    padding:24px 20px 120px;
+  }
+
+  /* ---------- Page header ---------- */
+  .pagehead{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding-bottom:20px;
+    margin-bottom:24px;
+    border-bottom:1px solid var(--hairline);
+  }
+  .pagehead .mark{
+    display:flex;align-items:center;gap:9px;
+  }
+  .pagehead .glyph-mark{
+    display:grid;
+    grid-template-columns:repeat(2,8px);
+    grid-template-rows:repeat(2,8px);
+    gap:3px;
+  }
+  .pagehead .glyph-mark i{width:8px;height:8px;border-radius:2.5px;background:var(--ink)}
+  .pagehead .glyph-mark i.next{background:transparent;border:1.5px solid var(--fluo)}
+  .pagehead h1{
+    font-size:16px;font-weight:600;letter-spacing:-.01em;margin:0;
+  }
+  .pagehead h1 span{color:var(--ink-3);font-weight:400}
+  .pagehead .meta{
+    margin-left:auto;
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--ink-3);
+    letter-spacing:.02em;
+  }
+
+  /* ---------- Section labels ---------- */
+  .section{margin-top:8px}
+  .section + .section{margin-top:48px}
+  .section__label{
+    display:flex;align-items:baseline;gap:10px;
+    margin-bottom:16px;
+  }
+  .section__label .num{
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--ink-3);
+    letter-spacing:.06em;
+  }
+  .section__label h2{
+    font-size:13px;font-weight:600;letter-spacing:.01em;margin:0;text-transform:uppercase;
+  }
+  .section__label .variant{
+    font-size:12px;color:var(--ink-2);font-weight:400;
+  }
+
+  /* ---------- Toolbar ---------- */
+  .toolbar{
+    display:flex;align-items:center;gap:10px;
+    margin-bottom:18px;
+    flex-wrap:wrap;
+  }
+  .toolbar .spacer{flex:1}
+  .tbtn{
+    font-family:var(--font);
+    font-size:13px;font-weight:500;
+    color:var(--ink);
+    background:var(--surface);
+    border:1px solid var(--hairline);
+    border-radius:9px;
+    padding:8px 13px;
+    cursor:pointer;
+    display:inline-flex;align-items:center;gap:7px;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .tbtn:hover{border-color:rgba(0,31,63,.22)}
+  .tbtn[aria-pressed="true"]{
+    background:var(--ink);color:var(--bg);border-color:var(--ink);
+  }
+  .tbtn .dot{width:6px;height:6px;border-radius:50%;background:var(--fluo)}
+  .tbtn.filterchip{color:var(--ink-2);font-weight:400}
+  .toolbar .count{
+    font-family:var(--mono);font-size:11px;color:var(--ink-3);letter-spacing:.02em;
+  }
+
+  /* ---------- Grid ---------- */
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(200px, 1fr));
+    gap:16px;
+  }
+
+  /* ---------- Card ---------- */
+  .card{
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    background:var(--surface);
+    border:1.5px solid var(--hairline);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    overflow:hidden;
+    transition:border-color .12s ease;
+  }
+  .card:hover{
+    border-color:rgba(0,31,63,.24);
+  }
+  .card:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  .card.sold{opacity:.72}
+  .card.sold:hover{opacity:.72}
+
+  /* photo zone */
+  .photo{
+    position:relative;
+    aspect-ratio:1/1;
+    width:100%;
+    background:var(--photo, #E7E9DD);
+    display:flex;align-items:center;justify-content:center;
+    overflow:hidden;
+  }
+  .photo svg.garment{
+    width:44%;height:44%;
+    opacity:.5;
+  }
+  .photo svg.garment path{
+    fill:none;
+    stroke:var(--ink-3);
+    stroke-width:1.3;
+    stroke-linejoin:round;
+    stroke-linecap:round;
+    vector-effect:non-scaling-stroke;
+  }
+
+  /* glyph overlay */
+  .glyph{
+    position:absolute;top:9px;left:9px;
+    display:grid;
+    grid-template-columns:repeat(2,8px);
+    grid-template-rows:repeat(2,8px);
+    gap:3px;
+    padding:5px;
+    background:rgba(255,255,255,.82);
+    border-radius:7px;
+    backdrop-filter:saturate(1.1) blur(1px);
+  }
+  .glyph i{width:8px;height:8px;border-radius:2.5px}
+  .glyph i.done{background:var(--ink)}
+  .glyph i.todo{background:transparent;box-shadow:inset 0 0 0 1px var(--hairline)}
+  .glyph i.next{background:transparent;box-shadow:inset 0 0 0 1.5px var(--fluo)}
+
+  /* status badge */
+  .badge{
+    position:absolute;top:9px;right:9px;
+    display:inline-flex;align-items:center;gap:5px;
+    font-size:11px;font-weight:500;line-height:1;
+    padding:5px 9px 5px 7px;
+    border-radius:999px;
+    letter-spacing:.01em;
+    white-space:nowrap;
+  }
+  .badge .bd{width:6px;height:6px;border-radius:50%;flex:none}
+  .badge svg{width:11px;height:11px;flex:none}
+  .badge--bozza{background:var(--grey-bg);color:var(--ink-2)}
+  .badge--bozza .bd{background:var(--ink-3)}
+  .badge--conf{background:var(--green-bg);color:var(--green)}
+  .badge--conf svg path{stroke:var(--green)}
+  .badge--live{background:var(--fluo);color:var(--ink);font-weight:500}
+  .badge--live .bd{background:var(--ink)}
+  .badge--sold{background:var(--ink);color:var(--bg)}
+  .badge--sold svg path{stroke:var(--bg)}
+
+  /* stable action row */
+  .cta{
+    position:static;
+    margin-top:auto;
+    padding:0 12px 12px;
+    opacity:1;
+    pointer-events:auto;
+  }
+  .cta button{
+    width:100%;
+    min-height:36px;
+    font-family:var(--font);
+    font-size:13px;font-weight:500;
+    padding:8px 12px;
+    border-radius:9px;
+    cursor:pointer;
+    border:1px solid var(--hairline);
+    background:var(--bg);
+    color:var(--ink);
+    transition:background .12s ease, border-color .12s ease;
+  }
+  .cta button:hover{border-color:rgba(0,31,63,.28)}
+  .cta button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  .cta button.primary{
+    background:var(--fluo);
+    color:var(--ink);
+    border-color:var(--fluo);
+  }
+  .cta button.primary:hover{background:var(--fluo-press);border-color:var(--fluo-press)}
+
+  /* card body */
+  .body{padding:12px}
+  .brand{font-size:15px;font-weight:500;letter-spacing:-.01em;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .type{font-size:13px;color:var(--ink-2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .row{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-top:10px;gap:8px;
+  }
+  .chip{
+    font-family:var(--mono);
+    font-size:11px;font-weight:500;
+    color:var(--ink-2);
+    background:var(--bg);
+    border:1px solid var(--hairline);
+    padding:3px 8px;
+    border-radius:7px;
+    letter-spacing:.01em;
+  }
+  .price{font-size:15px;font-weight:500;letter-spacing:-.01em}
+  .price.muted{color:var(--ink-3)}
+  .price.struck{text-decoration:line-through;text-decoration-color:var(--ink-3);color:var(--ink-2)}
+
+  .foot{
+    margin-top:10px;padding-top:10px;
+    border-top:1px solid var(--hairline);
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+    min-height:26px;
+  }
+  .sku{
+    font-family:var(--mono);
+    font-size:11px;color:var(--ink-3);letter-spacing:.02em;
+  }
+  .hint{
+    display:inline-flex;align-items:center;gap:5px;
+    font-size:11px;color:var(--ink-2);
+  }
+  .hint .bd{width:6px;height:6px;border-radius:50%;background:var(--fluo)}
+  .channels{display:inline-flex;align-items:center;gap:5px}
+  .ch{
+    width:17px;height:17px;border-radius:50%;
+    background:var(--ink);color:var(--bg);
+    font-family:var(--mono);font-size:9px;font-weight:500;
+    display:inline-flex;align-items:center;justify-content:center;
+    letter-spacing:0;
+  }
+  .fresh{font-family:var(--mono);font-size:11px;color:var(--ink-3)}
+
+  /* ---------- Bulk select mode ---------- */
+  .check{
+    position:absolute;top:9px;left:9px;
+    width:22px;height:22px;border-radius:7px;
+    background:rgba(255,255,255,.9);
+    border:1.5px solid var(--hairline);
+    display:none;align-items:center;justify-content:center;
+    z-index:3;
+    transition:background .12s ease, border-color .12s ease;
+  }
+  .check svg{width:13px;height:13px;opacity:0;transition:opacity .12s ease}
+  .check svg path{stroke:var(--ink)}
+  body.selecting .glyph{display:none}
+  body.selecting .check{display:inline-flex}
+  body.selecting .card{cursor:pointer}
+  body.selecting .card:hover{border-color:var(--fluo)}
+  body.selecting .cta{visibility:hidden;pointer-events:none}
+  .card.selected .check{background:var(--fluo);border-color:var(--fluo)}
+  .card.selected .check svg{opacity:1}
+  .card.selected{border-color:var(--fluo);border-width:1.5px}
+
+  /* bulk bar */
+  .bulkbar{
+    position:fixed;left:0;right:0;bottom:0;
+    background:var(--ink);
+    color:var(--bg);
+    padding:14px 20px;
+    display:none;
+    align-items:center;gap:16px;
+    box-shadow:0 -6px 24px rgba(0,31,63,.18);
+    z-index:20;
+  }
+  .bulkbar.show{display:flex}
+  .bulkbar .n{
+    font-family:var(--mono);font-size:13px;letter-spacing:.02em;
+  }
+  .bulkbar .sep{color:var(--ink-3)}
+  .bulkbar .spacer{flex:1}
+  .bulkbar button{
+    font-family:var(--font);font-size:13px;font-weight:500;
+    padding:9px 15px;border-radius:9px;cursor:pointer;border:none;
+  }
+  .bulkbar .publish{background:var(--fluo);color:var(--ink)}
+  .bulkbar .publish:hover{background:var(--fluo-press)}
+  .bulkbar .cancel{
+    background:transparent;color:var(--bg);
+    border:1px solid rgba(246,247,237,.28);
+  }
+  .bulkbar .cancel:hover{border-color:rgba(246,247,237,.55)}
+
+  /* legend */
+  .legend{
+    margin-top:22px;
+    display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    font-size:12px;color:var(--ink-2);
+  }
+  .legend .glyph-mini{
+    display:grid;grid-template-columns:repeat(2,7px);grid-template-rows:repeat(2,7px);gap:2.5px;
+  }
+  .legend .glyph-mini i{width:7px;height:7px;border-radius:2px;background:var(--ink)}
+  .legend .glyph-mini i.o{background:transparent;box-shadow:inset 0 0 0 1px var(--hairline)}
+  .legend .glyph-mini i.n{background:transparent;box-shadow:inset 0 0 0 1.5px var(--fluo)}
+  .legend .k{font-family:var(--mono);font-size:11px;color:var(--ink-3)}
+  .legend .swatch{display:inline-flex;align-items:center;gap:6px}
+  .legend .sw{width:11px;height:11px;border-radius:3px}
+
+  /* ---------- Section 2 : Photo-hero ---------- */
+  .hero-wrap{max-width:340px}
+  .hero{
+    position:relative;
+    background:var(--surface);
+    border:1px solid var(--hairline);
+    border-radius:var(--radius);
+    overflow:hidden;
+    box-shadow:var(--shadow);
+  }
+  .hero .photo{
+    aspect-ratio:4/5;
+  }
+  .hero .photo svg.garment{width:38%;height:38%}
+  .pricechip{
+    position:absolute;top:11px;left:11px;
+    background:var(--surface);
+    color:var(--ink);
+    font-size:14px;font-weight:500;
+    padding:6px 11px;border-radius:999px;
+    box-shadow:0 1px 3px rgba(0,31,63,.14);
+  }
+  .hero .badge{top:11px;right:11px}
+  .scrim{
+    position:absolute;left:0;right:0;bottom:0;
+    background:rgba(0,31,63,.74);
+    padding:11px 13px;
+    display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
+  }
+  .scrim .l .b{color:#F6F7ED;font-size:15px;font-weight:500;line-height:1.2}
+  .scrim .l .t{color:#C4CBD3;font-size:12px;margin-top:2px}
+  .scrim .r{text-align:right;flex:none}
+  .scrim .r .sz{font-family:var(--mono);font-size:12px;color:#F6F7ED;font-weight:500}
+  .scrim .r .sk{font-family:var(--mono);font-size:11px;color:#C4CBD3;margin-top:3px}
+  .hero-cta{
+    margin-top:12px;width:100%;
+    font-family:var(--font);font-size:14px;font-weight:500;
+    padding:12px;border-radius:11px;cursor:pointer;
+    background:var(--fluo);color:var(--ink);border:1px solid var(--fluo);
+    transition:background .12s ease;
+  }
+  .hero-cta:hover{background:var(--fluo-press);border-color:var(--fluo-press)}
+  .hero-note{
+    margin-top:10px;font-size:12px;color:var(--ink-3);
+  }
+
+  @media (max-width:520px){
+    .wrap{padding:20px 14px 120px}
+    .grid{grid-template-columns:repeat(auto-fill, minmax(150px,1fr));gap:12px}
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    .card,.cta button,.tbtn,.check,.check svg,.hero-cta{transition:none}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Page header -->
+  <header class="pagehead">
+    <div class="mark">
+      <div class="glyph-mark" aria-hidden="true"><i></i><i></i><i></i><i class="next"></i></div>
+      <h1>MAAT <span>· Catalog card</span></h1>
+    </div>
+    <div class="meta">MP076 · operator view</div>
+  </header>
+
+  <!-- ============ SECTION 1 ============ -->
+  <section class="section" aria-labelledby="s1">
+    <div class="section__label">
+      <span class="num">01</span>
+      <h2 id="s1">Inventario</h2>
+      <span class="variant">variante “Signature” · default</span>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <button class="tbtn" id="selBtn" aria-pressed="false" aria-label="Attiva selezione multipla">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="4" stroke="currentColor" stroke-width="1.8"/><path d="M8 12.5l2.8 2.8L16 9.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg> Seleziona
+      </button>
+      <button class="tbtn filterchip" type="button">Tutti gli stati</button>
+      <span class="spacer"></span>
+      <span class="count">8 capi</span>
+    </div>
+
+    <!-- Grid -->
+    <div class="grid" id="grid">
+
+      <!-- 1 · Stone Island · BOZZA -->
+      <article class="card" data-state="bozza" style="--photo:#E4E7DE" tabindex="0">
+        <div class="check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="photo">
+          <div class="glyph" role="img" aria-label="Pipeline: Foto fatto, Copy prossimo, Stock da fare, Lista da fare">
+            <i class="done"></i><i class="next"></i><i class="todo"></i><i class="todo"></i>
+          </div>
+          <span class="badge badge--bozza"><span class="bd"></span>Bozza</span>
+          <svg class="garment" viewBox="0 0 48 48" aria-hidden="true"><path d="M18 8 L24 12 L30 8 L38 14 L34 21 L30 18.5 L30 41 L18 41 L18 18.5 L14 21 L10 14 Z"/></svg>
+        </div>
+        <div class="body">
+          <div class="brand">Stone Island</div>
+          <div class="type">Felpa girocollo</div>
+          <div class="row">
+            <span class="chip">L</span>
+            <span class="price muted">— €</span>
+          </div>
+          <div class="foot">
+            <span class="hint"><span class="bd"></span>manca: Copy</span>
+          </div>
+        </div>
+        <div class="cta"><button type="button">Completa</button></div>
+      </article>
+
+      <!-- 2 · Burberry · CONFERMATO -->
+      <article class="card" data-state="conf" style="--photo:#E6E4DB" tabindex="0">
+        <div class="check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="photo">
+          <div class="glyph" role="img" aria-label="Pipeline: Foto fatto, Copy fatto, Stock fatto, Lista prossimo">
+            <i class="done"></i><i class="done"></i><i class="done"></i><i class="next"></i>
+          </div>
+          <span class="badge badge--conf"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Confermato</span>
+          <svg class="garment" viewBox="0 0 48 48" aria-hidden="true"><path d="M18 8 L24 12 L30 8 L38 14 L34 21 L30 18.5 L30 41 L18 41 L18 18.5 L14 21 L10 14 Z"/></svg>
+        </div>
+        <div class="body">
+          <div class="brand">Burberry</div>
+          <div class="type">Camicia check</div>
+          <div class="row">
+            <span class="chip">M</span>
+            <span class="price">85 €</span>
+          </div>
+          <div class="foot">
+            <span class="sku">MT-0421</span>
+            <span class="hint"><span class="bd"></span>manca: Pubblica</span>
+          </div>
+        </div>
+        <div class="cta"><button type="button" class="primary">Pubblica</button></div>
+      </article>
+
+      <!-- 3 · Levi's · LIVE -->
+      <article class="card" data-state="live" style="--photo:#DFE4E9" tabindex="0">
+        <div class="check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="photo">
+          <div class="glyph" role="img" aria-label="Pipeline completa: Foto, Copy, Stock, Lista tutti fatti">
+            <i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i>
+          </div>
+          <span class="badge badge--live"><span class="bd"></span>Live</span>
+          <svg class="garment" viewBox="0 0 48 48" aria-hidden="true"><path d="M16 10 H32 V14 H16 Z"/><path d="M16 14 L17.5 41 L22.5 41 L24 22 L25.5 41 L30.5 41 L32 14"/></svg>
+        </div>
+        <div class="body">
+          <div class="brand">Levi’s</div>
+          <div class="type">501 vintage</div>
+          <div class="row">
+            <span class="chip">W32 L34</span>
+            <span class="price">60 €</span>
+          </div>
+          <div class="foot">
+            <span class="channels"><span class="ch">V</span><span class="ch">G</span></span>
+            <span class="fresh">3g fa</span>
+          </div>
+        </div>
+        <div class="cta"><button type="button">Vedi annuncio</button></div>
+      </article>
+
+      <!-- 4 · Nike · VENDUTO -->
+      <article class="card sold" data-state="sold" style="--photo:#E2E4DC" tabindex="0">
+        <div class="check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="photo">
+          <div class="glyph" role="img" aria-label="Pipeline completa: tutti i moduli fatti">
+            <i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i>
+          </div>
+          <span class="badge badge--sold"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Venduto</span>
+          <svg class="garment" viewBox="0 0 48 48" aria-hidden="true"><path d="M18 8 L24 12 L30 8 L38 14 L34 21 L30 18.5 L30 41 L18 41 L18 18.5 L14 21 L10 14 Z"/></svg>
+        </div>
+        <div class="body">
+          <div class="brand">Nike</div>
+          <div class="type">Windrunner ’90s</div>
+          <div class="row">
+            <span class="chip">XL</span>
+            <span class="price struck">70 €</span>
+          </div>
+          <div class="foot">
+            <span class="sku">MT-0388</span>
+            <span class="fresh">venduto · V</span>
+          </div>
+        </div>
+        <div class="cta"><button type="button">Archivia</button></div>
+      </article>
+
+      <!-- 5 · Carhartt · CONFERMATO -->
+      <article class="card" data-state="conf" style="--photo:#E7E5D6" tabindex="0">
+        <div class="check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="photo">
+          <div class="glyph" role="img" aria-label="Pipeline: Foto fatto, Copy fatto, Stock fatto, Lista prossimo">
+            <i class="done"></i><i class="done"></i><i class="done"></i><i class="next"></i>
+          </div>
+          <span class="badge badge--conf"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Confermato</span>
+          <svg class="garment" viewBox="0 0 48 48" aria-hidden="true"><path d="M18 8 L24 12 L30 8 L38 14 L34 21 L30 18.5 L30 41 L18 41 L18 18.5 L14 21 L10 14 Z"/></svg>
+        </div>
+        <div class="body">
+          <div class="brand">Carhartt</div>
+          <div class="type">Giacca Detroit</div>
+          <div class="row">
+            <span class="chip">L</span>
+            <span class="price">120 €</span>
+          </div>
+          <div class="foot">
+            <span class="sku">MT-0435</span>
+            <span class="hint"><span class="bd"></span>manca: Pubblica</span>
+          </div>
+        </div>
+        <div class="cta"><button type="button" class="primary">Pubblica</button></div>
+      </article>
+
+      <!-- 6 · The North Face · LIVE -->
+      <article class="card" data-state="live" style="--photo:#DEE3E8" tabindex="0">
+        <div class="check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="photo">
+          <div class="glyph" role="img" aria-label="Pipeline completa: tutti i moduli fatti">
+            <i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i>
+          </div>
+          <span class="badge badge--live"><span class="bd"></span>Live</span>
+          <svg class="garment" viewBox="0 0 48 48" aria-hidden="true"><path d="M17 11 C20 14 28 14 31 11 L36 16 L36 20 L33 21 L33 40 L15 40 L15 21 L12 20 L12 16 Z"/><path d="M15 25 H33 M15 30 H33 M15 35 H33"/></svg>
+        </div>
+        <div class="body">
+          <div class="brand">The North Face</div>
+          <div class="type">Nuptse 700</div>
+          <div class="row">
+            <span class="chip">M</span>
+            <span class="price">140 €</span>
+          </div>
+          <div class="foot">
+            <span class="channels"><span class="ch">V</span><span class="ch">G</span></span>
+            <span class="fresh">1g fa</span>
+          </div>
+        </div>
+        <div class="cta"><button type="button">Vedi annuncio</button></div>
+      </article>
+
+      <!-- 7 · Ralph Lauren · BOZZA -->
+      <article class="card" data-state="bozza" style="--photo:#E8E6DC" tabindex="0">
+        <div class="check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="photo">
+          <div class="glyph" role="img" aria-label="Pipeline: Foto fatto, Copy prossimo, Stock da fare, Lista da fare">
+            <i class="done"></i><i class="next"></i><i class="todo"></i><i class="todo"></i>
+          </div>
+          <span class="badge badge--bozza"><span class="bd"></span>Bozza</span>
+          <svg class="garment" viewBox="0 0 48 48" aria-hidden="true"><path d="M18 8 L24 12 L30 8 L38 14 L34 21 L30 18.5 L30 41 L18 41 L18 18.5 L14 21 L10 14 Z"/></svg>
+        </div>
+        <div class="body">
+          <div class="brand">Ralph Lauren</div>
+          <div class="type">Polo piqué</div>
+          <div class="row">
+            <span class="chip">M</span>
+            <span class="price muted">— €</span>
+          </div>
+          <div class="foot">
+            <span class="hint"><span class="bd"></span>manca: Copy</span>
+          </div>
+        </div>
+        <div class="cta"><button type="button">Completa</button></div>
+      </article>
+
+      <!-- 8 · Arc'teryx · LIVE -->
+      <article class="card" data-state="live" style="--photo:#DDE2E6" tabindex="0">
+        <div class="check" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="photo">
+          <div class="glyph" role="img" aria-label="Pipeline completa: tutti i moduli fatti">
+            <i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i>
+          </div>
+          <span class="badge badge--live"><span class="bd"></span>Live</span>
+          <svg class="garment" viewBox="0 0 48 48" aria-hidden="true"><path d="M18 8 L24 12 L30 8 L38 14 L34 21 L30 18.5 L30 41 L18 41 L18 18.5 L14 21 L10 14 Z"/></svg>
+        </div>
+        <div class="body">
+          <div class="brand">Arc’teryx</div>
+          <div class="type">Beta LT shell</div>
+          <div class="row">
+            <span class="chip">S</span>
+            <span class="price">190 €</span>
+          </div>
+          <div class="foot">
+            <span class="channels"><span class="ch">V</span><span class="ch">G</span></span>
+            <span class="fresh">5g fa</span>
+          </div>
+        </div>
+        <div class="cta"><button type="button">Vedi annuncio</button></div>
+      </article>
+
+    </div><!-- /grid -->
+
+    <!-- Legend -->
+    <div class="legend" aria-label="Legenda moduli pipeline">
+      <span class="glyph-mini" aria-hidden="true"><i></i><i class="n"></i><i class="o"></i><i class="o"></i></span>
+      <span><strong style="font-weight:500">Moduli:</strong> Foto · Copy · Stock · Lista</span>
+      <span class="swatch"><span class="sw" style="background:var(--ink)"></span><span class="k">fatto</span></span>
+      <span class="swatch"><span class="sw" style="background:transparent;box-shadow:inset 0 0 0 1px var(--hairline)"></span><span class="k">da fare</span></span>
+      <span class="swatch"><span class="sw" style="background:transparent;box-shadow:inset 0 0 0 1.5px var(--fluo)"></span><span class="k">prossimo</span></span>
+    </div>
+  </section>
+
+  <!-- ============ SECTION 2 ============ -->
+  <section class="section" aria-labelledby="s2">
+    <div class="section__label">
+      <span class="num">02</span>
+      <h2 id="s2">Focus capo singolo</h2>
+      <span class="variant">variante “Photo-hero” · B</span>
+    </div>
+
+    <div class="hero-wrap">
+      <div class="hero">
+        <div class="photo" style="--photo:#DEE3E8">
+          <span class="pricechip">140 €</span>
+          <span class="badge badge--live"><span class="bd"></span>Live</span>
+          <svg class="garment" viewBox="0 0 48 48" aria-hidden="true"><path d="M17 11 C20 14 28 14 31 11 L36 16 L36 20 L33 21 L33 40 L15 40 L15 21 L12 20 L12 16 Z"/><path d="M15 25 H33 M15 30 H33 M15 35 H33"/></svg>
+          <div class="scrim">
+            <div class="l">
+              <div class="b">The North Face</div>
+              <div class="t">Nuptse 700</div>
+            </div>
+            <div class="r">
+              <div class="sz">M</div>
+              <div class="sk">MT-0402</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button class="hero-cta" type="button">Pubblica</button>
+      <p class="hero-note">Vista di conferma P2C · un solo capo a fuoco.</p>
+    </div>
+  </section>
+
+</div><!-- /wrap -->
+
+<!-- Bulk action bar -->
+<div class="bulkbar" id="bulkbar" role="region" aria-label="Azioni multiple">
+  <span class="n"><span id="bulkCount">0</span> selezionati</span>
+  <span class="sep" aria-hidden="true">·</span>
+  <button class="publish" type="button">Pubblica tutte</button>
+  <span class="spacer"></span>
+  <button class="cancel" type="button" id="bulkCancel">Annulla</button>
+</div>
+
+<script>
+(function(){
+  var selBtn   = document.getElementById('selBtn');
+  var grid     = document.getElementById('grid');
+  var bulkbar  = document.getElementById('bulkbar');
+  var bulkCount= document.getElementById('bulkCount');
+  var bulkCancel = document.getElementById('bulkCancel');
+  var publishBtn = bulkbar.querySelector('.publish');
+  var cards    = Array.prototype.slice.call(grid.querySelectorAll('.card'));
+  var selecting = false;
+
+  cards.forEach(function(c){
+    var brand=(c.querySelector('.brand')||{}).textContent||'';
+    var type=(c.querySelector('.type')||{}).textContent||'';
+    var badge=(c.querySelector('.badge')||{}).textContent||'';
+    c.setAttribute('aria-label', (brand+' '+type+', '+badge).replace(/\s+/g,' ').trim());
+  });
+
+  function count(){ return grid.querySelectorAll('.card.selected').length; }
+  function refresh(){
+    var n = count();
+    bulkCount.textContent = n;
+    bulkbar.classList.toggle('show', selecting && n > 0);
+  }
+
+  function enter(){
+    selecting = true;
+    document.body.classList.add('selecting');
+    selBtn.setAttribute('aria-pressed','true');
+    cards.forEach(function(c){ c.setAttribute('role','checkbox'); c.setAttribute('aria-checked','false'); });
+    refresh();
+  }
+  function exit(){
+    selecting = false;
+    document.body.classList.remove('selecting');
+    selBtn.setAttribute('aria-pressed','false');
+    cards.forEach(function(c){ c.classList.remove('selected'); c.removeAttribute('role'); c.removeAttribute('aria-checked'); });
+    bulkbar.classList.remove('show');
+    if(publishBtn) publishBtn.textContent='Pubblica tutte';
+  }
+  function toggle(card){
+    if(!selecting) return;
+    var on = card.classList.toggle('selected');
+    card.setAttribute('aria-checked', on ? 'true' : 'false');
+    refresh();
+  }
+
+  selBtn.addEventListener('click', function(){ selecting ? exit() : enter(); });
+  bulkCancel.addEventListener('click', exit);
+  if(publishBtn) publishBtn.addEventListener('click', function(){
+    var n = count(); if(!n) return;
+    publishBtn.textContent = n + ' pubblicati ✓';
+    window.setTimeout(exit, 900);
+  });
+
+  cards.forEach(function(card){
+    card.addEventListener('click', function(){ toggle(card); });
+    card.addEventListener('keydown', function(e){
+      if(selecting && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); toggle(card); }
+    });
+  });
+})();
+</script>
+</body>
+</html>

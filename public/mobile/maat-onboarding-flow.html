@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MAAT · Onboarding</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ── Token MAAT (palette MP076) ── */
+:root{
+  --bg:#F6F7ED; --surface:#FFFFFF; --ink:#001F3F; --ink-2:#5B6670; --ink-3:#9AA0A6;
+  --hairline:rgba(0,31,63,.10); --fluo:#DBE64C; --on-fluo:#001F3F; --green:#00804C;
+  --r-sm:8px; --r-card:14px; --r-btn:14px; --r-pill:999px;
+  --shadow:0 1px 2px rgba(0,31,63,.04), 0 6px 20px rgba(0,31,63,.06);
+  --shadow-lift:0 2px 6px rgba(0,31,63,.08), 0 16px 40px rgba(0,31,63,.10);
+  --tint-bozza:rgba(219,230,76,.24);
+  --font:'Geist',system-ui,-apple-system,sans-serif; --mono:'JetBrains Mono',ui-monospace,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{font-family:var(--font);color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+a{cursor:pointer}
+svg{display:block}
+:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(219,230,76,.45);border-radius:8px}
+
+/* ── Buttons (DS rounded-rect) ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:52px;padding:0 22px;border-radius:var(--r-btn);font-weight:600;font-size:15px;transition:background .14s,transform .12s,filter .14s}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--fluo);color:var(--on-fluo)}
+.btn-primary:active{filter:brightness(.96)}
+.badge{display:inline-flex;align-items:center;font-size:11px;font-weight:600;padding:3px 9px;border-radius:var(--r-pill)}
+.badge-bozza{background:var(--tint-bozza);color:#5f6a12}
+
+/* ── Stepper: full-screen steps, mobile column ── */
+.step{display:none;flex-direction:column;min-height:100dvh}
+.step.active{display:flex;animation:stepIn .34s cubic-bezier(.22,1,.36,1)}
+@keyframes stepIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+#obClose{position:fixed;top:16px;right:16px;z-index:10;width:36px;height:36px;border-radius:999px;display:grid;place-items:center;background:rgba(0,31,63,.06);color:var(--ink-2)}
+#obClose.on-dark{background:rgba(246,247,237,.12);color:#F6F7ED}
+
+/* ── Phone → full-screen override + all .o* verbatim ── */
+.phone{width:100%;background:var(--bg)}
+.phone.dark{background:var(--ink);color:#F6F7ED}
+.pscreen{width:100%;max-width:440px;margin:0 auto;padding:52px 22px 30px;display:flex;flex-direction:column;gap:15px;flex:1}
+
+.obar{display:flex;gap:5px;align-items:center}
+.obar i{flex:1;height:4px;border-radius:2px;background:#E3E4DA;position:relative;overflow:hidden}
+.phone.dark .obar i{background:rgba(246,247,237,.16)}
+.obar i.done{background:var(--green)}
+.obar i.cur{background:var(--fluo)}
+.obar i.cur::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.6),transparent);animation:oshine 2.1s ease-in-out infinite}
+@keyframes oshine{0%{transform:translateX(-100%)}60%,100%{transform:translateX(200%)}}
+.oblbl{font-family:var(--mono);font-size:10.5px;color:var(--ink-2);letter-spacing:.04em;text-transform:uppercase}
+.phone.dark .oblbl{color:rgba(246,247,237,.6)}
+
+.obh1{font-size:25px;font-weight:800;letter-spacing:-.03em;line-height:1.08;text-wrap:balance}
+.phone.dark .obh1{color:#F6F7ED}
+.obsub{font-size:13.5px;color:var(--ink-2);line-height:1.5}
+.phone.dark .obsub{color:rgba(246,247,237,.66)}
+.ofoot{margin-top:auto;display:flex;flex-direction:column;gap:11px;padding-top:12px}
+.ofoot a{text-align:center;font-size:12.5px;color:var(--ink-2);text-decoration:none}
+.phone.dark .ofoot a{color:rgba(246,247,237,.6)}
+.obtn{width:100%}
+
+.owm{font-size:19px;font-weight:800;letter-spacing:-.02em;display:flex;align-items:center;gap:7px}
+.owm .dot{width:7px;height:7px;border-radius:50%;background:var(--fluo)}
+.owelcome{font-size:38px;font-weight:800;letter-spacing:-.035em;line-height:1.02;margin-top:2px}
+.owelcome em{font-style:normal;color:var(--fluo)}
+
+.oillo{flex:0 0 auto;aspect-ratio:3/2;width:100%;border-radius:16px;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;color:var(--ink);margin:2px 0;background:radial-gradient(120% 100% at 50% 40%,rgba(0,31,63,.035),transparent 70%)}
+.oillo img{width:100%;height:100%;object-fit:cover;display:block}
+.oillo .otag{position:absolute;left:13px;bottom:12px;z-index:2;font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-2);display:flex;align-items:center;gap:6px}
+.oillo .otag::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--fluo)}
+.oillo .oai{position:absolute;right:13px;bottom:12px;z-index:2;font-family:var(--mono);font-size:10px;color:var(--ink);display:flex;align-items:center;gap:6px;opacity:.85;background:rgba(246,247,237,.85);padding:4px 8px;border-radius:999px}
+.oillo .oai .pulse{width:7px;height:7px;border-radius:50%;background:var(--fluo);animation:opulse 1.6s ease-in-out infinite}
+.oillo .oai .okdot{width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0}
+.phone.dark .oillo{color:#F6F7ED;background:radial-gradient(120% 100% at 50% 40%,rgba(246,247,237,.05),transparent 70%)}
+@keyframes opulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+.oscan{position:absolute;left:0;right:0;top:0;height:42%;pointer-events:none;opacity:0;z-index:1;background:linear-gradient(180deg,transparent,rgba(219,230,76,.28) 62%,rgba(219,230,76,.04))}
+.oscan::after{content:"";position:absolute;left:8px;right:8px;bottom:0;height:2px;border-radius:2px;background:var(--fluo)}
+.oscan.run{animation:oscanmove 1.5s cubic-bezier(.4,0,.2,1)}
+@keyframes oscanmove{0%{opacity:0;transform:translateY(-55%)}12%{opacity:1}80%{opacity:1}100%{opacity:0;transform:translateY(285%)}}
+
+/* attributi demo */
+.attr{display:flex;flex-direction:column;gap:8px;border:1px solid var(--hairline);border-radius:var(--r-card);background:var(--surface);padding:12px}
+.ar{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.ar .k{font-family:var(--mono);font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2)}
+.ar .v{font-size:14px;font-weight:600;display:flex;align-items:center;gap:7px}
+.ar .v.mono{font-family:var(--mono)}
+.ar .v .tag{font-family:var(--mono);font-size:8.5px;font-weight:700;letter-spacing:.06em;color:var(--on-fluo);background:var(--fluo);padding:2px 5px;border-radius:5px}
+.ar.check .v::before{content:"";width:15px;height:15px;border-radius:50%;background:rgba(0,128,76,.14);flex-shrink:0;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2300804C' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:center}
+.attr.anim .ar{opacity:0;transform:translateY(7px)}
+.attr.anim .ar.in{opacity:1;transform:none;transition:opacity .34s ease-out,transform .34s ease-out}
+
+.osel-grid{display:flex;flex-direction:column;gap:9px}
+.osel{display:flex;align-items:center;gap:11px;padding:12px 13px;border:1.5px solid var(--hairline);border-radius:12px;background:var(--surface);cursor:pointer;position:relative;transition:border-color .16s,box-shadow .16s,transform .12s}
+.osel:hover{transform:translateY(-1px)}
+.osel .oconn-logo{width:32px;height:32px;border-radius:8px}
+.osel-txt{flex:1;min-width:0}
+.osel-name{font-size:13.5px;font-weight:600;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.osel-sub{font-size:11px;color:var(--ink-2);margin-top:1px}
+.osel .ck{flex-shrink:0;width:19px;height:19px;border-radius:50%;border:1.5px solid var(--hairline);transition:.16s}
+.osel.sel{border-color:var(--fluo);box-shadow:0 0 0 3px rgba(219,230,76,.28)}
+.osel.sel .ck{background:var(--fluo);border-color:var(--fluo);position:relative}
+.osel.sel .ck::after{content:"";position:absolute;inset:0;margin:auto;width:4px;height:7px;border:solid var(--on-fluo);border-width:0 2px 2px 0;transform:rotate(45deg) translate(-1px,-2px)}
+.ohelp{font-size:11.5px;color:var(--ink-2);line-height:1.5;display:flex;gap:8px;align-items:flex-start;background:rgba(0,31,63,.035);border-radius:10px;padding:11px 12px}
+.ohelp .i{flex-shrink:0;width:15px;height:15px;border-radius:50%;border:1.3px solid var(--ink-3);color:var(--ink-2);font-size:10px;display:flex;align-items:center;justify-content:center;margin-top:1px}
+
+.oconn-logo{width:38px;height:38px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--surface);box-shadow:inset 0 0 0 1px var(--hairline)}
+.oconn-logo img{width:100%;height:100%;object-fit:cover;display:block}
+.oconn-logo.wordmark img{object-fit:contain;padding:5px}
+
+.ovideo{aspect-ratio:16/11;border-radius:14px;background:linear-gradient(135deg,#01285a,#001a35);display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.ovideo::before{content:"";position:absolute;inset:0;background:radial-gradient(60% 60% at 50% 45%,rgba(219,230,76,.14),transparent 70%)}
+.ovideo .play{width:52px;height:52px;border-radius:50%;background:var(--fluo);color:var(--on-fluo);display:flex;align-items:center;justify-content:center;font-size:16px;padding-left:3px;position:relative;box-shadow:0 8px 24px rgba(0,31,63,.4)}
+.ovideo .dur{position:absolute;right:12px;bottom:11px;font-family:var(--mono);font-size:10px;color:rgba(246,247,237,.75)}
+.otrust{border:1px solid rgba(246,247,237,.16);border-radius:13px;padding:15px;display:flex;flex-direction:column;gap:9px}
+.otrust .th{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:600}
+.otrust .th .lock{width:26px;height:26px;border-radius:8px;background:rgba(219,230,76,.16);color:var(--fluo);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.otrust p{font-size:12px;color:rgba(246,247,237,.66);line-height:1.55}
+
+.oconn-list{display:flex;flex-direction:column;gap:9px;position:relative}
+.oconn{position:relative;display:flex;align-items:center;gap:11px;padding:11px 12px 11px 14px;border:1.5px solid var(--hairline);border-radius:13px;background:var(--surface);cursor:pointer;transition:border-color .18s,box-shadow .18s,transform .12s}
+.oconn:hover{transform:translateY(-1px)}
+.oconn::before{content:"";position:absolute;left:-1.5px;top:50%;transform:translateY(-50%);width:4px;height:20px;border-radius:0 4px 4px 0;background:var(--hairline);transition:.18s}
+.oconn-txt{flex:1;min-width:0}
+.oconn-name{font-size:14px;font-weight:600;letter-spacing:-.01em}
+.oconn-sub{font-size:11px;font-weight:400;color:var(--ink-2);margin-top:1px}
+.oconn-state{flex-shrink:0;display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;padding:6px 11px 6px 9px;border-radius:var(--r-pill);border:1.5px solid var(--hairline);color:var(--ink-2);transition:.18s}
+.oconn-state .plug{width:13px;height:13px;flex-shrink:0}
+.oconn-state .plug .ln{fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.oconn.on{border-color:var(--fluo);box-shadow:0 0 0 3px rgba(219,230,76,.28)}
+.oconn.on::before{background:var(--fluo);height:26px}
+.oconn.on .oconn-state{background:var(--fluo);border-color:var(--fluo);color:var(--on-fluo)}
+.oconn.primary{padding-top:13px;padding-bottom:13px}
+.oconn.primary .oconn-logo{width:42px;height:42px}
+.phone.dark .oconn{background:#0a2848;border-color:rgba(246,247,237,.14)}
+.phone.dark .oconn-name{color:#F6F7ED}
+.phone.dark .oconn-sub{color:rgba(246,247,237,.6)}
+.phone.dark .oconn-state{color:rgba(246,247,237,.7);border-color:rgba(246,247,237,.22)}
+.phone.dark .oconn::before{background:rgba(246,247,237,.18)}
+.phone.dark .oconn.on{border-color:var(--fluo)}
+.phone.dark .oconn.on::before{background:var(--fluo)}
+.phone.dark .oconn.on .oconn-state{background:var(--fluo);border-color:var(--fluo);color:var(--on-fluo)}
+
+.ohub-sec{margin-top:18px}
+.ohub-h{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
+.ohub-h .n{color:var(--green);font-weight:600;display:inline-flex;align-items:center;gap:5px}
+.ohub-card{display:flex;align-items:center;gap:10px;border:1px solid var(--hairline);border-radius:var(--r-card);background:var(--surface);box-shadow:var(--shadow);padding:10px}
+.ohub-thumb{width:46px;height:46px;border-radius:9px;overflow:hidden;flex-shrink:0;background:var(--bg)}
+.ohub-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.ohub-info{flex:1;min-width:0}
+.ohub-brand{font-size:13px;font-weight:600;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ohub-meta{display:flex;align-items:center;gap:8px;margin-top:4px}
+.ohub-meta .price{font-family:var(--mono);font-size:12.5px;font-weight:500;white-space:nowrap}
+
+@media (prefers-reduced-motion:reduce){
+  .obar i.cur::after,.oillo .oai .pulse,.oscan{animation:none}
+  .oscan{display:none}
+  .attr.anim .ar{opacity:1;transform:none}
+  .step.active{animation:none}
+}
+</style>
+</head>
+<body>
+
+<button id="obClose" class="on-dark" aria-label="Salta onboarding">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+</button>
+
+<!-- ═══ WELCOME ═══ -->
+<section class="step phone dark active" data-ostep="welcome" data-dark>
+  <div class="pscreen">
+    <div class="owm">MAAT<span class="dot"></span></div>
+    <div class="oillo"><img src="assets/onboarding/illo-1-shoot.png" alt="Una persona fotografa un capo vintage appeso a una gruccia"><span class="otag">Scatti tu</span></div>
+    <div class="owelcome">Fotografi il capo.<br><em>MAAT fa il resto.</em></div>
+    <div class="obsub">Titolo, descrizione, misure e prezzo, pubblicati su tutte le tue piattaforme. Tu scatti, il lavoro è fatto.</div>
+    <div class="ofoot">
+      <button class="btn btn-primary obtn" data-next>Prova gratis, senza carta</button>
+      <a data-finish>Ho già un account</a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ STEP 1 · Dove vendi ═══ -->
+<section class="step phone" data-ostep="s1">
+  <div class="pscreen">
+    <div class="obar"><i class="cur"></i><i></i><i></i><i></i></div>
+    <div class="oblbl">Step 1 di 4</div>
+    <div class="obh1">Dove vendi<br>adesso?</div>
+    <div class="obsub">Seleziona le piattaforme che usi. Le colleghi dopo.</div>
+    <div class="osel-grid">
+      <div class="osel sel"><span class="oconn-logo"><img src="assets/onboarding/loghi/vinted.png" alt="Vinted"></span><div class="osel-txt"><div class="osel-name">Vinted</div><div class="osel-sub">Il tuo canale principale</div></div><span class="ck"></span></div>
+      <div class="osel sel"><span class="oconn-logo"><img src="assets/onboarding/loghi/depop.png" alt="Depop"></span><div class="osel-txt"><div class="osel-name">Depop</div></div><span class="ck"></span></div>
+      <div class="osel"><span class="oconn-logo"><img src="assets/onboarding/loghi/vestiaire.png" alt="Vestiaire"></span><div class="osel-txt"><div class="osel-name">Vestiaire</div></div><span class="ck"></span></div>
+      <div class="osel"><span class="oconn-logo"><img src="assets/onboarding/loghi/catawiki.png" alt="Catawiki"></span><div class="osel-txt"><div class="osel-name">Catawiki</div></div><span class="ck"></span></div>
+      <div class="osel"><span class="oconn-logo wordmark"><img src="assets/onboarding/loghi/ebay.png" alt="eBay"></span><div class="osel-txt"><div class="osel-name">eBay</div></div><span class="ck"></span></div>
+    </div>
+    <div class="ohelp"><span class="i">i</span>Non ti chiediamo accessi adesso, solo per personalizzare il tuo setup.</div>
+    <div class="ofoot"><button class="btn btn-primary obtn" data-next>Continua</button><a data-next>Salta per ora</a></div>
+  </div>
+</section>
+
+<!-- ═══ STEP 2 · Estensione ═══ -->
+<section class="step phone dark" data-ostep="s2" data-dark>
+  <div class="pscreen">
+    <div class="obar"><i class="done"></i><i class="cur"></i><i></i><i></i></div>
+    <div class="oblbl">Step 2 di 4 · 2 minuti</div>
+    <div class="obh1">Collega il<br>browser</div>
+    <div class="ovideo"><span class="play">&#9654;</span><span class="dur">0:45</span></div>
+    <div class="otrust">
+      <div class="th"><span class="lock"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>Le tue credenziali restano tue</div>
+      <p>L'estensione pubblica nella tua sessione, come se fossi tu. MAAT non vede né conserva la tua password, e non può entrare nel tuo account senza che tu sia loggato.</p>
+    </div>
+    <div class="ofoot"><button class="btn btn-primary obtn" data-next>Aggiungi MAAT a Chrome</button><a data-next>Uso Firefox o Edge</a></div>
+  </div>
+</section>
+
+<!-- ═══ STEP 3 · Demo (aha) ═══ -->
+<section class="step phone" data-ostep="s3" id="obDemo">
+  <div class="pscreen">
+    <div class="obar"><i class="done"></i><i class="done"></i><i class="cur"></i><i></i></div>
+    <div class="oblbl">Step 3 di 4</div>
+    <div class="obh1">Una foto,<br>la scheda pronta</div>
+    <div class="obsub">Carica lo scatto frontale. MAAT riconosce il capo e compila i campi.</div>
+    <div class="oillo"><img src="assets/onboarding/illo-2-scan.png" alt="Il capo caricato, analizzato dall'AI"><div class="oscan"></div><div class="oai"><span class="pulse"></span>Elaborazione AI</div></div>
+    <div class="attr">
+      <div class="ar check"><span class="k">Brand</span><span class="v">Carhartt WIP<span class="tag">AI</span></span></div>
+      <div class="ar check"><span class="k">Categoria</span><span class="v">Bomber<span class="tag">AI</span></span></div>
+      <div class="ar check"><span class="k">Taglia</span><span class="v">M<span class="tag">AI</span></span></div>
+      <div class="ar check"><span class="k">Colore</span><span class="v">Verde militare<span class="tag">AI</span></span></div>
+      <div class="ar"><span class="k">Prezzo</span><span class="v mono">€ 68</span></div>
+    </div>
+    <div class="ohelp"><span class="i">i</span>Esempio da una foto. Col tuo capo, più scatti e le misure reali rendono la scheda ancora più precisa.</div>
+    <div class="ofoot"><button class="btn btn-primary obtn" data-next>Continua</button></div>
+  </div>
+</section>
+
+<!-- ═══ STEP 4 · Connetti ═══ -->
+<section class="step phone dark" data-ostep="s4" data-dark>
+  <div class="pscreen">
+    <div class="obar"><i class="done"></i><i class="done"></i><i class="done"></i><i class="cur"></i></div>
+    <div class="oblbl">Step 4 di 4</div>
+    <div class="obh1">Collega i<br>tuoi canali</div>
+    <div class="obsub">Aggancia i canali che hai scelto. MAAT pubblicherà lì per te, come se fossi tu.</div>
+    <div class="oconn-list">
+      <div class="oconn primary on"><span class="oconn-logo"><img src="assets/onboarding/loghi/vinted.png" alt="Vinted"></span><div class="oconn-txt"><div class="oconn-name">Vinted</div><div class="oconn-sub">Sessione attiva</div></div><span class="oconn-state"><svg class="plug" viewBox="0 0 24 24"><g class="ln"><path d="M9 2v5M15 2v5"/><path d="M6 7h12v3a6 6 0 0 1-12 0z"/><path d="M12 16v6"/></g></svg>Collegato</span></div>
+      <div class="oconn"><span class="oconn-logo"><img src="assets/onboarding/loghi/depop.png" alt="Depop"></span><div class="oconn-txt"><div class="oconn-name">Depop</div></div><span class="oconn-state"><svg class="plug" viewBox="0 0 24 24"><g class="ln"><path d="M9 2v5M15 2v5"/><path d="M6 7h12v3a6 6 0 0 1-12 0z"/><path d="M12 16v6"/></g></svg>Collega</span></div>
+      <div class="oconn"><span class="oconn-logo"><img src="assets/onboarding/loghi/vestiaire.png" alt="Vestiaire"></span><div class="oconn-txt"><div class="oconn-name">Vestiaire</div></div><span class="oconn-state"><svg class="plug" viewBox="0 0 24 24"><g class="ln"><path d="M9 2v5M15 2v5"/><path d="M6 7h12v3a6 6 0 0 1-12 0z"/><path d="M12 16v6"/></g></svg>Collega</span></div>
+    </div>
+    <div class="ofoot"><button class="btn btn-primary obtn" data-next>Vai alla dashboard</button><a data-next>Lo faccio dopo</a></div>
+  </div>
+</section>
+
+<!-- ═══ FINALE ═══ -->
+<section class="step phone" data-ostep="done">
+  <div class="pscreen">
+    <div class="oblbl">Onboarding completato</div>
+    <div class="obh1">Sei pronto<br>a pubblicare.</div>
+    <div class="obsub">Vinted connesso, il primo capo è in bozza. Manca un tap.</div>
+    <div class="ohub-sec">
+      <div class="ohub-h"><span>La tua bozza</span><span class="n">Vinted&nbsp;<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span></div>
+      <div class="ohub-card">
+        <div class="ohub-thumb"><img src="assets/onboarding/illo-2-scan.png" alt="Bomber Carhartt WIP"></div>
+        <div class="ohub-info"><div class="ohub-brand">Carhartt WIP · Bomber</div><div class="ohub-meta"><span class="price">€ 68</span><span class="badge badge-bozza">Bozza</span></div></div>
+      </div>
+    </div>
+    <div class="ofoot" style="margin-top:auto"><button class="btn btn-primary obtn" data-finish data-publish>Pubblica su Vinted</button><a data-finish>Entra in MAAT</a></div>
+  </div>
+</section>
+
+<script>
+(function(){
+  const steps = [...document.querySelectorAll('.step')];
+  const closeBtn = document.getElementById('obClose');
+  let idx = 0;
+
+  function post(action, data){ try{ parent.postMessage(Object.assign({source:'maat-onboarding', action}, data||{}), '*'); }catch(e){} }
+
+  function show(i){
+    idx = Math.max(0, Math.min(steps.length-1, i));
+    steps.forEach((s,k)=> s.classList.toggle('active', k===idx));
+    const dark = steps[idx].hasAttribute('data-dark');
+    closeBtn.classList.toggle('on-dark', dark);
+    window.scrollTo(0,0);
+    if(steps[idx].id === 'obDemo') runDemo();
+    post('step', {step: steps[idx].dataset.ostep, index: idx});
+  }
+  function next(){ if(idx < steps.length-1) show(idx+1); else post('finish'); }
+
+  document.querySelectorAll('[data-next]').forEach(el => el.addEventListener('click', e => { e.preventDefault(); next(); }));
+  document.querySelectorAll('[data-finish]').forEach(el => el.addEventListener('click', e => {
+    e.preventDefault(); post(el.hasAttribute('data-publish') ? 'publish' : 'finish');
+  }));
+  closeBtn.addEventListener('click', ()=> post('finish'));
+
+  // platform selection toggle (step 1)
+  document.querySelectorAll('.osel').forEach(o => o.addEventListener('click', ()=> o.classList.toggle('sel')));
+
+  // Step 3 demo — scan + campi in cascata (loop finché la schermata è attiva)
+  const REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let demoTimer=null, demoIv=null;
+  function runDemo(){
+    const demo = document.getElementById('obDemo'); if(!demo || REDUCE) return;
+    const attr = demo.querySelector('.attr');
+    const rows = [...demo.querySelectorAll('.attr .ar')];
+    const scan = demo.querySelector('.oscan');
+    const oai  = demo.querySelector('.oai');
+    attr.classList.add('anim');
+    clearTimeout(demoTimer); clearInterval(demoIv);
+    const cycle = ()=>{
+      rows.forEach(r=> r.classList.remove('in'));
+      oai.innerHTML = '<span class="pulse"></span>Elaborazione AI';
+      scan.classList.remove('run'); void scan.offsetWidth; scan.classList.add('run');
+      rows.forEach((r,i)=> setTimeout(()=> r.classList.add('in'), 850 + i*430));
+      demoTimer = setTimeout(()=>{ oai.innerHTML = '<span class="okdot"></span>Scheda pronta'; }, 850 + rows.length*430 + 250);
+    };
+    cycle();
+    demoIv = setInterval(()=>{ if(document.getElementById('obDemo').classList.contains('active')) cycle(); else clearInterval(demoIv); }, 5400);
+  }
+
+  show(0);
+})();
+</script>
+</body>
+</html>

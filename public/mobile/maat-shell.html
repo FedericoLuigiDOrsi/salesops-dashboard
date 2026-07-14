@@ -1,0 +1,999 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MAAT — App Shell · Sistema di navigazione</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* ============================================================
+   MAAT — TOKEN CONTRACT (da MAAT Design System · palette MP076)
+   ============================================================ */
+:root{
+  /* neutrals */
+  --bg:#F6F7ED; --surface:#FFFFFF; --surface-dark:#001F3F;
+  --ink:#001F3F; --ink-2:#5B6670; --ink-3:#9AA0A6;
+  --text-on-dark:#F6F7ED; --hairline:rgba(0,31,63,.10);
+  /* accent */
+  --fluo:#DBE64C; --fluo-press:#C8D43B; --on-fluo:#001F3F;
+  --focus-ring:0 0 0 3px rgba(219,230,76,.45);
+  /* status */
+  --green:#00804C; --blue:#1E488F; --red:#E5484D;
+  --status-locale:#5B6670; --status-bozza:#DBE64C; --status-confermato:#00804C;
+  --tint-bozza:rgba(219,230,76,.24); --tint-conf:rgba(0,128,76,.12);
+  --tint-locale:rgba(91,102,112,.14); --tint-rej:rgba(229,72,77,.12);
+  --tint-ink-soft:rgba(0,31,63,.05); --tint-ink-soft-h:rgba(0,31,63,.10);
+  --surface-sunken:#ECEDE3; --track-neutral:#E0E1D6; --slot-empty-bg:#FBFBF5; --slot-empty-border:#C7CDB8;
+  /* on-dark helpers */
+  --on-dark-2:rgba(246,247,237,.62); --on-dark-hover:rgba(246,247,237,.09); --on-dark-line:rgba(246,247,237,.12);
+  /* shape */
+  --r-sm:8px; --r-slot:10px; --r-card:14px; --r-pill:999px;
+  --r-btn-sm:10px; --r-btn:12px; --r-btn-lg:14px;
+  --e1:0 1px 2px rgba(0,31,63,.04), 0 6px 20px rgba(0,31,63,.06);
+  --e2:0 2px 6px rgba(0,31,63,.08), 0 16px 40px rgba(0,31,63,.10);
+  /* type */
+  --font:'Geist', system-ui, -apple-system, sans-serif;
+  --mono:'JetBrains Mono', ui-monospace, monospace;
+  /* space */
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px; --s7:48px; --s8:64px;
+  /* motion */
+  --dur-fast:120ms; --dur-base:180ms; --dur-slow:400ms; --ease:cubic-bezier(.22,1,.36,1);
+  /* layout */
+  --rail:76px; --sidebar-w:248px; --tabbar-h:66px;
+  /* z-scale */
+  --z-nav:20; --z-appbar:30; --z-sheet:60; --z-wizard:70; --z-toast:90;
+}
+
+*{box-sizing:border-box; margin:0; padding:0}
+html,body{height:100%}
+body{
+  font-family:var(--font); background:var(--bg); color:var(--ink);
+  font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+button{font:inherit; color:inherit; cursor:pointer; background:none; border:none}
+a{color:inherit; text-decoration:none}
+.mono{font-family:var(--mono); font-feature-settings:"tnum"; letter-spacing:-.01em}
+.overline{font-family:var(--mono); font-size:12px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-3)}
+:focus-visible{outline:none; box-shadow:var(--focus-ring); border-radius:var(--r-sm)}
+::selection{background:var(--tint-bozza)}
+
+svg.ico{width:22px; height:22px; stroke:currentColor; stroke-width:1.5; fill:none; stroke-linecap:round; stroke-linejoin:round; flex:none}
+svg.ico.sm{width:18px; height:18px}
+svg.ico.lg{width:26px; height:26px}
+.ico-fill circle{fill:currentColor; stroke:none}
+
+/* ============================================================
+   APP SHELL LAYOUT
+   ============================================================ */
+.app{
+  display:grid; grid-template-columns:var(--sidebar-w) 1fr;
+  height:100dvh; overflow:hidden;
+  transition:grid-template-columns var(--dur-base) var(--ease);
+}
+.app[data-collapsed="true"]{grid-template-columns:var(--rail) 1fr}
+
+/* ---------- SIDEBAR (desktop) ---------- */
+.sidebar{
+  background:var(--surface-dark); color:var(--text-on-dark);
+  display:flex; flex-direction:column; gap:var(--s2);
+  padding:var(--s5) var(--s3) var(--s4);
+  overflow:visible; position:relative;
+}
+.brand{display:flex; align-items:center; gap:var(--s3); padding:0 var(--s2) var(--s2)}
+.brand-mark{
+  width:36px; height:36px; border-radius:10px; background:var(--fluo); color:var(--on-fluo);
+  display:grid; place-items:center; font-weight:800; font-size:18px; letter-spacing:-.02em; flex:none;
+}
+.brand-name{font-weight:700; font-size:19px; letter-spacing:.02em}
+.rail-toggle{
+  margin-left:auto; width:30px; height:30px; border-radius:8px; color:var(--on-dark-2);
+  display:grid; place-items:center; transition:background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+.rail-toggle:hover{background:var(--on-dark-hover); color:var(--text-on-dark)}
+.app[data-collapsed="true"] .rail-toggle .ico{transform:rotate(180deg)}
+
+.hero-add{
+  display:flex; align-items:center; gap:var(--s3); justify-content:flex-start;
+  background:var(--fluo); color:var(--on-fluo); font-weight:600; font-size:15px;
+  padding:12px var(--s4); border-radius:var(--r-btn); margin:var(--s2) var(--s1) var(--s4);
+  transition:background var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
+  white-space:nowrap;
+}
+.hero-add:hover{background:var(--fluo-press)}
+.hero-add:active{transform:translateY(1px)}
+.hero-add .ico{stroke-width:2}
+
+.nav{display:flex; flex-direction:column; gap:2px}
+.nav-item{
+  display:flex; align-items:center; gap:var(--s3);
+  padding:11px var(--s3); border-radius:var(--r-btn); color:var(--on-dark-2);
+  font-weight:500; white-space:nowrap; position:relative;
+  transition:background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+.nav-item:hover{background:var(--on-dark-hover); color:var(--text-on-dark)}
+.nav-item[aria-current="page"]{background:var(--fluo); color:var(--on-fluo); font-weight:600}
+.nav-item .badge-count{
+  margin-left:auto; font-family:var(--mono); font-size:11px; font-weight:600;
+  background:var(--on-dark-hover); color:var(--text-on-dark); padding:1px 7px; border-radius:var(--r-pill);
+}
+.nav-item[aria-current="page"] .badge-count{background:rgba(0,31,63,.14); color:var(--on-fluo)}
+
+.side-foot{margin-top:auto; padding-top:var(--s4); border-top:1px solid var(--on-dark-line)}
+.role-chip{
+  display:flex; align-items:center; gap:var(--s3); width:100%; padding:var(--s2) var(--s2);
+  border-radius:var(--r-btn); transition:background var(--dur-fast) var(--ease);
+}
+.role-chip:hover{background:var(--on-dark-hover)}
+.avatar{
+  width:34px; height:34px; border-radius:var(--r-pill); flex:none; display:grid; place-items:center;
+  background:#3A4A5E; color:var(--text-on-dark); font-weight:600; font-size:13px; font-family:var(--mono);
+}
+.avatar.ring{box-shadow:0 0 0 2px var(--surface-dark), 0 0 0 4px var(--fluo)}
+.role-id{display:flex; flex-direction:column; align-items:flex-start; line-height:1.2; min-width:0}
+.role-id b{font-weight:600; font-size:14px}
+.role-id .role-tag{font-family:var(--mono); font-size:11px; color:var(--on-dark-2); text-transform:uppercase; letter-spacing:.06em}
+
+/* collapsed rail: hide labels */
+.app[data-collapsed="true"] .brand-name,
+.app[data-collapsed="true"] .hero-add span,
+.app[data-collapsed="true"] .nav-item span,
+.app[data-collapsed="true"] .nav-item .badge-count,
+.app[data-collapsed="true"] .role-id{display:none}
+.app[data-collapsed="true"] .hero-add{justify-content:center; padding:12px}
+.app[data-collapsed="true"] .nav-item{justify-content:center; padding:11px}
+.app[data-collapsed="true"] .brand{justify-content:center; padding-inline:0}
+.app[data-collapsed="true"] .rail-toggle{position:absolute; top:var(--s4); right:-14px; background:var(--surface-dark); box-shadow:0 0 0 1px var(--on-dark-line)}
+.app[data-collapsed="true"] .role-chip{justify-content:center}
+
+/* ---------- CONTENT HOST ---------- */
+.host{position:relative; overflow:hidden; display:flex; flex-direction:column; min-width:0}
+
+/* mobile app bar (hidden on desktop) */
+.appbar{display:none}
+
+.scroll{overflow-y:auto; overflow-x:hidden; flex:1; scroll-behavior:smooth}
+.panel{display:none; padding:var(--s6) var(--s7) var(--s8)}
+.panel.active{display:block; animation:panelIn var(--dur-base) var(--ease)}
+@keyframes panelIn{from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:none}}
+
+.page-head{display:flex; align-items:flex-end; justify-content:space-between; gap:var(--s4); margin-bottom:var(--s6)}
+.page-head .kicker{margin-bottom:6px}
+.page-title{font-size:28px; font-weight:700; letter-spacing:-.02em; line-height:1.05}
+.page-sub{color:var(--ink-2); margin-top:6px; max-width:60ch}
+
+/* ---------- TAB BAR (mobile) ---------- */
+.tabbar{display:none}
+
+/* ============================================================
+   REUSABLE COMPONENTS (from DS vocabulary)
+   ============================================================ */
+.btn{display:inline-flex; align-items:center; gap:var(--s2); font-weight:600; font-size:14px;
+  padding:10px var(--s4); border-radius:var(--r-btn); transition:background var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease)}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--fluo); color:var(--on-fluo)}
+.btn-primary:hover{background:var(--fluo-press)}
+.btn-ghost{box-shadow:inset 0 0 0 1px var(--hairline); color:var(--ink)}
+.btn-ghost:hover{background:var(--ink); color:var(--text-on-dark)}
+.btn-sm{padding:7px var(--s3); border-radius:var(--r-btn-sm); font-size:13px}
+
+.iconbtn{width:38px; height:38px; border-radius:var(--r-btn); display:grid; place-items:center; color:var(--ink-2);
+  background:var(--tint-ink-soft); transition:background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease); position:relative}
+.iconbtn:hover{background:var(--tint-ink-soft-h); color:var(--ink)}
+.iconbtn.nude{background:none}
+.iconbtn .dot{position:absolute; top:8px; right:8px; width:8px; height:8px; border-radius:var(--r-pill); background:var(--fluo); box-shadow:0 0 0 2px var(--surface)}
+
+/* status badge */
+.badge{display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600;
+  padding:3px 10px; border-radius:var(--r-pill); line-height:1.4; white-space:nowrap}
+.badge .bd{width:7px; height:7px; border-radius:var(--r-pill); flex:none}
+.badge-bozza{background:var(--tint-locale); color:var(--ink-2)} .badge-bozza .bd{background:var(--ink-3)}
+.badge-conf{background:var(--tint-conf); color:var(--green)} .badge-conf .bd{background:var(--green)}
+.badge-locale{background:var(--tint-locale); color:var(--ink-2)} .badge-locale .bd{background:var(--status-locale)}
+.badge-pub{background:rgba(30,72,143,.12); color:var(--blue)} .badge-pub .bd{background:var(--blue)}
+.badge-rej{background:var(--tint-rej); color:var(--red)} .badge-rej .bd{background:var(--red)}
+
+/* segmented filter (exclusive → active near-black) */
+.seg{display:inline-flex; background:var(--surface-sunken); padding:3px; border-radius:var(--r-pill); gap:2px; flex-wrap:wrap}
+.seg button{padding:6px 14px; border-radius:var(--r-pill); font-size:13px; font-weight:500; color:var(--ink-2);
+  transition:background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease)}
+.seg button[aria-pressed="true"]{background:var(--ink); color:var(--text-on-dark)}
+.seg button .seg-n{font-family:var(--mono); font-size:11px; font-weight:600; margin-left:6px; color:var(--ink-3); font-feature-settings:"tnum"}
+.seg button[aria-pressed="true"] .seg-n{color:var(--text-on-dark); opacity:.72}
+
+/* chip (additive tag → active fluo) */
+.chip{display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:var(--r-pill);
+  font-size:13px; font-weight:500; color:var(--ink); box-shadow:inset 0 0 0 1px var(--hairline);
+  transition:background var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease)}
+.chip[aria-pressed="true"]{background:var(--fluo); box-shadow:none; color:var(--on-fluo)}
+.chip .ico{width:15px;height:15px}
+
+/* search */
+.search{display:flex; align-items:center; gap:var(--s2); background:var(--surface); box-shadow:inset 0 0 0 1px var(--hairline);
+  padding:10px var(--s4); border-radius:var(--r-pill); color:var(--ink-3); flex:1; min-width:0; max-width:440px;
+  transition:box-shadow var(--dur-fast) var(--ease)}
+.search:focus-within{box-shadow:inset 0 0 0 1px var(--ink), var(--focus-ring)}
+.search input{border:none; outline:none; background:none; flex:1; min-width:0; font:inherit; color:var(--ink)}
+.search input::placeholder{color:var(--ink-3)}
+
+/* stat tile */
+.stat-row{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:var(--s3); margin-bottom:var(--s6)}
+.stat{background:var(--surface); border:1px solid var(--hairline); border-radius:var(--r-card); padding:var(--s4) var(--s5); box-shadow:var(--e1)}
+.stat .stat-num{font-family:var(--mono); font-size:30px; font-weight:600; letter-spacing:-.02em; line-height:1; font-feature-settings:"tnum"}
+.stat .stat-lab{display:flex; align-items:center; gap:7px; margin-top:10px; color:var(--ink-2); font-size:13px}
+.stat .stat-lab .bd{width:8px; height:8px; border-radius:var(--r-pill); flex:none}
+
+/* catalog card grid */
+.catalog-card-tools{display:flex; align-items:center; gap:var(--s3); flex-wrap:wrap; margin-bottom:var(--s5)}
+.catalog-card-tools .catalog-filters{display:flex; align-items:center; gap:var(--s3); flex-wrap:wrap}
+.catalog-card-tools .catalog-select{margin-left:auto}
+.catalog-card-tools .selection-count{font-family:var(--mono); font-size:11px; font-weight:600}
+.catalog-card-tools .catalog-select[aria-pressed="true"]{background:var(--ink); color:var(--text-on-dark); box-shadow:none}
+.cgrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(218px,1fr)); gap:var(--s4); align-items:stretch}
+.ccard{position:relative; min-width:0; display:flex; flex-direction:column; background:var(--surface); border:1.5px solid var(--hairline);
+  border-radius:var(--r-card); overflow:hidden; box-shadow:var(--e1); transition:border-color var(--dur-fast) var(--ease); cursor:pointer}
+.ccard[hidden]{display:none}
+.ccard:hover{border-color:rgba(0,31,63,.24)}
+.ccard .card-open{position:absolute; inset:0 0 48px; z-index:2; width:100%; border-radius:var(--r-card) var(--r-card) 0 0; cursor:pointer}
+.ccard .card-open:focus-visible{outline:none; box-shadow:inset var(--focus-ring)}
+.ccard .thumb{aspect-ratio:1/1; width:100%; background:var(--photo,var(--surface-sunken)); display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden}
+.ccard .garment{width:44%; height:44%; opacity:.5}
+.ccard .garment path{fill:none; stroke:var(--ink-3); stroke-width:1.3; stroke-linecap:round; stroke-linejoin:round; vector-effect:non-scaling-stroke}
+.ccard .thumb .badge{position:absolute; right:9px; top:9px; box-shadow:0 1px 2px rgba(0,31,63,.08)}
+.pipeline-glyph{position:absolute; top:9px; left:9px; display:grid; grid-template-columns:repeat(2,8px); grid-template-rows:repeat(2,8px); gap:3px;
+  padding:5px; background:rgba(255,255,255,.84); border-radius:7px}
+.pipeline-glyph i{width:8px; height:8px; border-radius:2.5px}
+.pipeline-glyph .done{background:var(--ink)}
+.pipeline-glyph .todo{background:transparent; box-shadow:inset 0 0 0 1px var(--hairline)}
+.pipeline-glyph .next{background:transparent; box-shadow:inset 0 0 0 1.5px var(--fluo)}
+.ccheck{position:absolute; top:9px; left:9px; z-index:3; width:28px; height:28px; border-radius:7px; display:grid; place-items:center;
+  background:rgba(255,255,255,.94); border:1.5px solid var(--hairline); visibility:hidden}
+.ccheck .ico{width:16px; height:16px; opacity:0; stroke-width:2.2}
+.catalog-selecting .pipeline-glyph{visibility:hidden}
+.catalog-selecting .ccheck{visibility:visible}
+.catalog-selecting .ccard.selected{border-color:var(--fluo)}
+.catalog-selecting .ccard.selected .ccheck{background:var(--fluo); border-color:var(--fluo)}
+.catalog-selecting .ccard.selected .ccheck .ico{opacity:1}
+.ccard .cbody{padding:var(--s3) var(--s3) 10px}
+.ccard .cbrand{font-weight:600; font-size:15px; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.ccard .cmeta{color:var(--ink-2); font-size:13px; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.ccard .cfoot{display:flex; align-items:center; justify-content:space-between; gap:var(--s2); min-height:28px; margin-top:var(--s3); padding-top:var(--s3); border-top:1px solid var(--hairline)}
+.ccard .csku{font-family:var(--mono); font-size:11px; color:var(--ink-3); white-space:nowrap}
+.ccard .cprice{font-family:var(--mono); font-size:15px; font-weight:600; white-space:nowrap}
+.ccard .cchannels{display:flex; align-items:center; gap:6px; margin-top:6px}
+.ccard .cchan{width:16px; height:16px; border-radius:50%; background:var(--ink); color:var(--text-on-dark); font-size:9px; font-weight:600; display:flex; align-items:center; justify-content:center; flex:none}
+.ccard .cfresh{font-family:var(--mono); font-size:11px; color:var(--ink-3)}
+.ccard .caction{position:relative; z-index:4; min-height:48px; margin-top:auto; padding:0 var(--s3) var(--s3); visibility:visible}
+.ccard .caction button{width:100%; min-height:36px; padding:8px var(--s3); border:1px solid var(--hairline); border-radius:var(--r-btn-sm);
+  background:var(--bg); color:var(--ink); font-size:13px; font-weight:600; transition:background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease)}
+.ccard .caction button:hover{border-color:rgba(0,31,63,.28)}
+.ccard .caction button.primary{background:var(--fluo); border-color:var(--fluo); color:var(--on-fluo)}
+.ccard .caction button.primary:hover{background:var(--fluo-press); border-color:var(--fluo-press)}
+.ccard .caction button:focus-visible{outline:none; box-shadow:var(--focus-ring)}
+.catalog-selecting .ccard .caction{visibility:hidden; pointer-events:none}
+.badge-live{background:var(--fluo); color:var(--on-fluo)} .badge-live .bd{background:var(--ink)}
+.badge-sold{background:var(--ink); color:var(--text-on-dark)} .badge-sold .bd{background:var(--text-on-dark)}
+
+/* notification rows */
+.card{background:var(--surface); border:1px solid var(--hairline); border-radius:var(--r-card); box-shadow:var(--e1)}
+.section-h{display:flex; align-items:center; justify-content:space-between; margin:var(--s6) 0 var(--s3)}
+.section-h h3{font-size:16px; font-weight:600}
+.nrow{display:flex; align-items:center; gap:var(--s4); padding:var(--s4); border-bottom:1px solid var(--hairline)}
+.nrow:last-child{border-bottom:none}
+.nrow .nic{width:40px; height:40px; border-radius:var(--r-btn); background:var(--tint-ink-soft); display:grid; place-items:center; color:var(--ink-2); flex:none}
+.nrow .nbody{flex:1; min-width:0}
+.nrow .ntitle{font-weight:500; font-size:14px}
+.nrow .nmeta{color:var(--ink-2); font-size:13px; margin-top:1px}
+.nrow .nmeta .mono{color:var(--ink)}
+.nrow .ntime{font-family:var(--mono); font-size:11px; color:var(--ink-3); white-space:nowrap}
+.nrow.unread .nic{background:var(--tint-bozza); color:#5f6a12}
+
+/* inventory matrix */
+.tablewrap{overflow-x:auto; border:1px solid var(--hairline); border-radius:var(--r-card); background:var(--surface); box-shadow:var(--e1)}
+table.inv{width:100%; border-collapse:collapse; min-width:560px}
+table.inv th, table.inv td{text-align:left; padding:14px var(--s4); border-bottom:1px solid var(--hairline); font-size:14px}
+table.inv thead th{font-family:var(--mono); font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3)}
+table.inv tbody tr:last-child td{border-bottom:none}
+table.inv .item-c{display:flex; align-items:center; gap:var(--s3)}
+table.inv .mini{width:38px; height:38px; border-radius:var(--r-sm); background:var(--surface-sunken); display:grid; place-items:center; color:var(--slot-empty-border); flex:none}
+table.inv .mini .ico{width:20px;height:20px}
+.lchip{display:inline-flex; align-items:center; gap:5px; font-size:12px; font-family:var(--mono); padding:3px 8px; border-radius:var(--r-pill); font-weight:500}
+.lchip.active{background:var(--tint-conf); color:var(--green)}
+.lchip.delisted{background:var(--tint-locale); color:var(--ink-2)}
+.lchip.pending{background:var(--tint-bozza); color:#5f6a12}
+
+/* list rows (altro) */
+.list{background:var(--surface); border:1px solid var(--hairline); border-radius:var(--r-card); box-shadow:var(--e1); overflow:hidden}
+.lrow{display:flex; align-items:center; gap:var(--s4); padding:var(--s4) var(--s5); border-bottom:1px solid var(--hairline); width:100%; text-align:left;
+  transition:background var(--dur-fast) var(--ease)}
+.lrow:last-child{border-bottom:none}
+.lrow:hover{background:var(--surface-sunken)}
+.lrow .lic{width:40px; height:40px; border-radius:var(--r-btn); background:var(--tint-ink-soft); display:grid; place-items:center; color:var(--ink-2); flex:none}
+.lrow .lbody{flex:1; min-width:0}
+.lrow .ltitle{font-weight:600; font-size:15px; display:flex; align-items:center; gap:8px}
+.lrow .lsub{color:var(--ink-2); font-size:13px; margin-top:1px}
+.lrow .chev{color:var(--ink-3)}
+.lrow[disabled]{opacity:.5; cursor:not-allowed}
+.lock-tag{font-family:var(--mono); font-size:10px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3);
+  border:1px solid var(--hairline); padding:2px 7px; border-radius:var(--r-pill)}
+
+/* toggle */
+.toggle{display:inline-flex; align-items:center; gap:var(--s3); cursor:pointer; user-select:none}
+.toggle .track{width:46px; height:27px; border-radius:var(--r-pill); background:#D7D9CC; position:relative; transition:background var(--dur-base) var(--ease); flex:none}
+.toggle .knob{position:absolute; top:3px; left:3px; width:21px; height:21px; border-radius:var(--r-pill); background:#fff; box-shadow:0 1px 3px rgba(0,31,63,.2); transition:transform var(--dur-base) var(--ease)}
+.toggle[aria-pressed="true"] .track{background:var(--fluo)}
+.toggle[aria-pressed="true"] .knob{transform:translateX(19px)}
+
+/* banner */
+.banner{display:flex; align-items:center; gap:var(--s3); padding:var(--s3) var(--s4); border-radius:var(--r-btn); font-size:14px; margin-bottom:var(--s5)}
+.banner-warn{background:var(--tint-bozza); color:#5f6a12}
+.banner .ico{flex:none}
+
+.empty-hint{color:var(--ink-3); font-size:13px; text-align:center; padding:var(--s5)}
+
+/* ============================================================
+   WIZARD OVERLAY (P2C launcher — hides nav, full screen)
+   ============================================================ */
+.wizard{position:fixed; inset:0; z-index:var(--z-wizard); background:var(--bg); display:flex; flex-direction:column;
+  opacity:0; visibility:hidden; transition:opacity var(--dur-base) var(--ease), visibility var(--dur-base)}
+body.wizard-open .wizard{opacity:1; visibility:visible}
+.wizard-inner{transform:translateY(12px); transition:transform var(--dur-slow) var(--ease); display:flex; flex-direction:column; height:100%}
+body.wizard-open .wizard-inner{transform:none}
+.wz-frame{flex:1; width:100%; border:0; display:block; background:var(--bg)}
+/* onboarding overlay (first-run, hosts onboarding flow in iframe over the whole app) */
+.onbov{position:fixed; inset:0; z-index:80; background:var(--surface-dark);
+  opacity:0; visibility:hidden; transition:opacity var(--dur-base) var(--ease), visibility var(--dur-base)}
+body.onbov-open .onbov{opacity:1; visibility:visible}
+.onbov-frame{width:100%; height:100%; border:0; display:block; background:var(--surface-dark)}
+.wz-bar{display:flex; align-items:center; gap:var(--s4); padding:var(--s4) var(--s5); border-bottom:1px solid var(--hairline)}
+.wz-bar .wz-title{font-weight:600; font-size:16px}
+.wz-steps{display:flex; align-items:center; gap:var(--s2); margin-left:auto}
+.wz-steps .st{display:flex; align-items:center; gap:8px; color:var(--ink-3); font-size:13px}
+.wz-steps .st .sd{width:9px; height:9px; border-radius:var(--r-pill); background:var(--track-neutral)}
+.wz-steps .st.cur{color:var(--ink); font-weight:600} .wz-steps .st.cur .sd{background:var(--fluo)}
+.wz-steps .st.done .sd{background:var(--green)}
+.wz-steps .sep{width:20px; height:1px; background:var(--hairline)}
+.wz-body{flex:1; overflow-y:auto; display:grid; place-items:center; padding:var(--s6)}
+.wz-choice{width:100%; max-width:620px}
+.wz-choice > .overline{text-align:center; display:block; margin-bottom:6px}
+.wz-choice h2{text-align:center; font-size:24px; font-weight:700; letter-spacing:-.02em; margin-bottom:var(--s6)}
+.modes{display:grid; grid-template-columns:1fr 1fr; gap:var(--s4)}
+.mode{background:var(--surface); border:1px solid var(--hairline); border-radius:var(--r-card); padding:var(--s6) var(--s5); text-align:center;
+  box-shadow:var(--e1); transition:transform var(--dur-base) var(--ease), box-shadow var(--dur-base) var(--ease), border-color var(--dur-base) var(--ease)}
+.mode:hover{transform:translateY(-4px); box-shadow:var(--e2); border-color:var(--fluo)}
+.mode .mic{width:60px; height:60px; border-radius:var(--r-card); background:var(--tint-bozza); color:var(--on-fluo); display:grid; place-items:center; margin:0 auto var(--s4)}
+.mode .mic .ico{width:30px; height:30px; stroke-width:1.5}
+.mode h4{font-size:17px; font-weight:600}
+.mode p{color:var(--ink-2); font-size:13px; margin-top:6px}
+.wz-note{text-align:center; margin-top:var(--s6); color:var(--ink-3); font-size:13px}
+.wz-note a{color:var(--ink-2); text-decoration:underline; text-underline-offset:2px}
+
+/* toast */
+.toast{position:fixed; left:50%; bottom:var(--s6); transform:translateX(-50%) translateY(20px); z-index:var(--z-toast);
+  background:var(--ink); color:var(--text-on-dark); padding:12px var(--s5); border-radius:var(--r-btn); font-size:14px; font-weight:500;
+  box-shadow:var(--e2); opacity:0; visibility:hidden; transition:opacity var(--dur-base) var(--ease), transform var(--dur-base) var(--ease), visibility var(--dur-base)}
+.toast.show{opacity:1; visibility:visible; transform:translateX(-50%)}
+
+/* ============================================================
+   RESPONSIVE — tablet rail (768–1023) + mobile tabbar (<768)
+   ============================================================ */
+@media (max-width:1023px) and (min-width:768px){
+  .app{grid-template-columns:var(--rail) 1fr}
+  .app .brand-name, .app .hero-add span, .app .nav-item span, .app .nav-item .badge-count, .app .role-id{display:none}
+  .app .hero-add{justify-content:center; padding:12px}
+  .app .nav-item{justify-content:center; padding:11px}
+  .app .brand{justify-content:center; padding-inline:0}
+  .app .role-chip{justify-content:center}
+  .rail-toggle{display:none}
+  .panel{padding:var(--s6) var(--s5) var(--s8)}
+}
+
+@media (max-width:767px){
+  .app{grid-template-columns:1fr}
+  .sidebar{display:none}
+  .host{padding-bottom:0}
+  /* mobile app bar */
+  .appbar{display:flex; align-items:center; gap:var(--s3); padding:var(--s4) var(--s4);
+    background:var(--surface); border-bottom:1px solid var(--hairline); position:sticky; top:0; z-index:var(--z-appbar)}
+  .appbar .brand-mark{width:32px; height:32px; font-size:16px}
+  .appbar .ab-name{font-weight:700; font-size:17px; letter-spacing:.02em}
+  .appbar .ab-sp{margin-left:auto}
+  .panel{padding:var(--s5) var(--s4) calc(var(--tabbar-h) + var(--s7))}
+  .page-head{flex-direction:column; align-items:flex-start; gap:var(--s3)}
+  .page-title{font-size:23px}
+  .stat-row{grid-template-columns:1fr 1fr}
+  /* bottom tab bar */
+  .tabbar{display:flex; position:fixed; left:0; right:0; bottom:0; height:calc(var(--tabbar-h) + env(safe-area-inset-bottom));
+    padding-bottom:env(safe-area-inset-bottom); background:var(--surface); border-top:1px solid var(--hairline);
+    z-index:var(--z-nav); box-shadow:0 -2px 12px rgba(0,31,63,.05)}
+  .tab{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:var(--ink-3);
+    font-size:11px; font-weight:500; position:relative; transition:color var(--dur-fast) var(--ease)}
+  .tab .ico{width:24px; height:24px}
+  .tab[aria-current="page"]{color:var(--ink)}
+  .tab[aria-current="page"] .ico{color:var(--ink)}
+  .tab[aria-current="page"]::before{content:""; position:absolute; top:0; width:26px; height:3px; border-radius:0 0 3px 3px; background:var(--fluo)}
+  /* hero add (center, raised) */
+  .tab-add{flex:0 0 auto; width:76px; display:flex; align-items:flex-start; justify-content:center}
+  .tab-add button{width:56px; height:56px; margin-top:-18px; border-radius:var(--r-pill); background:var(--fluo); color:var(--on-fluo);
+    display:grid; place-items:center; box-shadow:0 6px 18px rgba(219,230,76,.5), 0 2px 6px rgba(0,31,63,.12);
+    transition:transform var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease)}
+  .tab-add button:active{transform:translateY(1px)}
+  .tab-add button .ico{width:28px; height:28px; stroke-width:2.25}
+  .wz-steps .st span{display:none}
+  .wz-bar{padding:var(--s4)}
+  .modes{grid-template-columns:1fr}
+  .panel .search{max-width:none}
+  .catalog-card-tools{align-items:stretch}
+  .catalog-card-tools .catalog-filters{flex:1}
+  .catalog-card-tools .catalog-select{margin-left:0}
+  .cgrid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:var(--s3)}
+}
+@media (max-width:767px){ .desk-only{display:none} }
+@media (min-width:768px){ .mob-only{display:none} }
+
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.001ms !important; transition-duration:.001ms !important}
+  .scroll{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== ICON SPRITE (Lucide-style, inline · no CDN) ===== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.7V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.7"/><path d="M9.5 21v-6h5v6"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="1.6"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.6"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.6"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.6"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24"><path d="M12 3 3.5 7.5v9L12 21l8.5-4.5v-9L12 3z"/><path d="M3.6 7.6 12 12l8.4-4.4"/><path d="M12 12v9"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24" class="ico-fill"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8.5a6 6 0 0 0-12 0c0 6-2.5 8-2.5 8h17S18 14.5 18 8.5"/><path d="M13.7 20.5a2 2 0 0 1-3.4 0"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></symbol>
+  <symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 8.5a2 2 0 0 1 2-2h1.8l1.1-1.7h6.2l1.1 1.7H18a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><circle cx="12" cy="12.5" r="3.4"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 15.5V4"/><path d="M7.5 8.5 12 4l4.5 4.5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></symbol>
+  <symbol id="i-wallet" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2.2"/><path d="M3 10.5h18"/><circle cx="16.5" cy="14.7" r="1.15" class="dotf"/></symbol>
+  <symbol id="i-truck" viewBox="0 0 24 24"><path d="M3.5 6.5h10v9h-10z"/><path d="M13.5 9.5H17l3.5 3.2v2.8h-7z"/><circle cx="7" cy="17.5" r="1.7"/><circle cx="17.3" cy="17.5" r="1.7"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 6h9"/><path d="M17 6h3"/><circle cx="15" cy="6" r="2"/><path d="M4 12h3"/><path d="M11 12h9"/><circle cx="9" cy="12" r="2"/><path d="M4 18h9"/><path d="M17 18h3"/><circle cx="15" cy="18" r="2"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></symbol>
+  <symbol id="i-chevL" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M4 12.5 9.5 18 20 6.5"/></symbol>
+  <symbol id="i-shirt" viewBox="0 0 24 24"><path d="M8 3 4 5.5 2.5 8 5 10.5 6.5 9v11h11V9l1.5 1.5L21 8l-1.5-2.5L15.5 3l-1.5 2a2.4 2.4 0 0 1-4 0z"/></symbol>
+  <symbol id="i-tag" viewBox="0 0 24 24"><path d="M3.5 3.5h7l9.6 9.6a2 2 0 0 1 0 2.8l-4.2 4.2a2 2 0 0 1-2.8 0L3.5 10.5z"/><circle cx="7.6" cy="7.6" r="1.4"/></symbol>
+  <symbol id="i-coins" viewBox="0 0 24 24"><circle cx="9" cy="9" r="5.5"/><path d="M14.5 5.3A5.5 5.5 0 1 1 15 18.4"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></symbol>
+</svg>
+<style>.dotf{fill:currentColor; stroke:none}</style>
+
+<!-- ============================ APP ============================ -->
+<div class="app" id="app" data-collapsed="false">
+
+  <!-- ---------- SIDEBAR (desktop / tablet rail) ---------- -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">M</div>
+      <span class="brand-name">MAAT</span>
+      <button class="rail-toggle" id="railToggle" aria-label="Comprimi menu"><svg class="ico sm"><use href="#i-chevL"/></svg></button>
+    </div>
+
+    <a class="hero-add" href="#nuovo" data-wizard aria-label="Crea capo">
+      <svg class="ico"><use href="#i-plus"/></svg><span>Crea capo</span>
+    </a>
+
+    <nav class="nav" aria-label="Navigazione principale">
+      <a class="nav-item" data-route="home" href="#home"><svg class="ico"><use href="#i-home"/></svg><span>Home</span></a>
+      <a class="nav-item" data-route="catalogo" href="#catalogo"><svg class="ico"><use href="#i-grid"/></svg><span>Capi</span><span class="badge-count">96</span></a>
+      <a class="nav-item" data-route="notifiche" href="#notifiche"><svg class="ico"><use href="#i-bell"/></svg><span>Notifiche</span><span class="badge-count">3</span></a>
+      <a class="nav-item" data-route="inventario" href="#inventario"><svg class="ico"><use href="#i-box"/></svg><span>Inventario</span></a>
+      <a class="nav-item" data-route="altro" href="#altro"><svg class="ico"><use href="#i-more"/></svg><span>Altro</span></a>
+    </nav>
+
+    <div class="side-foot">
+      <button class="role-chip" data-route="altro">
+        <span class="avatar ring">FD</span>
+        <span class="role-id"><b>Federico D.</b><span class="role-tag" id="roleTagSide">Admin</span></span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ---------- CONTENT HOST ---------- -->
+  <div class="host">
+
+    <!-- mobile app bar -->
+    <header class="appbar">
+      <div class="brand-mark">M</div>
+      <span class="ab-name">MAAT</span>
+      <span class="ab-sp"></span>
+      <button class="iconbtn nude" data-route="notifiche" aria-label="Notifiche"><svg class="ico"><use href="#i-bell"/></svg><span class="dot"></span></button>
+      <button class="avatar" data-route="altro" style="width:34px;height:34px" aria-label="Account">FD</button>
+    </header>
+
+    <div class="scroll" id="scroll">
+
+      <!-- ===================== HOME (S-00) ===================== -->
+      <section class="panel" data-panel="home" aria-labelledby="h-home">
+        <div class="page-head">
+          <div>
+            <div class="overline kicker">Dashboard</div>
+            <h1 class="page-title" id="h-home">Ciao, Federico</h1>
+            <p class="page-sub">3 capi richiedono attenzione oggi. 12 bozze in attesa di revisione.</p>
+          </div>
+          <button class="btn btn-primary desk-only" data-wizard><svg class="ico sm"><use href="#i-plus"/></svg>Crea capo</button>
+        </div>
+
+        <div class="stat-row">
+          <div class="stat"><div class="stat-num">96</div><div class="stat-lab"><span class="bd" style="background:var(--ink-2)"></span>Capi a catalogo</div></div>
+          <div class="stat"><div class="stat-num">12</div><div class="stat-lab"><span class="bd" style="background:var(--status-bozza)"></span>Bozze da revisionare</div></div>
+          <div class="stat"><div class="stat-num">27</div><div class="stat-lab"><span class="bd" style="background:var(--blue)"></span>Pubblicati</div></div>
+          <div class="stat"><div class="stat-num">9</div><div class="stat-lab"><span class="bd" style="background:var(--green)"></span>Venduti · 30gg</div></div>
+        </div>
+
+        <div class="section-h"><h3>Notifiche recenti</h3><a class="btn btn-sm btn-ghost" data-route="altro">Vedi tutte</a></div>
+        <div class="card">
+          <div class="nrow unread">
+            <div class="nic"><svg class="ico sm"><use href="#i-coins"/></svg></div>
+            <div class="nbody"><div class="ntitle">Capo venduto</div><div class="nmeta">Stone Island bomber · <span class="mono">Vinted</span> · <span class="mono">92 €</span></div></div>
+            <div class="ntime">12 min</div>
+          </div>
+          <div class="nrow unread">
+            <div class="nic"><svg class="ico sm"><use href="#i-tag"/></svg></div>
+            <div class="nbody"><div class="ntitle">Offerta ricevuta</div><div class="nmeta">Burberry trench · <span class="mono">Grailed</span> · <span class="mono">45 €</span></div></div>
+            <div class="ntime">1 h</div>
+          </div>
+          <div class="nrow">
+            <div class="nic"><svg class="ico sm"><use href="#i-truck"/></svg></div>
+            <div class="nbody"><div class="ntitle">Reso pronto al ritiro</div><div class="nmeta">Levi's 501 · <span class="mono">SKU B-074</span></div></div>
+            <div class="ntime">3 h</div>
+          </div>
+          <div class="nrow">
+            <div class="nic"><svg class="ico sm"><use href="#i-check"/></svg></div>
+            <div class="nbody"><div class="ntitle">Bozza pronta da revisionare</div><div class="nmeta">Carhartt Detroit jacket · <span class="mono">SKU —</span></div></div>
+            <div class="ntime">ieri</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== CATALOGO (S-12) ===================== -->
+      <section class="panel" data-panel="catalogo" aria-labelledby="h-cat">
+        <div class="page-head">
+          <div>
+            <div class="overline kicker">I tuoi capi · Tenant DirtyTag</div>
+            <h1 class="page-title" id="h-cat">Capi</h1>
+          </div>
+          <button class="btn btn-primary desk-only" data-wizard><svg class="ico sm"><use href="#i-plus"/></svg>Crea capo</button>
+        </div>
+
+        <div style="display:flex; gap:var(--s3); align-items:center; flex-wrap:wrap; margin-bottom:var(--s4)">
+          <div class="search"><svg class="ico sm"><use href="#i-search"/></svg><input placeholder="Cerca per SKU, brand o codice legacy…"></div>
+        </div>
+        <div style="display:flex; gap:var(--s3); align-items:center; flex-wrap:wrap; margin-bottom:var(--s4)">
+          <div class="seg" id="capiSeg" role="group" aria-label="Sezione capi">
+            <button data-seg="tutti" aria-pressed="true">Tutti<span class="seg-n" data-n="tutti">0</span></button>
+            <button data-seg="bozze" aria-pressed="false">Bozze<span class="seg-n" data-n="bozze">0</span></button>
+            <button data-seg="catalogo" aria-pressed="false">Catalogo<span class="seg-n" data-n="catalogo">0</span></button>
+          </div>
+        </div>
+        <div class="catalog-card-tools">
+          <div class="catalog-filters">
+            <button class="chip" aria-pressed="false"><svg class="ico"><use href="#i-tag"/></svg>Brand</button>
+            <button class="chip" aria-pressed="false">Taglia</button>
+            <button class="chip" aria-pressed="false">Categoria</button>
+          </div>
+          <button class="btn btn-sm btn-ghost catalog-select" id="catalogSelect" type="button" aria-pressed="false">
+            <svg class="ico sm"><use href="#i-check"/></svg><span id="catalogSelectLabel">Seleziona</span><span class="selection-count" id="catalogSelectionCount" hidden>0</span>
+          </button>
+        </div>
+
+        <div class="cgrid" aria-label="Griglia capi">
+          <article class="ccard" data-status="confermato" style="--photo:#E4E7DE" role="group">
+            <span class="ccheck" aria-hidden="true"><svg class="ico"><use href="#i-check"/></svg></span>
+            <div class="thumb">
+              <div class="pipeline-glyph" role="img" aria-label="Moduli: Foto, Copy e Stock completati; Lista è il prossimo"><i class="done"></i><i class="done"></i><i class="done"></i><i class="next"></i></div>
+              <span class="badge badge-conf"><span class="bd"></span>Confermato</span>
+              <svg class="garment" viewBox="0 0 48 48" aria-hidden="true"><path d="M18 8 L24 12 L30 8 L38 14 L34 21 L30 18.5 L30 41 L18 41 L18 18.5 L14 21 L10 14 Z"/></svg>
+            </div>
+            <div class="cbody"><div class="cbrand">Stone Island</div><div class="cmeta">Bomber · Taglia L</div><div class="cfoot"><span class="csku">SKU B-091</span><span class="cprice">180 €</span></div></div>
+            <div class="caction"><button class="primary" type="button" data-card-action="Pubblica">Pubblica</button></div>
+          </article>
+          <article class="ccard" data-status="live" style="--photo:#E6E4DB" role="group">
+            <span class="ccheck" aria-hidden="true"><svg class="ico"><use href="#i-check"/></svg></span>
+            <div class="thumb">
+              <div class="pipeline-glyph" role="img" aria-label="Moduli Foto, Copy, Stock e Lista completati"><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i></div>
+              <span class="badge badge-live"><span class="bd"></span>Live</span>
+              <svg class="garment" viewBox="0 0 48 48" aria-hidden="true"><path d="M18 8 L24 12 L30 8 L38 14 L34 21 L30 18.5 L30 41 L18 41 L18 18.5 L14 21 L10 14 Z"/></svg>
+            </div>
+            <div class="cbody"><div class="cbrand">Burberry</div><div class="cmeta">Trench · Taglia M</div><div class="cfoot"><span class="csku">SKU B-088</span><span class="cprice">240 €</span></div><div class="cchannels"><span class="cchan">V</span><span class="cchan">G</span><span class="cfresh">3g fa</span></div></div>
+            <div class="caction"><button type="button" data-card-action="Vedi annuncio">Vedi annuncio</button></div>
+          </article>
+          <article class="ccard" data-status="bozza" style="--photo:#E7E5D6" role="group">
+            <span class="ccheck" aria-hidden="true"><svg class="ico"><use href="#i-check"/></svg></span>
+            <div class="thumb">
+              <div class="pipeline-glyph" role="img" aria-label="Modulo Foto completato; Copy è il prossimo; Stock e Lista da fare"><i class="done"></i><i class="next"></i><i class="todo"></i><i class="todo"></i></div>
+              <span class="badge badge-bozza"><span class="bd"></span>Bozza</span>
+              <svg class="garment" viewBox="0 0 48 48" aria-hidden="true"><path d="M18 8 L24 12 L30 8 L38 14 L34 21 L30 18.5 L30 41 L18 41 L18 18.5 L14 21 L10 14 Z"/></svg>
+            </div>
+            <div class="cbody"><div class="cbrand">Carhartt</div><div class="cmeta">Detroit jacket · Taglia L</div><div class="cfoot"><span class="csku">SKU —</span><span class="cprice">— €</span></div></div>
+            <div class="caction"><button type="button" data-card-action="Completa">Completa</button></div>
+          </article>
+          <article class="ccard" data-status="bozza" style="--photo:#DFE4E9" role="group">
+            <span class="ccheck" aria-hidden="true"><svg class="ico"><use href="#i-check"/></svg></span>
+            <div class="thumb">
+              <div class="pipeline-glyph" role="img" aria-label="Modulo Foto completato; Copy è il prossimo; Stock e Lista da fare"><i class="done"></i><i class="next"></i><i class="todo"></i><i class="todo"></i></div>
+              <span class="badge badge-bozza"><span class="bd"></span>Bozza</span>
+              <svg class="garment" viewBox="0 0 48 48" aria-hidden="true"><path d="M16 10 H32 V14 H16 Z"/><path d="M16 14 L17.5 41 L22.5 41 L24 22 L25.5 41 L30.5 41 L32 14"/></svg>
+            </div>
+            <div class="cbody"><div class="cbrand">Levi's</div><div class="cmeta">501 · W32 L34</div><div class="cfoot"><span class="csku">SKU —</span><span class="cprice">65 €</span></div></div>
+            <div class="caction"><button type="button" data-card-action="Completa">Completa</button></div>
+          </article>
+          <article class="ccard" data-status="live" style="--photo:#DEE3E8" role="group">
+            <span class="ccheck" aria-hidden="true"><svg class="ico"><use href="#i-check"/></svg></span>
+            <div class="thumb">
+              <div class="pipeline-glyph" role="img" aria-label="Moduli Foto, Copy, Stock e Lista completati"><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i></div>
+              <span class="badge badge-live"><span class="bd"></span>Live</span>
+              <svg class="garment" viewBox="0 0 48 48" aria-hidden="true"><path d="M17 11 C20 14 28 14 31 11 L36 16 L36 20 L33 21 L33 40 L15 40 L15 21 L12 20 L12 16 Z"/><path d="M15 25 H33 M15 30 H33 M15 35 H33"/></svg>
+            </div>
+            <div class="cbody"><div class="cbrand">The North Face</div><div class="cmeta">Nuptse 700 · Taglia M</div><div class="cfoot"><span class="csku">SKU B-090</span><span class="cprice">150 €</span></div><div class="cchannels"><span class="cchan">V</span><span class="cfresh">1g fa</span></div></div>
+            <div class="caction"><button type="button" data-card-action="Vedi annuncio">Vedi annuncio</button></div>
+          </article>
+          <article class="ccard" data-status="venduto" style="--photo:#E2E4DC" role="group">
+            <span class="ccheck" aria-hidden="true"><svg class="ico"><use href="#i-check"/></svg></span>
+            <div class="thumb">
+              <div class="pipeline-glyph" role="img" aria-label="Moduli Foto, Copy, Stock e Lista completati"><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i></div>
+              <span class="badge badge-sold"><span class="bd"></span>Venduto</span>
+              <svg class="garment" viewBox="0 0 48 48" aria-hidden="true"><path d="M18 8 L24 12 L30 8 L38 14 L34 21 L30 18.5 L30 41 L18 41 L18 18.5 L14 21 L10 14 Z"/></svg>
+            </div>
+            <div class="cbody"><div class="cbrand">Ralph Lauren</div><div class="cmeta">Camicia oxford · Taglia L</div><div class="cfoot"><span class="csku">SKU B-074</span><span class="cprice">40 €</span></div></div>
+            <div class="caction"><button type="button" data-card-action="Archivia">Archivia</button></div>
+          </article>
+        </div>
+        <div class="empty-hint" id="capiEmpty" hidden></div>
+      </section>
+
+      <!-- ===================== INVENTARIO (S-17) ===================== -->
+      <section class="panel" data-panel="inventario" aria-labelledby="h-inv">
+        <div class="page-head">
+          <div>
+            <div class="overline kicker">Inventario · Listing & fulfillment</div>
+            <h1 class="page-title" id="h-inv">Inventario</h1>
+            <p class="page-sub">Stato di pubblicazione per piattaforma e avanzamento delle spedizioni.</p>
+          </div>
+        </div>
+
+        <div class="banner banner-warn"><svg class="ico sm"><use href="#i-box"/></svg>1 listing richiede rimozione manuale dalla piattaforma (nessuna API).</div>
+
+        <div class="tablewrap">
+          <table class="inv">
+            <thead><tr><th>Capo</th><th>Vinted</th><th>Grailed</th><th>Depop</th><th>Fulfillment</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><div class="item-c"><span class="mini"><svg class="ico"><use href="#i-shirt"/></svg></span><div><div style="font-weight:600">Stone Island</div><div class="csku mono">SKU B-091</div></div></div></td>
+                <td><span class="lchip active">active</span></td><td><span class="lchip active">active</span></td><td><span class="lchip delisted">delisted</span></td>
+                <td><span class="badge badge-locale"><span class="bd"></span>—</span></td>
+              </tr>
+              <tr>
+                <td><div class="item-c"><span class="mini"><svg class="ico"><use href="#i-shirt"/></svg></span><div><div style="font-weight:600">Ralph Lauren</div><div class="csku mono">SKU B-074</div></div></div></td>
+                <td><span class="lchip delisted">venduto</span></td><td><span class="lchip pending">pending</span></td><td><span class="lchip delisted">delisted</span></td>
+                <td><span class="badge badge-pub"><span class="bd"></span>In transito</span></td>
+              </tr>
+              <tr>
+                <td><div class="item-c"><span class="mini"><svg class="ico"><use href="#i-shirt"/></svg></span><div><div style="font-weight:600">Burberry</div><div class="csku mono">SKU B-088</div></div></div></td>
+                <td><span class="lchip active">active</span></td><td><span class="lchip active">active</span></td><td><span class="lchip active">active</span></td>
+                <td><span class="badge badge-locale"><span class="bd"></span>—</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ===================== NOTIFICHE (Inbox · S-11/nav-flow) ===================== -->
+      <section class="panel" data-panel="notifiche" aria-labelledby="h-notif">
+        <div class="page-head">
+          <div>
+            <div class="overline kicker">Inbox</div>
+            <h1 class="page-title" id="h-notif">Notifiche</h1>
+            <p class="page-sub">Vendite, offerte, resi e bozze pronte. Le non lette sono in evidenza.</p>
+          </div>
+        </div>
+        <div class="seg" role="group" aria-label="Filtro notifiche" style="margin-bottom:var(--s5)">
+          <button aria-pressed="true">Tutte</button><button aria-pressed="false">Non lette · 3</button>
+        </div>
+        <div class="card">
+          <div class="nrow unread">
+            <div class="nic"><svg class="ico sm"><use href="#i-coins"/></svg></div>
+            <div class="nbody"><div class="ntitle">Capo venduto</div><div class="nmeta">Stone Island bomber · <span class="mono">Vinted</span> · <span class="mono">92 €</span></div></div>
+            <div class="ntime">12 min</div>
+          </div>
+          <div class="nrow unread">
+            <div class="nic"><svg class="ico sm"><use href="#i-tag"/></svg></div>
+            <div class="nbody"><div class="ntitle">Offerta ricevuta</div><div class="nmeta">Burberry trench · <span class="mono">Grailed</span> · <span class="mono">45 €</span></div></div>
+            <div class="ntime">1 h</div>
+          </div>
+          <div class="nrow unread">
+            <div class="nic"><svg class="ico sm"><use href="#i-check"/></svg></div>
+            <div class="nbody"><div class="ntitle">Bozza pronta da revisionare</div><div class="nmeta">Carhartt Detroit jacket · <span class="mono">MP-0043</span></div></div>
+            <div class="ntime">2 h</div>
+          </div>
+          <div class="nrow">
+            <div class="nic"><svg class="ico sm"><use href="#i-truck"/></svg></div>
+            <div class="nbody"><div class="ntitle">Reso pronto al ritiro</div><div class="nmeta">Levi's 501 · <span class="mono">SKU B-074</span></div></div>
+            <div class="ntime">3 h</div>
+          </div>
+          <div class="nrow">
+            <div class="nic"><svg class="ico sm"><use href="#i-box"/></svg></div>
+            <div class="nbody"><div class="ntitle">Delisting completato</div><div class="nmeta">Ralph Lauren oxford · <span class="mono">Depop</span></div></div>
+            <div class="ntime">ieri</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== ALTRO ===================== -->
+      <section class="panel" data-panel="altro" aria-labelledby="h-altro">
+        <div class="page-head">
+          <div>
+            <div class="overline kicker">Altro</div>
+            <h1 class="page-title" id="h-altro">Altro</h1>
+          </div>
+        </div>
+
+        <div class="section-h"><h3>Account</h3></div>
+        <div class="list" style="margin-bottom:var(--s6)">
+          <div class="lrow" style="cursor:default">
+            <span class="avatar ring" style="width:44px;height:44px">FD</span>
+            <div class="lbody"><div class="ltitle">Federico D'Orsi</div><div class="lsub">DirtyTag · <span class="mono" id="roleSub">Admin</span> · 3 / 5 account</div></div>
+            <label class="toggle" id="roleToggle" role="switch" aria-pressed="true" tabindex="0">
+              <span class="lsub" style="font-size:13px">Admin</span><span class="track"><span class="knob"></span></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="section-h"><h3>Gestione</h3></div>
+        <div class="list">
+          <button class="lrow" id="rowOnboarding">
+            <span class="lic"><svg class="ico sm"><use href="#i-arrow"/></svg></span>
+            <div class="lbody"><div class="ltitle">Rivedi onboarding</div><div class="lsub">Rigioca il flusso di attivazione (welcome → demo AI → connetti)</div></div>
+            <span class="chev"><svg class="ico sm"><use href="#i-chev"/></svg></span>
+          </button>
+          <button class="lrow" id="rowAccounting">
+            <span class="lic"><svg class="ico sm"><use href="#i-wallet"/></svg></span>
+            <div class="lbody"><div class="ltitle">Contabilità <span class="lock-tag" id="acctGate" hidden>Solo Admin</span></div><div class="lsub">Vendite, escrow e settlement · finestra reso 14gg</div></div>
+            <span class="chev"><svg class="ico sm"><use href="#i-chev"/></svg></span>
+          </button>
+          <button class="lrow">
+            <span class="lic"><svg class="ico sm"><use href="#i-truck"/></svg></span>
+            <div class="lbody"><div class="ltitle">Logistica</div><div class="lsub">Tracking spedizioni per fase di fulfillment</div></div>
+            <span class="chev"><svg class="ico sm"><use href="#i-chev"/></svg></span>
+          </button>
+          <button class="lrow">
+            <span class="lic"><svg class="ico sm"><use href="#i-sliders"/></svg></span>
+            <div class="lbody"><div class="ltitle">Impostazioni</div><div class="lsub">Account tenant · pubblicazione auto per piattaforma</div></div>
+            <span class="chev"><svg class="ico sm"><use href="#i-chev"/></svg></span>
+          </button>
+        </div>
+      </section>
+
+    </div><!-- /scroll -->
+  </div><!-- /host -->
+
+  <!-- ---------- BOTTOM TAB BAR (mobile) ---------- -->
+  <!-- Mobile: nav canonica 2 tab (Capi · Notifiche) + Crea capo centrale -->
+  <nav class="tabbar" aria-label="Navigazione principale">
+    <a class="tab" data-route="catalogo" href="#catalogo"><svg class="ico"><use href="#i-grid"/></svg>Capi</a>
+    <span class="tab-add"><button data-wizard aria-label="Crea capo"><svg class="ico"><use href="#i-plus"/></svg></button></span>
+    <a class="tab" data-route="notifiche" href="#notifiche"><svg class="ico"><use href="#i-bell"/></svg>Notifiche</a>
+  </nav>
+</div>
+
+<!-- ============================ WIZARD (P2C · S-05) ============================ -->
+<div class="wizard" id="wizard" role="dialog" aria-modal="true" aria-label="Nuovo capo · Photo-to-Catalog">
+  <div class="wizard-inner">
+    <iframe class="wz-frame" id="wzFrame" title="Nuovo capo · flusso Photo-to-Catalog"></iframe>
+  </div>
+</div>
+
+<!-- ============================ ONBOARDING (first-run) ============================ -->
+<div class="onbov" id="onbov" role="dialog" aria-modal="true" aria-label="Onboarding MAAT">
+  <iframe class="onbov-frame" id="onbFrame" title="Onboarding MAAT"></iframe>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  const app = document.getElementById('app');
+  const ROUTES = ['home','catalogo','notifiche','inventario','altro'];
+
+  /* ---------- routing ---------- */
+  function setRoute(r){
+    if(!ROUTES.includes(r)) r = 'home';
+    document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.dataset.panel === r));
+    document.querySelectorAll('[data-route]').forEach(el => {
+      const on = el.dataset.route === r;
+      if(el.classList.contains('nav-item') || el.classList.contains('tab')) el.setAttribute('aria-current', on ? 'page' : 'false');
+    });
+    const sc = document.getElementById('scroll'); if(sc) sc.scrollTop = 0;
+    if(location.hash.slice(1) !== r) history.replaceState(null,'','#'+r);
+  }
+  document.querySelectorAll('[data-route]').forEach(el => {
+    el.addEventListener('click', e => { if(el.dataset.wizard!==undefined) return; e.preventDefault(); setRoute(el.dataset.route); });
+  });
+  window.addEventListener('hashchange', () => { const h = location.hash.slice(1); if(ROUTES.includes(h)) setRoute(h); });
+
+  /* ---------- rail collapse ---------- */
+  document.getElementById('railToggle').addEventListener('click', () => {
+    app.dataset.collapsed = app.dataset.collapsed === 'true' ? 'false' : 'true';
+  });
+
+  /* ---------- wizard (P2C flow in iframe) ---------- */
+  const wzFrame = document.getElementById('wzFrame');
+  const P2C_SRC = 'maat-p2c-flow.html';
+  const CAMERA_SRC = 'acquisizione-foto-v2b.html';
+  let lastFocus = null;
+  function openWizard(){ lastFocus = document.activeElement; if(wzFrame.getAttribute('src') !== P2C_SRC) wzFrame.setAttribute('src', P2C_SRC); document.body.classList.add('wizard-open'); }
+  function closeWizard(){ document.body.classList.remove('wizard-open'); setTimeout(() => { wzFrame.setAttribute('src', 'about:blank'); }, 240); if(lastFocus) lastFocus.focus(); }
+  document.querySelectorAll('[data-wizard]').forEach(b => b.addEventListener('click', e => { e.preventDefault(); openWizard(); }));
+  document.addEventListener('keydown', e => { if(e.key === 'Escape' && document.body.classList.contains('wizard-open')) closeWizard(); });
+  window.addEventListener('message', e => {
+    const d = e.data; if(!d || d.source !== 'maat-p2c') return;
+    if(d.action === 'close') closeWizard();
+    else if(d.action === 'catalogo'){ closeWizard(); setRoute('catalogo'); selectCapiSeg('catalogo'); toast('Capo confermato · a Catalogo'); }
+    else if(d.action === 'bozze'){ closeWizard(); setRoute('catalogo'); selectCapiSeg('bozze'); toast('Bozza salvata'); }
+    else if(d.action === 'camera'){ wzFrame.setAttribute('src', CAMERA_SRC); }
+  });
+  window.addEventListener('message', e => {
+    const d = e.data; if(!d || d.source !== 'maat-camera') return;
+    if(d.action === 'cancel'){
+      wzFrame.setAttribute('src', P2C_SRC + '?step=2&from=camera-cancel');
+    } else if(d.action === 'complete'){
+      try{ sessionStorage.setItem('maat_camera_payload', JSON.stringify(d)); }catch(err){}
+      const count = Number(d.count || (d.photos && d.photos.length) || 0);
+      wzFrame.setAttribute('src', P2C_SRC + '?step=3&from=camera&count=' + encodeURIComponent(count));
+      toast(count ? count + ' foto acquisite · etichettatura' : 'Foto acquisite · etichettatura');
+    }
+  });
+
+  /* ---------- onboarding (first-run overlay in iframe) ---------- */
+  const onbFrame = document.getElementById('onbFrame');
+  const ONB_SRC = 'maat-onboarding-flow.html';
+  function openOnboarding(){ if(onbFrame.getAttribute('src') !== ONB_SRC) onbFrame.setAttribute('src', ONB_SRC); document.body.classList.add('onbov-open'); }
+  function closeOnboarding(){ document.body.classList.remove('onbov-open'); try{ localStorage.setItem('maat_onboarded','1'); }catch(e){} setTimeout(() => { onbFrame.setAttribute('src', 'about:blank'); }, 260); }
+  document.getElementById('rowOnboarding').addEventListener('click', openOnboarding);
+  window.addEventListener('message', e => {
+    const d = e.data; if(!d || d.source !== 'maat-onboarding') return;
+    if(d.action === 'finish') closeOnboarding();
+    else if(d.action === 'publish'){ closeOnboarding(); setRoute('catalogo'); toast('Capo pubblicato su Vinted'); }
+  });
+
+  /* ---------- role gate demo (Admin/Operator) ---------- */
+  const roleToggle = document.getElementById('roleToggle');
+  function setRole(admin){
+    roleToggle.setAttribute('aria-pressed', String(admin));
+    roleToggle.querySelector('.lsub').textContent = admin ? 'Admin' : 'Operator';
+    document.getElementById('roleSub').textContent = admin ? 'Admin' : 'Operator';
+    document.getElementById('roleTagSide').textContent = admin ? 'Admin' : 'Operator';
+    const row = document.getElementById('rowAccounting');
+    document.getElementById('acctGate').hidden = admin;
+    row.toggleAttribute('disabled', !admin);
+    row.style.pointerEvents = admin ? '' : 'none';
+  }
+  roleToggle.addEventListener('click', () => setRole(roleToggle.getAttribute('aria-pressed') !== 'true'));
+  roleToggle.addEventListener('keydown', e => { if(e.key===' '||e.key==='Enter'){ e.preventDefault(); setRole(roleToggle.getAttribute('aria-pressed')!=='true'); }});
+  document.getElementById('rowAccounting').addEventListener('click', () => toast('Contabilità · escrow e settlement (Admin)'));
+
+  /* ---------- filters: other segs visual only, chips toggle ---------- */
+  document.querySelectorAll('.seg:not(#capiSeg)').forEach(seg => seg.addEventListener('click', e => {
+    const b = e.target.closest('button'); if(!b) return;
+    seg.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x===b)));
+  }));
+  document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => c.setAttribute('aria-pressed', c.getAttribute('aria-pressed')!=='true')));
+
+  /* ---------- Capi segmented (functional filter + live counts + empty state) ---------- */
+  const capiSeg = document.getElementById('capiSeg');
+  const capiGrid = document.querySelector('.panel[data-panel="catalogo"] .cgrid');
+  const capiEmpty = document.getElementById('capiEmpty');
+  const capiCards = [...capiGrid.querySelectorAll('.ccard')];
+  const SEG_MAP = { tutti:null, bozze:['bozza'], catalogo:['confermato','live','venduto'] };
+  const SEG_EMPTY = { tutti:'Nessun capo. Scatta il primo con Crea capo.', bozze:'Nessuna bozza da revisionare.', catalogo:'Nessun capo a catalogo.' };
+  function capiCounts(){
+    const n = { tutti:capiCards.length, bozze:0, catalogo:0 };
+    capiCards.forEach(c => { if(SEG_MAP.bozze.includes(c.dataset.status)) n.bozze++; if(SEG_MAP.catalogo.includes(c.dataset.status)) n.catalogo++; });
+    capiSeg.querySelectorAll('.seg-n').forEach(s => s.textContent = n[s.dataset.n]);
+  }
+  function filterCapi(seg){
+    const allow = SEG_MAP[seg]; let shown = 0;
+    capiCards.forEach(c => { const ok = !allow || allow.includes(c.dataset.status); c.hidden = !ok; if(ok) shown++; });
+    capiEmpty.textContent = SEG_EMPTY[seg]; capiEmpty.hidden = shown > 0;
+  }
+  function selectCapiSeg(seg){
+    capiSeg.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.seg === seg)));
+    filterCapi(seg);
+  }
+  capiSeg.addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; selectCapiSeg(b.dataset.seg); });
+  capiCounts(); filterCapi('tutti');
+
+  /* ---------- Catalog cards (detail, actions, keyboard + stable multi-select) ---------- */
+  const catalogPanel = document.querySelector('.panel[data-panel="catalogo"]');
+  const catalogSelect = document.getElementById('catalogSelect');
+  const catalogSelectLabel = document.getElementById('catalogSelectLabel');
+  const catalogSelectionCount = document.getElementById('catalogSelectionCount');
+  let catalogSelecting = false;
+
+  function cardName(card){ return card.querySelector('.cbrand').textContent.trim(); }
+  function setCardA11y(card, selected){
+    const badge = card.querySelector('.badge').textContent.trim();
+    const meta = card.querySelector('.cmeta').textContent.trim();
+    card.setAttribute('aria-label', `${cardName(card)}, ${meta}, ${badge}`);
+    const openButton = card.querySelector('.card-open');
+    if(catalogSelecting){
+      openButton.setAttribute('aria-label', `${selected ? 'Deseleziona' : 'Seleziona'} ${cardName(card)}`);
+      openButton.setAttribute('aria-pressed', String(selected));
+    }else{
+      openButton.setAttribute('aria-label', `Apri dettaglio ${cardName(card)}, ${meta}`);
+      openButton.removeAttribute('aria-pressed');
+    }
+  }
+  function selectedCatalogCards(){ return capiCards.filter(card => card.classList.contains('selected')); }
+  function refreshCatalogSelection(){
+    const count = selectedCatalogCards().length;
+    catalogSelectionCount.textContent = count;
+    catalogSelectionCount.hidden = !catalogSelecting;
+    catalogSelectLabel.textContent = catalogSelecting ? 'Fine' : 'Seleziona';
+    catalogSelect.setAttribute('aria-label', catalogSelecting ? `Termina selezione multipla, ${count} selezionati` : 'Attiva selezione multipla');
+  }
+  function setCatalogSelecting(on){
+    catalogSelecting = on;
+    catalogPanel.classList.toggle('catalog-selecting', on);
+    catalogSelect.setAttribute('aria-pressed', String(on));
+    capiCards.forEach(card => {
+      if(!on) card.classList.remove('selected');
+      const action = card.querySelector('.caction button');
+      action.disabled = on;
+      action.setAttribute('aria-hidden', String(on));
+      setCardA11y(card, card.classList.contains('selected'));
+    });
+    refreshCatalogSelection();
+  }
+  function toggleCatalogCard(card){
+    const selected = card.classList.toggle('selected');
+    setCardA11y(card, selected);
+    refreshCatalogSelection();
+  }
+  function openCatalogDetail(card){ toast(`Dettaglio capo · ${cardName(card)}`); }
+
+  catalogSelect.addEventListener('click', () => setCatalogSelecting(!catalogSelecting));
+  capiCards.forEach(card => {
+    const openButton = document.createElement('button');
+    openButton.className = 'card-open';
+    openButton.type = 'button';
+    card.prepend(openButton);
+    setCardA11y(card, false);
+    card.addEventListener('click', e => {
+      if(e.target.closest('.caction button')) return;
+      catalogSelecting ? toggleCatalogCard(card) : openCatalogDetail(card);
+    });
+    const action = card.querySelector('.caction button');
+    action.addEventListener('click', e => {
+      e.stopPropagation();
+      toast(`${action.dataset.cardAction} · ${cardName(card)}`);
+    });
+  });
+  document.addEventListener('keydown', e => {
+    if(e.key === 'Escape' && catalogSelecting){ setCatalogSelecting(false); catalogSelect.focus(); }
+  });
+
+  /* ---------- toast ---------- */
+  let tTimer; const toastEl = document.getElementById('toast');
+  function toast(msg){ toastEl.textContent = msg; toastEl.classList.add('show'); clearTimeout(tTimer); tTimer = setTimeout(()=>toastEl.classList.remove('show'), 2200); }
+
+  /* init */
+  const startHash = location.hash.slice(1);
+  const isMobile = window.matchMedia('(max-width:767px)').matches;
+  setRoute(ROUTES.includes(startHash) ? startHash : (isMobile ? 'catalogo' : 'home'));
+
+  /* first-run onboarding: auto su primo avvio (gate localStorage) · ?onboarding=1 forza · ?onboarding=0 salta */
+  const qs = new URLSearchParams(location.search);
+  let onboarded = '0'; try{ onboarded = localStorage.getItem('maat_onboarded'); }catch(e){}
+  if(qs.get('onboarding') === '1' || (qs.get('onboarding') !== '0' && !onboarded)) openOnboarding();
+})();
+</script>
+</body>
+</html>

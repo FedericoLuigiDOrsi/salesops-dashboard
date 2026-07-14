@@ -11,17 +11,15 @@ import { CatalogTable } from "@/components/maat/CatalogTable";
 import { CatalogKanban } from "@/components/maat/CatalogKanban";
 import { EmptyState } from "@/components/maat/EmptyState";
 import { mockCatalogEntries } from "@/lib/maat-mock";
-import type { CatalogEntryStatus } from "@/types/maat";
+import {
+  OPERATION_PRESETS,
+  DEFAULT_PRESET,
+  getPreset,
+  type PresetValue,
+  type ViewMode,
+} from "@/lib/catalog-presets";
 
-type StatusFilter = CatalogEntryStatus | "tutti";
-type ViewMode = "table" | "card" | "kanban";
-
-const STATUS_OPTIONS: { value: StatusFilter; label: string }[] = [
-  { value: "tutti", label: "Tutti" },
-  { value: "to_be_reviewed", label: "Bozze" },
-  { value: "available", label: "Confermati" },
-  { value: "local_draft", label: "Locali" },
-];
+const PRESET_OPTIONS = OPERATION_PRESETS.map((p) => ({ value: p.value, label: p.label }));
 
 const VIEW_OPTIONS: { value: ViewMode; label: string; icon: typeof Table2 }[] = [
   { value: "table", label: "Tabella", icon: Table2 },
@@ -30,40 +28,50 @@ const VIEW_OPTIONS: { value: ViewMode; label: string; icon: typeof Table2 }[] = 
 ];
 
 export default function CapiListPage() {
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("tutti");
-  const [view, setView] = useState<ViewMode>("table");
+  const [presetValue, setPresetValue] = useState<PresetValue>(DEFAULT_PRESET);
+  const [view, setView] = useState<ViewMode>(getPreset(DEFAULT_PRESET).view);
   const [query, setQuery] = useState("");
 
-  const entriesSortedDesc = useMemo(
-    () => [...mockCatalogEntries].sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
-    []
-  );
+  const preset = getPreset(presetValue);
+
+  // Cambiando preset la vista torna al default dell'operazione; poi è sovrascrivibile.
+  function selectPreset(value: PresetValue) {
+    setPresetValue(value);
+    setView(getPreset(value).view);
+  }
 
   const counts = useMemo(
     () => ({
-      totale: entriesSortedDesc.length,
-      bozze: entriesSortedDesc.filter((e) => e.status === "to_be_reviewed").length,
-      confermati: entriesSortedDesc.filter((e) => e.status === "available").length,
-      locali: entriesSortedDesc.filter((e) => e.status === "local_draft").length,
+      totale: mockCatalogEntries.length,
+      bozze: mockCatalogEntries.filter((e) => e.status === "to_be_reviewed").length,
+      confermati: mockCatalogEntries.filter((e) => e.status === "available").length,
+      locali: mockCatalogEntries.filter((e) => e.status === "local_draft").length,
     }),
-    [entriesSortedDesc]
+    []
   );
 
   const filteredEntries = useMemo(() => {
-    return entriesSortedDesc.filter((entry) => {
-      const matchesStatus = statusFilter === "tutti" || entry.status === statusFilter;
-      const q = query.trim().toLowerCase();
-      const matchesQuery =
-        q.length === 0 ||
+    const scoped =
+      preset.statuses === null
+        ? mockCatalogEntries
+        : mockCatalogEntries.filter((e) => preset.statuses!.includes(e.status));
+    const sorted = [...scoped].sort((a, b) =>
+      preset.sort === "createdAtAsc"
+        ? a.createdAt.localeCompare(b.createdAt)
+        : b.createdAt.localeCompare(a.createdAt)
+    );
+    const q = query.trim().toLowerCase();
+    if (q.length === 0) return sorted;
+    return sorted.filter(
+      (entry) =>
         entry.attributes.brand.toLowerCase().includes(q) ||
         entry.attributes.tipoCapo.toLowerCase().includes(q) ||
-        (entry.sku ?? "").toLowerCase().includes(q);
-      return matchesStatus && matchesQuery;
-    });
-  }, [entriesSortedDesc, statusFilter, query]);
+        (entry.sku ?? "").toLowerCase().includes(q)
+    );
+  }, [preset, query]);
 
   const isEmpty = filteredEntries.length === 0;
-  const isGlobalEmpty = entriesSortedDesc.length === 0;
+  const isGlobalEmpty = mockCatalogEntries.length === 0;
 
   return (
     <div className="mx-auto max-w-[1400px] px-6 py-8 sm:px-8">
@@ -101,7 +109,7 @@ export default function CapiListPage() {
       </div>
 
       <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
-        <SegmentedFilter options={STATUS_OPTIONS} active={statusFilter} onChange={setStatusFilter} />
+        <SegmentedFilter options={PRESET_OPTIONS} active={presetValue} onChange={selectPreset} />
         <div className="inline-flex gap-0.5 rounded-full bg-foreground/[.05] p-[3px]">
           {VIEW_OPTIONS.map(({ value, label, icon: Icon }) => (
             <button
@@ -119,18 +127,20 @@ export default function CapiListPage() {
         </div>
       </div>
 
+      <p className="mt-2 text-[13px] text-muted-foreground">{preset.hint}</p>
+
       <div className="mt-5">
         {isGlobalEmpty ? (
           <EmptyState title="Nessun capo ancora" subtitle="Scatta il primo capo per iniziare a catalogare." />
         ) : isEmpty ? (
           <EmptyState
-            title={`Nessun capo in "${STATUS_OPTIONS.find((o) => o.value === statusFilter)?.label ?? ""}"`}
-            subtitle="Cambia filtro o cerca qualcos'altro."
+            title={`Nessun capo in "${preset.label}"`}
+            subtitle="Cambia operazione o cerca qualcos'altro."
           />
         ) : view === "table" ? (
           <CatalogTable entries={filteredEntries} />
         ) : view === "kanban" ? (
-          <CatalogKanban entries={filteredEntries} />
+          <CatalogKanban entries={filteredEntries} statuses={preset.statuses ?? undefined} />
         ) : (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-6">
             {filteredEntries.map((entry) => (

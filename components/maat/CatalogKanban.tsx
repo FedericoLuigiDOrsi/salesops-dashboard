@@ -2,7 +2,8 @@ import { CatalogCard } from "@/components/maat/CatalogCard";
 import type { CatalogEntry, CatalogEntryStatus } from "@/types/maat";
 
 // Vista kanban per status — estensione confermata con Federico il 2026-07-06,
-// non nel brief originale. Colonne fisse sui 3 valori di CatalogEntry.status.
+// non nel brief originale. Colonne sui 3 valori di CatalogEntry.status; il preset
+// operazione può restringerle passando `statuses` (fallback: tutte e 3).
 const COLUMNS: { status: CatalogEntryStatus; label: string }[] = [
   { status: "local_draft", label: "Locale" },
   { status: "to_be_reviewed", label: "Bozza" },
@@ -11,12 +12,22 @@ const COLUMNS: { status: CatalogEntryStatus; label: string }[] = [
 
 interface CatalogKanbanProps {
   entries: CatalogEntry[];
+  statuses?: CatalogEntryStatus[];
 }
 
-export function CatalogKanban({ entries }: CatalogKanbanProps) {
+// Classi Tailwind letterali (il JIT non vede le interpolazioni dinamiche).
+const GRID_COLS: Record<number, string> = {
+  1: "sm:grid-cols-1",
+  2: "sm:grid-cols-2",
+  3: "sm:grid-cols-3",
+};
+
+export function CatalogKanban({ entries, statuses }: CatalogKanbanProps) {
+  const columns = statuses ? COLUMNS.filter((c) => statuses.includes(c.status)) : COLUMNS;
+  const gridCols = GRID_COLS[columns.length] ?? "sm:grid-cols-3";
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-      {COLUMNS.map((column) => {
+    <div className={`grid grid-cols-1 gap-4 ${gridCols}`}>
+      {columns.map((column) => {
         const columnEntries = entries.filter((e) => e.status === column.status);
         return (
           <div key={column.status} className="flex flex-col gap-3 rounded-lg bg-foreground/[.03] p-3">

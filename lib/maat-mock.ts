@@ -185,6 +185,11 @@ export const mockCatalogEntry: CatalogEntry = {
   ],
 };
 
+/** Lookup per id con fallback al mock canonico. Usato dalla route piena `[id]` e dall'overlay intercettato. */
+export function getCatalogEntry(id: string): CatalogEntry {
+  return mockCatalogEntries.find((e) => e.id === id) ?? mockCatalogEntry;
+}
+
 export const mockNotifications: Notification[] = [
   {
     id: "n1",

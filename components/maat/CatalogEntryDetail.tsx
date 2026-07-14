@@ -16,6 +16,7 @@ import { ConfirmGateButton } from "@/components/maat/ConfirmGateButton";
 import { PhotoGrid } from "@/components/maat/PhotoGrid";
 import { useMaatEntry } from "@/lib/maat-store";
 import { getMeasureCategory, MEASURE_FIELDS, CATEGORY_LABELS } from "@/lib/measures";
+import { cn } from "@/lib/utils";
 import type { CatalogEntry } from "@/types/maat";
 
 const ATTRIBUTE_ORDER: { key: keyof CatalogEntry["attributes"]; label: string }[] = [
@@ -39,9 +40,16 @@ const REQUIRED_LABELS: { key: "fronte" | "retro" | "brand"; text: string }[] = [
 
 const UNCERTAIN_FIELDS = new Set<keyof CatalogEntry["attributes"]>(["stagionalita"]);
 
-export function CatalogEntryDetail() {
+interface CatalogEntryDetailProps {
+  /** "page" = route piena (gate fixed a fondo viewport); "panel" = dentro l'overlay Sheet (gate sticky). */
+  variant?: "page" | "panel";
+}
+
+export function CatalogEntryDetail({ variant = "page" }: CatalogEntryDetailProps) {
   const router = useRouter();
   const { entry } = useMaatEntry();
+  const isPanel = variant === "panel";
+  const pad = isPanel ? "px-5" : "px-4 sm:px-0";
   const missingLabels = REQUIRED_LABELS.filter(({ key }) => {
     const photo = entry.photos.find((p) => p.label === key);
     return !photo || photo.state !== "validated";
@@ -53,9 +61,9 @@ export function CatalogEntryDetail() {
   const measureFields = MEASURE_FIELDS[measureCategory];
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col pb-28">
+    <div className={cn("flex flex-col", isPanel ? "min-h-full" : "mx-auto max-w-3xl pb-28")}>
       {/* Hero */}
-      <div className="flex items-start gap-4 border-b border-border px-4 py-6 sm:px-0">
+      <div className={cn("flex items-start gap-4 border-b border-border py-6", pad)}>
         <div className="size-20 shrink-0 overflow-hidden rounded-[14px] bg-muted">
           {heroPhoto?.url && (
             // eslint-disable-next-line @next/next/no-img-element
@@ -86,7 +94,7 @@ export function CatalogEntryDetail() {
       </div>
 
       {/* Photo grid */}
-      <div className="border-b border-border px-4 py-6 sm:px-0">
+      <div className={cn("border-b border-border py-6", pad)}>
         <h2 className="mb-3 font-mono text-xs font-semibold uppercase tracking-wide text-muted-foreground">Foto</h2>
         <PhotoGrid
           photos={entry.photos}
@@ -96,7 +104,7 @@ export function CatalogEntryDetail() {
       </div>
 
       {/* Attributes */}
-      <div className="px-4 sm:px-0">
+      <div className={pad}>
         {ATTRIBUTE_ORDER.map(({ key, label }) => (
           <AttributeField
             key={key}
@@ -108,7 +116,7 @@ export function CatalogEntryDetail() {
       </div>
 
       {/* Misure — calcolate dalla foto ArUco, categoria derivata da tipoCapo */}
-      <div className="px-4 py-2 sm:px-0">
+      <div className={cn("py-2", pad)}>
         <Accordion type="single" collapsible>
           <AccordionItem value="misure">
             <AccordionTrigger className="font-medium">
@@ -129,17 +137,23 @@ export function CatalogEntryDetail() {
       </div>
 
       {/* Metadata footer */}
-      <div className="flex justify-between px-4 py-4 text-xs text-muted-foreground sm:px-0">
+      <div className={cn("flex justify-between py-4 text-xs text-muted-foreground", pad)}>
         <span className="font-mono">{new Date(entry.createdAt).toLocaleDateString("it-IT")}</span>
         <span className="font-mono">{entry.accountId}</span>
       </div>
 
-      {/* Sticky confirm gate */}
-      <div className="fixed inset-x-0 bottom-0">
-        <div className="mx-auto max-w-3xl">
+      {/* Confirm gate — fixed a fondo viewport nella pagina, sticky dentro il pannello */}
+      {isPanel ? (
+        <div className="sticky bottom-0 z-10 mt-auto">
           <ConfirmGateButton enabled={gateEnabled} missingLabels={missingLabels} />
         </div>
-      </div>
+      ) : (
+        <div className="fixed inset-x-0 bottom-0">
+          <div className="mx-auto max-w-3xl">
+            <ConfirmGateButton enabled={gateEnabled} missingLabels={missingLabels} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

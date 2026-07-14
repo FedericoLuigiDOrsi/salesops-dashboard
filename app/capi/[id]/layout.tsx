@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { MaatEntryProvider } from "@/lib/maat-store";
-import { mockCatalogEntry } from "@/lib/maat-mock";
+import { getCatalogEntry } from "@/lib/maat-mock";
 
 export default async function CapiEntryLayout({
   children,
@@ -12,7 +12,7 @@ export default async function CapiEntryLayout({
   const { id } = await params;
 
   return (
-    <MaatEntryProvider id={id} initialEntry={mockCatalogEntry}>
+    <MaatEntryProvider id={id} initialEntry={getCatalogEntry(id)}>
       {children}
     </MaatEntryProvider>
   );

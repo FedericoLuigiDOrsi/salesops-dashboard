@@ -8,6 +8,9 @@
 
 Ultimo aggiornamento: 2026-07-17 · Owner: Federico D'Orsi
 
+> 👥 **Onboarding team e metodo di lavoro (HTML-first → Next.js):** [`docs/GUIDA-TEAM.md`](docs/GUIDA-TEAM.md).
+> Questo file è invece la vista "stato + backlog" per riprendere lo sviluppo.
+
 ---
 
 ## 1. Cos'è, in una frase

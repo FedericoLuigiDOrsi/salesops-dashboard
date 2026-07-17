@@ -19,7 +19,11 @@ di codice reale su cui costruire l'MVP.
 
 - **Live (produzione):** <https://salesops-dashboard-mu-six.vercel.app>
 - **Repo:** <https://github.com/FedericoLuigiDOrsi/salesops-dashboard>  ⚠️ *vedi §7 punto 1 — repo personale, da spostare in org DedaloTeam*
-- **Deploy:** automatico a ogni push su `main` (Vercel Git integration). Un push = un deploy.
+- **Deploy:** ⚠️ **auto-deploy da Git NON scatta al momento** (verificato 2026-07-17: il commit
+  `6a72fda` pushato su `main` non ha prodotto alcun deploy dopo 9h; il repo risulta "connected" ma
+  il webhook non triggera). Finché non è sistemato (vedi §7 punto 1) **il deploy va fatto a mano**:
+  `vercel --prod` dalla root del repo. La live gira quindi su un deploy potenzialmente più vecchio
+  di `main`.
 
 ---
 
@@ -147,8 +151,14 @@ fisico + QR (S-25m) · ordini/bundle multi-capo (S-27) · analytics/KPI (S-26a, 
 
 ## 7. Decisioni aperte (owner: Federico)
 
-1. **Spostare il repo in org `DedaloTeam`** (oggi è su account personale `FedericoLuigiDOrsi`).
+1. **Riparare l'auto-deploy Git → Vercel** (🔴 priorità). Il repo è "connected" ma i push non
+   triggerano deploy (verificato 2026-07-17). Da controllare nel dashboard Vercel:
+   Project → Settings → Git (auto-deploy attivo? branch `main`?) e l'installazione della GitHub App
+   sul repo. Finché non scatta, ogni "vetrina" al team richiede `vercel --prod` a mano.
+2. **Spostare il repo in org `DedaloTeam`** (oggi è su account personale `FedericoLuigiDOrsi`).
    Senza questo, il team non collabora davvero: vanno invitati collaboratori uno a uno.
+   (Nota: cambiare owner del repo spesso richiede di ri-collegare l'integrazione Vercel — buon
+   momento per sistemare anche il punto 1.)
 2. **Progetto Vercel** è sotto scope personale `federicoluigidorsis-projects` → invitare il team
    o spostarlo su un team Vercel.
 3. **Pointer in dedalo-os:** `dedalo-os/projects/maat/README.md` non menziona questo repo né il link
@@ -178,8 +188,9 @@ fisico + QR (S-25m) · ordini/bundle multi-capo (S-27) · analytics/KPI (S-26a, 
 6. `git add` mirato (mai `git add -A` alla cieca) → `git commit` → **`git push`**.
    Nessun lavoro resta solo sulla macchina. Se non è pushato, non esiste.
 7. Aggiorna la sezione §5/§6 di questo file e (se lo portiamo nel repo) il tracker.
-8. Il push su `main` fa partire il deploy: controlla che <https://salesops-dashboard-mu-six.vercel.app>
-   sia verde.
+8. **Deploy:** finché l'auto-deploy non è riparato (§7 punto 1), lancia `vercel --prod` a mano dopo
+   il push, poi controlla che <https://salesops-dashboard-mu-six.vercel.app> sia verde. Una volta
+   sistemato, basterà il push e questo passo diventa solo "verifica che il deploy sia verde".
 
 **Convenzione commit**
 ```

@@ -53,7 +53,7 @@ export default function RegistrazionePage() {
           <AuthBackButton onClick={() => setView("choice")} />
           <AuthHeader eyebrow="Crea account · Email" title="Crea il tuo account" sub="Inserisci i tuoi dati per registrarti con l'email." />
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(() => router.push("/"))} className="flex flex-col gap-3" noValidate>
+            <form onSubmit={form.handleSubmit(() => router.push("/onboarding?step=browser"))} className="flex flex-col gap-3" noValidate>
               <FormField
                 control={form.control}
                 name="fullName"

@@ -11,7 +11,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 import { RegistraCaricoDialog } from "@/components/maat/accounting/RegistraCaricoDialog";
 import { formatEUR, cn } from "@/lib/utils";
 import { MARKETPLACE_LABELS } from "@/types/maat";
-import type { LotType, Supplier } from "@/types/maat";
+import type { Lot, LotType, Supplier } from "@/types/maat";
 import {
   weeklyKpi,
   topCategory,
@@ -22,7 +22,7 @@ import {
   cassaKpi,
   accountingEntries,
 } from "@/lib/accounting-mock";
-import { suppliers as initialSuppliers } from "@/lib/suppliers-mock";
+import { suppliers as initialSuppliers, loadHistory as initialLoadHistory } from "@/lib/suppliers-mock";
 
 const PERIODS = [
   { value: "7", label: "7 giorni" },
@@ -57,9 +57,18 @@ function supplierFigure(s: Supplier) {
   return parts.join(" · ") || "—";
 }
 
+function nextLoadCode(loads: Lot[]) {
+  const max = loads.reduce((m, l) => {
+    const match = /^CAR-(\d+)$/.exec(l.code);
+    return match ? Math.max(m, Number(match[1])) : m;
+  }, 0);
+  return `CAR-${String(max + 1).padStart(4, "0")}`;
+}
+
 export function AccountingView() {
   const [period, setPeriod] = useState("30");
   const [suppliers, setSuppliers] = useState<Supplier[]>(initialSuppliers);
+  const [loads, setLoads] = useState<Lot[]>(initialLoadHistory);
   const [highlightSupplier, setHighlightSupplier] = useState<string | null>(null);
   const [caricoOpen, setCaricoOpen] = useState(false);
 
@@ -73,7 +82,17 @@ export function AccountingView() {
     { gross: 0, fee: 0, shipping: 0, net: 0 }
   );
 
-  function registerLoad(data: { type: LotType; quantity: number; category: string; supplierName: string }) {
+  const loadsSpentCents = loads.reduce((sum, l) => sum + (l.pricePaidCents ?? 0), 0);
+
+  function registerLoad(data: {
+    name?: string;
+    type: LotType;
+    quantity: number;
+    category: string;
+    supplierName: string;
+    pricePaidCents?: number | null;
+    executedAt: string;
+  }) {
     setSuppliers((prev) => {
       const existing = prev.find((s) => s.name.toLowerCase() === data.supplierName.toLowerCase());
       if (existing) {
@@ -98,6 +117,24 @@ export function AccountingView() {
         updatedAt: "oggi",
       };
       return [created, ...prev];
+    });
+    setLoads((prev) => {
+      const code = nextLoadCode(prev);
+      const newLoad: Lot = {
+        id: `load-${Date.now()}`,
+        code,
+        name: data.name?.trim() || code,
+        supplierName: data.supplierName,
+        acquiredAt: data.executedAt,
+        executedAt: data.executedAt,
+        type: data.type,
+        quantity: data.quantity,
+        category: data.category,
+        allocationMethod: data.type === "ingrosso" ? "weight_based" : "uniform",
+        totalCostCents: null,
+        pricePaidCents: data.pricePaidCents ?? null,
+      };
+      return [newLoad, ...prev];
     });
     setHighlightSupplier(data.supplierName);
     window.setTimeout(() => setHighlightSupplier(null), 1500);
@@ -402,6 +439,54 @@ export function AccountingView() {
               <div className="font-mono text-[13px] font-semibold">{supplierFigure(s)}</div>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* storico carichi */}
+      <section>
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="text-base font-semibold">Storico carichi</h3>
+          <span className="font-mono text-xs text-muted-foreground">
+            Speso ultimi 90gg · <b className="font-semibold text-foreground">{formatEUR(loadsSpentCents)}</b>
+          </span>
+        </div>
+        <div className="overflow-hidden rounded-xl border border-border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Carico</TableHead>
+                <TableHead>Data</TableHead>
+                <TableHead>Fornitore</TableHead>
+                <TableHead>Categoria</TableHead>
+                <TableHead className="text-right">Q.tà</TableHead>
+                <TableHead className="text-right">Prezzo pagato</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loads.map((l) => (
+                <TableRow key={l.id}>
+                  <TableCell className="font-mono text-xs font-semibold">{l.name || l.code}</TableCell>
+                  <TableCell className="font-mono text-xs text-muted-foreground">
+                    {new Date(l.executedAt).toLocaleDateString("it-IT", { day: "numeric", month: "numeric" })}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">{l.supplierName}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground">{l.category}</TableCell>
+                  <TableCell className="text-right font-mono text-xs text-muted-foreground">
+                    {l.quantity} {l.type === "pezzo" ? "pz" : "kg"}
+                  </TableCell>
+                  <TableCell className="text-right font-mono text-xs font-semibold">
+                    {l.pricePaidCents ? formatEUR(l.pricePaidCents) : "—"}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+            <TableFooter>
+              <TableRow>
+                <TableCell colSpan={5}>Totale · {loads.length} carichi</TableCell>
+                <TableCell className="text-right font-mono text-xs font-semibold">{formatEUR(loadsSpentCents)}</TableCell>
+              </TableRow>
+            </TableFooter>
+          </Table>
         </div>
       </section>
 

@@ -5,9 +5,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Home,
-  Shirt,
   Bell,
   Package,
+  Layers,
   Wallet,
   Truck,
   Plus,
@@ -17,14 +17,13 @@ import { cn } from "@/lib/utils";
 import { useNotifications } from "@/lib/notifications-store";
 import { useSettings } from "@/lib/settings-store";
 import { mockUserProfile } from "@/lib/tenant-mock";
-import { mockCatalogEntries } from "@/lib/maat-mock";
 import { SettingsModal } from "@/components/maat/SettingsModal";
 
 const NAV_ITEMS = [
   { href: "/", label: "Home", icon: Home },
-  { href: "/capi", label: "Capi", icon: Shirt, badge: mockCatalogEntries.length },
-  { href: "/notifiche", label: "Notifiche", icon: Bell, badgeFromNotifications: true },
   { href: "/inventario", label: "Inventario", icon: Package },
+  { href: "/pubblicazione", label: "Pubblicazione", icon: Layers },
+  { href: "/notifiche", label: "Notifiche", icon: Bell, badgeFromNotifications: true },
   { href: "/contabilita", label: "Contabilità", icon: Wallet },
   { href: "/logistica", label: "Logistica", icon: Truck },
 ] as const;
@@ -111,11 +110,7 @@ export function AppShell({ children }: AppShellProps) {
           {NAV_ITEMS.map((item) => {
             const { href, label, icon: Icon } = item;
             const badge =
-              "badgeFromNotifications" in item && item.badgeFromNotifications
-                ? unreadCount
-                : "badge" in item
-                  ? item.badge
-                  : undefined;
+              "badgeFromNotifications" in item && item.badgeFromNotifications ? unreadCount : undefined;
             const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href);
             return (
               <Link
@@ -207,11 +202,11 @@ export function AppShell({ children }: AppShellProps) {
           aria-label="Navigazione principale"
         >
           <Link
-            href="/capi"
+            href="/inventario"
             className="flex flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium text-muted-foreground data-[active=true]:text-primary"
-            data-active={pathname.startsWith("/capi")}
+            data-active={pathname.startsWith("/inventario")}
           >
-            <Shirt className="size-5" /> Capi
+            <Package className="size-5" /> Inventario
           </Link>
           <div className="flex w-[76px] flex-none items-start justify-center">
             <Link

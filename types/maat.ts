@@ -144,13 +144,16 @@ export interface Supplier {
 export interface Lot {
   id: string;
   code: string;
+  name?: string; // etichetta libera del carico; se assente si mostra `code` (es. CAR-0142)
   supplierName: string;
   acquiredAt: string; // ISO date
+  executedAt: string; // ISO date — "Data di esecuzione" nel dialog Registra carico
   type: LotType;
   quantity: number;
   category: string;
   allocationMethod: LotAllocationMethod;
-  totalCostCents: number | null; // non raccolto nel dialog "Registra carico", opzionale
+  totalCostCents: number | null; // costo di ripartizione per capo, non raccolto nel dialog, opzionale
+  pricePaidCents?: number | null; // "Prezzo pagato" al fornitore per l'intero carico, facoltativo nel dialog
 }
 
 export type ShipmentStatus = "shipped" | "in_transit" | "out_for_delivery";

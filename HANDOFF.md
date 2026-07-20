@@ -58,11 +58,11 @@ pnpm build          # gate prima di ogni push
 
 Il prodotto vive su **due binari dentro questo unico repo**, serviti da **un solo deploy**:
 
-1. **App React reale** (`app/`, `components/maat/`, `lib/`) — Inventario, scheda prodotto,
-   Notifiche, Home, Impostazioni. È il codice più avanzato del progetto.
-2. **Prototipi HTML mobile** (`public/mobile/`) — Onboarding e flusso "aggiungi articolo/cattura
-   foto", serviti come static da `/mobile/*.html`. Linkati dall'`AppShell` React (voce
-   "Anteprima mobile").
+1. **App React reale** (`app/`, `components/maat/`, `lib/`) — Capi, scheda prodotto, Notifiche,
+   Home, Inventario, Contabilità, Logistica, Impostazioni (modal). È il codice più avanzato del progetto.
+2. **Prototipi HTML mobile** (`public/mobile/`) — Onboarding, flusso "aggiungi articolo/cattura foto"
+   e lo Shell+Account originale di Marco, serviti come static da `/mobile/*.html` (non più linkati
+   dall'AppShell — restano come sorgente di design/riferimento, non come route dell'app).
 
 > **Fonte di verità degli HTML = `public/mobile/` (versionato).** I file sciolti in
 > `~/Downloads/*.html` sono **archivio storico**: non modificarli lì, non ripartire da lì.
@@ -91,23 +91,30 @@ devono restare identici tra mobile e web; gli **organismi** possono divergere
 /capi/[id]/review         review scheda            ⚠️ S-10, bloccata su 2 decisioni (vedi §6)
 /capi/[id]/foto/[label]   slot foto etichettato
 /notifiche                app/notifiche/page.tsx  Inbox (badge live, "segna tutte lette", raggruppo per giorno)
-/impostazioni             app/impostazioni/page.tsx  Tabs Profilo + Brand tenant
+/inventario               app/inventario/page.tsx Stato pubblicazione per piattaforma (Vinted/Grailed/Depop) + fulfillment
+/contabilita              app/contabilita/page.tsx  KPI settimana, andamento 8 settimane (recharts), distribuzione piattaforma/categoria, cassa/settlement, transazioni, Fornitori+carico
+/logistica                app/logistica/page.tsx  Spedizioni raggruppate per piattaforma (corriere/tracking/stato/consegna)
 /login                    app/login/page.tsx       Login — scelta metodo social-first + form email, validazione zod  [UI mock, pre-login → fuori dall'AppShell]
 /registrazione            app/registrazione/page.tsx  Registrazione — social-first + form email (hint password live + conferma)  [UI mock] → submit success punta a /onboarding?step=browser
 /onboarding               app/onboarding/page.tsx  Tour prodotto (welcome→bozza) + continuazione post-signup (browser→canali→fatto via ?step=)  [UI mock, fuori dall'AppShell]
 /mobile/*.html            public/mobile/           Prototipi HTML (onboarding, cattura foto, shell, auth)
 ```
+Impostazioni non è più una route: è il **modal** `SettingsModal` (8 pannelli), aperto dal bottone account
+nell'AppShell (rail desktop o app-bar mobile). `app/impostazioni/` e `SettingsView.tsx` rimossi.
 
 ### Componenti (`components/maat/`)
 AppShell · CatalogCard · CatalogEntryDetail · CatalogKanban · CatalogTable · EntrySheet ·
 ReviewForm · AttributeField · PhotoCaptureFlow · PhotoGrid · PhotoSlot · NotificationInbox ·
-NotificationRow · HomeDashboard · SettingsView · StatTile · StatusBadge · SegmentedFilter ·
+NotificationRow · HomeDashboard · SettingsModal · StatTile · StatusBadge · SegmentedFilter ·
 Sequence · ConfirmGateButton · EmptyState · AuthLayout · SocialButtons · PasswordInput ·
-onboarding/OnboardingFlow
+onboarding/OnboardingFlow · accounting/AccountingView · accounting/RegistraCaricoDialog ·
+logistics/LogisticsView · inventory/InventoryView
 
 ### Stato & dati (`lib/`)
-`maat-store.tsx` · `notifications-store.tsx` (context, badge live) · `catalog-presets.ts` (i 3 preset-operazione) ·
-`catalog-stats.ts` (conteggi condivisi Home/capi) · `maat-mock.ts` · `tenant-mock.ts` · `measures.ts` (ArUco).
+`maat-store.tsx` · `notifications-store.tsx` (context, badge live) · `settings-store.tsx` (context: modal
+Impostazioni + profilo/ruolo + brand, condiviso rail/app-bar/SettingsModal) · `catalog-presets.ts` (i 3
+preset-operazione) · `catalog-stats.ts` (conteggi condivisi Home/capi) · `maat-mock.ts` · `tenant-mock.ts` ·
+`accounting-mock.ts` · `logistics-mock.ts` · `suppliers-mock.ts` · `inventory-mock.ts` · `measures.ts` (ArUco).
 Tipi in `types/maat.ts`.
 
 ---
@@ -132,6 +139,20 @@ Tipi in `types/maat.ts`.
       con la review): piano+pagamento (richiede PSP, mai stato nel port), loghi piattaforma reali (badge iniziali al
       posto dei PNG), progress-dots decorativi. `restart()` del prototipo → sostituito con uscita reale a `/`.
       Sorgente design: `public/mobile/maat-onboarding-interattivo.html`. Deriva dal batch HTML di Marco 20/07.
+- [x] **Fase 7** — Shell + Account: `AppShell` ricostruito — rail desktop collassabile (216↔64px, persistito
+      `localStorage`) + bottom-tab-bar/FAB mobile (Capi/Crea capo/Notifiche); voce "Impostazioni" diventata
+      **modal** (`SettingsModal`, 8 pannelli: Generale con Brand/tono/estetica, Account con toggle ruolo
+      Admin/Operator **cosmetico**, Dipendenti, Piano e fatturazione, Notifiche/Privacy/Lingua placeholder,
+      Tutorial→riapre `/onboarding`). 3 domini nuovi: **Contabilità** (KPI settimana, categoria top, andamento
+      8 settimane in `recharts`, distribuzione piattaforma/categoria, cassa/settlement, tabella transazioni +
+      export CSV reale, sezione Fornitori con dialog "Registra carico" al pezzo/all'ingrosso), **Logistica**
+      (spedizioni per piattaforma), **Inventario** (stato listing per piattaforma + fulfillment, sui capi
+      `available` esistenti). Tipi/mock **informati dal target Supabase reale** (schema minimo: `AccountingEntry`,
+      `Lot`, `Shipment`, `Supplier` — vedi `Reference/research/maat/maat-airtable-database-fields.md` nel vault,
+      cluster C11/C12), non ancora collegati a un DB (resta mock locale, coerente col resto del prototipo).
+      **Fuori scope**: role-gate reale (resta cosmetico, nessuna route protetta), entità `suppliers`/`carichi`
+      come tabelle vere (restano stato locale in `AccountingView`). Sorgente design:
+      `public/mobile/maat-shell-account.html`. Deriva dal batch HTML di Marco 20/07.
 
 Piano originale completo: era in `~/.claude/plans/jaunty-stirring-raven.md` (locale — se serve
 storicizzarlo, va copiato qui in `docs/`).
@@ -143,11 +164,14 @@ storicizzarlo, va copiato qui in `docs/`).
 Fonte: tracker schermate `~/Downloads/maat-ui-tracker.html` (23 schermate S-00→S-22 + backlog).
 ⚠️ **Il tracker stesso è "solo in locale"** — vedi §7 punto 4, va portato nel repo.
 
-### 🔴 Sblocco prioritario — 2 decisioni bloccanti su S-10 (Review scheda)
-La schermata cardine è ferma finché non si chiudono:
-1. **Contratto attributi:** 10 (contratto reale `ATTRIBUTE_ORDER` del codice) vs 12 (vecchio OBJECTS).
-   Proposta in piano: disegnare S-10 sul contratto a **10**. Da confermare.
-2. **Blocco "prezzo suggerito"** (REQ-213/214): dove vive il suggerimento AI → accetta/modifica. Senza casa.
+### ✅ 2 decisioni chiuse (20/07) — S-10 sbloccata (Review scheda)
+1. **Gate di conferma:** DECISO — gate composito **AND** (3 foto `validated` + campi obbligatori OK). Sostituisce il
+   conflitto tra `10 — UIUX Screens.md` (solo campi) e CTA-matrix/MCSFD (solo foto). Propagato nei doc OOUX 20/07.
+2. **Contratto attributi:** DECISO — S-10 si disegna sul contratto **v2, 10 attributi** (`ATTRIBUTE_ORDER` del
+   codice) + misure derivate per categoria via ArUco, non i 12 del vecchio `02-object-guide.md`.
+
+### 🔴 Ancora aperto
+1. **Blocco "prezzo suggerito"** (REQ-213/214): dove vive il suggerimento AI → accetta/modifica. Senza casa.
 
 ### 🟡 Tier 1 — flusso P2C core (in `dev`/`review`, da rifinire)
 - S-08 misure ArUco: esiste in mobile, **manca la versione web**.
@@ -155,9 +179,13 @@ La schermata cardine è ferma finché non si chiudono:
 - S-12 catalogo lista / S-13 dettaglio+timeline: valorizzare in demo.
 
 ### 🟠 Tier 2-4 — non iniziati (nessun prototipo, `todo`)
-Editor con lock (S-14) · gestione offerte (S-18) · resi & conformity (S-19) · accounting/escrow (S-20) ·
-gestione bozze (S-15) · elimina & recupera (S-16) · listing & fulfillment (S-17) · account tenant (S-03) ·
-settings pubblicazione (S-04) · logistics (S-21) · stato degradato (S-22).
+Editor con lock (S-14) · gestione offerte (S-18) · resi & conformity (S-19) ·
+gestione bozze (S-15) · elimina & recupera (S-16) · account tenant (S-03) ·
+settings pubblicazione (S-04) · stato degradato (S-22).
+
+Accounting/escrow (S-20), listing & fulfillment (S-17) e logistics (S-21): 🟢 **UI FATTA 2026-07-20** —
+`/contabilita`, `/inventario`, `/logistica` (mock locale, dati statici informati dallo schema Supabase
+target — vedi Fase 7 in §5); manca il backend reale (`accounting_entries`/`shipments`/`listings` veri).
 
 ### 🔵 Backlog ALTA (gap di prodotto emersi in review, senza schermata)
 Login/Auth (S-26): 🟢 **UI FATTA 2026-07-20** — route `/login` + `/registrazione` (mock, social-first); manca il backend Supabase/OAuth · timeline auto-delist

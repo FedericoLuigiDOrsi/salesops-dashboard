@@ -93,7 +93,8 @@ devono restare identici tra mobile e web; gli **organismi** possono divergere
 /notifiche                app/notifiche/page.tsx  Inbox (badge live, "segna tutte lette", raggruppo per giorno)
 /impostazioni             app/impostazioni/page.tsx  Tabs Profilo + Brand tenant
 /login                    app/login/page.tsx       Login — scelta metodo social-first + form email, validazione zod  [UI mock, pre-login → fuori dall'AppShell]
-/registrazione            app/registrazione/page.tsx  Registrazione — social-first + form email (hint password live + conferma)  [UI mock]
+/registrazione            app/registrazione/page.tsx  Registrazione — social-first + form email (hint password live + conferma)  [UI mock] → submit success punta a /onboarding?step=browser
+/onboarding               app/onboarding/page.tsx  Tour prodotto (welcome→bozza) + continuazione post-signup (browser→canali→fatto via ?step=)  [UI mock, fuori dall'AppShell]
 /mobile/*.html            public/mobile/           Prototipi HTML (onboarding, cattura foto, shell, auth)
 ```
 
@@ -101,7 +102,8 @@ devono restare identici tra mobile e web; gli **organismi** possono divergere
 AppShell · CatalogCard · CatalogEntryDetail · CatalogKanban · CatalogTable · EntrySheet ·
 ReviewForm · AttributeField · PhotoCaptureFlow · PhotoGrid · PhotoSlot · NotificationInbox ·
 NotificationRow · HomeDashboard · SettingsView · StatTile · StatusBadge · SegmentedFilter ·
-Sequence · ConfirmGateButton · EmptyState · AuthLayout · SocialButtons · PasswordInput
+Sequence · ConfirmGateButton · EmptyState · AuthLayout · SocialButtons · PasswordInput ·
+onboarding/OnboardingFlow
 
 ### Stato & dati (`lib/`)
 `maat-store.tsx` · `notifications-store.tsx` (context, badge live) · `catalog-presets.ts` (i 3 preset-operazione) ·
@@ -123,6 +125,13 @@ Tipi in `types/maat.ts`.
       fuori dall'`AppShell` (isolamento via prefissi in `AppShell.tsx`), validazione `zod` + hint password live
       (8/speciale/maiuscola) + conferma password, submit mock → `/`. Social Google/Apple = **placeholder** (manca OAuth).
       Sorgente design: `public/mobile/maat-auth.html`. Deriva dal batch HTML di Marco 20/07.
+- [x] **Fase 6** — Onboarding interattivo (`app/onboarding`, componente `OnboardingFlow`): tour prodotto welcome→
+      piattaforme→demo AI→camera(shoot animato)→bozza, poi continuazione post-signup browser→canali→fatto
+      (raggiunta solo via `?step=browser` dopo una registrazione reale — niente pannelli register/login duplicati,
+      tutti i CTA "prosegui/salta" del tour portano a `/registrazione` vera). **Fuori scope** (per design, coerente
+      con la review): piano+pagamento (richiede PSP, mai stato nel port), loghi piattaforma reali (badge iniziali al
+      posto dei PNG), progress-dots decorativi. `restart()` del prototipo → sostituito con uscita reale a `/`.
+      Sorgente design: `public/mobile/maat-onboarding-interattivo.html`. Deriva dal batch HTML di Marco 20/07.
 
 Piano originale completo: era in `~/.claude/plans/jaunty-stirring-raven.md` (locale — se serve
 storicizzarlo, va copiato qui in `docs/`).

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Shirt, Package, Minus, Plus, Shield } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -17,16 +17,39 @@ const TIPO_CONFIG: Record<LotType, { label: string; unit: string; hint: string; 
   ingrosso: { label: "Peso del carico", unit: "kg", hint: "Peso complessivo dei capi, in chilogrammi.", def: 25, step: 5 },
 };
 
+// Mirrors mockup's parsePrezzo(): se c'è la virgola tratta i punti come separatori
+// delle migliaia (formato IT), altrimenti il punto resta decimale. Ritorna centesimi.
+function parsePricePaidCents(raw: string): number | null {
+  let s = raw.trim().replace(/[€\s]/g, "");
+  if (!s) return null;
+  if (s.includes(",")) s = s.replace(/\./g, "").replace(",", ".");
+  const value = parseFloat(s.replace(/[^0-9.]/g, ""));
+  if (!Number.isFinite(value) || value <= 0) return null;
+  return Math.round(value * 100);
+}
+
 interface RegistraCaricoDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   suppliers: Supplier[];
-  onSubmit: (data: { type: LotType; quantity: number; category: string; supplierName: string }) => void;
+  onSubmit: (data: {
+    name?: string;
+    type: LotType;
+    quantity: number;
+    category: string;
+    supplierName: string;
+    pricePaidCents?: number | null;
+    executedAt: string;
+  }) => void;
 }
 
 export function RegistraCaricoDialog({ open, onOpenChange, suppliers, onSubmit }: RegistraCaricoDialogProps) {
+  const [name, setName] = useState("");
   const [type, setType] = useState<LotType>("pezzo");
   const [qty, setQty] = useState(TIPO_CONFIG.pezzo.def);
+  const [pricePaid, setPricePaid] = useState("");
+  const [executedAt, setExecutedAt] = useState("");
+  const [maxDate, setMaxDate] = useState("");
   const [category, setCategory] = useState<string>(CARICO_CATEGORIES[0]);
   const [supplierChoice, setSupplierChoice] = useState<string>(suppliers[0]?.name ?? NEW_SUPPLIER);
   const [newSupplierName, setNewSupplierName] = useState("");
@@ -35,6 +58,15 @@ export function RegistraCaricoDialog({ open, onOpenChange, suppliers, onSubmit }
   const supplierName = supplierChoice === NEW_SUPPLIER ? newSupplierName.trim() : supplierChoice;
   const canSubmit = qty > 0 && supplierName.length > 0;
 
+  // Data di esecuzione preimpostata a oggi ad ogni apertura del dialog (client-only,
+  // niente Date a livello di modulo per evitare mismatch SSR/hydration).
+  useEffect(() => {
+    if (!open) return;
+    const today = new Date().toISOString().slice(0, 10);
+    setExecutedAt(today);
+    setMaxDate(today);
+  }, [open]);
+
   function changeType(next: LotType) {
     setType(next);
     setQty(TIPO_CONFIG[next].def);
@@ -42,9 +74,19 @@ export function RegistraCaricoDialog({ open, onOpenChange, suppliers, onSubmit }
 
   function handleSubmit() {
     if (!canSubmit) return;
-    onSubmit({ type, quantity: qty, category, supplierName });
+    onSubmit({
+      name: name.trim() || undefined,
+      type,
+      quantity: qty,
+      category,
+      supplierName,
+      pricePaidCents: parsePricePaidCents(pricePaid),
+      executedAt: executedAt || maxDate,
+    });
     onOpenChange(false);
     setNewSupplierName("");
+    setName("");
+    setPricePaid("");
   }
 
   return (
@@ -56,6 +98,18 @@ export function RegistraCaricoDialog({ open, onOpenChange, suppliers, onSubmit }
         </DialogHeader>
 
         <div className="flex flex-col gap-5">
+          <div className="flex flex-col gap-2">
+            <span className="text-sm font-medium">Nome del carico</span>
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="es. Giacche invernali"
+              autoComplete="off"
+              maxLength={40}
+            />
+            <span className="text-xs text-muted-foreground">Se lo lasci vuoto assegniamo un codice automatico.</span>
+          </div>
+
           <div className="flex flex-col gap-2">
             <span className="text-sm font-medium">Tipo di carico</span>
             <div className="grid grid-cols-2 gap-2">
@@ -102,6 +156,28 @@ export function RegistraCaricoDialog({ open, onOpenChange, suppliers, onSubmit }
               </Button>
             </div>
             <span className="text-xs text-muted-foreground">{cfg.hint}</span>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <span className="text-sm font-medium">Prezzo pagato</span>
+            <div className="flex items-center gap-1.5 rounded-md border border-border px-3 py-1">
+              <span className="text-sm text-muted-foreground">€</span>
+              <Input
+                value={pricePaid}
+                onChange={(e) => setPricePaid(e.target.value.replace(/[^0-9.,]/g, ""))}
+                inputMode="decimal"
+                placeholder="0,00"
+                aria-label="Prezzo pagato in euro"
+                className="border-none p-0 shadow-none focus-visible:ring-0"
+              />
+            </div>
+            <span className="text-xs text-muted-foreground">Totale versato al fornitore per questo carico (facoltativo).</span>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <span className="text-sm font-medium">Data di esecuzione</span>
+            <Input type="date" value={executedAt} max={maxDate} onChange={(e) => setExecutedAt(e.target.value)} />
+            <span className="text-xs text-muted-foreground">Quando hai ricevuto il carico · preimpostata a oggi, modificabile.</span>
           </div>
 
           <div className="flex flex-col gap-2">

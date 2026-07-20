@@ -138,7 +138,7 @@ Per capire cosa è già "in Fase 2" e cosa è ancora "solo HTML":
 
 | Elemento / schermata | HTML (Fase 1) | React (Fase 2) | Stato |
 |---|---|---|---|
-| App shell / navigazione | `public/mobile/maat-shell.html` (v1) → `maat-shell-account.html` (rebuild 20/07) | `components/maat/AppShell.tsx` | ✅ entrambi (rail collassabile + tabbar/FAB mobile) |
+| App shell / navigazione | `public/mobile/maat-shell-account.html` (**v2**, nav Capi→Inventario + Pubblicazione) | `components/maat/AppShell.tsx` | ✅ entrambi (rail collassabile + tabbar/FAB mobile) |
 | Catalog card | `public/mobile/maat-catalog-card.html` | `components/maat/CatalogCard.tsx` | ✅ entrambi |
 | Cattura foto | `public/mobile/acquisizione-foto-v2b.html` | `components/maat/PhotoCaptureFlow.tsx` | 🟡 React parziale |
 | Aggiungi articolo / Review | `public/mobile/maat-p2c-flow.html` | `components/maat/ReviewForm.tsx` | 🟡 bloccato (HANDOFF §6) |
@@ -150,9 +150,13 @@ Per capire cosa è già "in Fase 2" e cosa è ancora "solo HTML":
 | Impostazioni | `public/mobile/maat-shell-account.html` (pannello `#settings`) | `components/maat/SettingsModal.tsx` | ✅ entrambi (modal, non più route) |
 | Auth (login + registrazione) | `public/mobile/maat-auth.html` | `app/login` · `app/registrazione` (+ `AuthLayout`) | ✅ entrambi (UI mock, no OAuth) |
 | Onboarding interattivo | `public/mobile/maat-onboarding-interattivo.html` | `app/onboarding` (+ `OnboardingFlow`) | ✅ entrambi (UI mock; billing/plan fuori scope) |
-| Contabilità + Fornitori/Carico | `public/mobile/maat-shell-account.html` (pannello `#contabilita`) | `app/contabilita` (+ `AccountingView`, `RegistraCaricoDialog`) | ✅ entrambi (mock, grafici `recharts`) |
-| Logistica | `public/mobile/maat-shell-account.html` (pannello `#logistica`) | `app/logistica` (+ `LogisticsView`) | ✅ entrambi (mock) |
-| Inventario listing/fulfillment | `public/mobile/maat-shell-account.html` (pannello `#inventario`) | `app/inventario` (+ `InventoryView`) | ✅ entrambi (mock) |
+| Contabilità + Fornitori/Carico + Storico carichi | `maat-shell-account.html` v2 (`#contabilita`) | `app/contabilita` (+ `AccountingView`, `RegistraCaricoDialog` esteso nome/prezzo/data) | ✅ entrambi (mock, `recharts`) |
+| Logistica | `maat-shell-account.html` v2 (`#logistica`) | `app/logistica` (+ `LogisticsView`) | ✅ entrambi (mock) |
+| Inventario unificato (capi + listing + automazioni) | `maat-shell-account.html` v2 (`#inventario` + `#autoDrawer`) | `app/inventario` (+ `InventoryView` v2, `AutomazioniDrawer`) | ✅ entrambi (mock; sostituisce sia `/capi` sia la vecchia `InventoryView` listing) |
+| Pubblicazione | `maat-shell-account.html` v2 (`#pubblicazione`) | `app/pubblicazione` (+ `PublishingView`) | ✅ entrambi (stub placeholder in entrambi) |
+| Home v2 (panoramica configurabile + offerte/vendite) | `maat-shell-account.html` v2 (`#home`) | `app/page.tsx` (+ `HomeDashboard`, `home-mock`) | ✅ entrambi (mock) |
+| Notifiche v2 (offerte/controfferta/anteprima) | `maat-shell-account.html` v2 (`#notifiche` + `#offPop`/`#artPreview`/`#actModal`) | `app/notifiche` (+ `NotificationInbox`, `notifications/OfferPopup`·`ArticlePreview`·`ActivityModal`) | ✅ entrambi (mock) |
+| Settings · Metodi di pagamento | `maat-shell-account.html` v2 (`#settings` pane pagamento) | `SettingsModal` (pane `pagamento`) | ✅ entrambi (form carta mock, no PSP) |
 
 Libreria completa degli atomi/molecole/pattern (in HTML `@dsCard`): `dedalo-os/.../maat-ds/`.
 

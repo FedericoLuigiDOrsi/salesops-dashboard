@@ -144,13 +144,16 @@ export interface Supplier {
 export interface Lot {
   id: string;
   code: string;
+  name?: string; // etichetta libera del carico; se assente si mostra `code` (es. CAR-0142)
   supplierName: string;
   acquiredAt: string; // ISO date
+  executedAt: string; // ISO date — "Data di esecuzione" nel dialog Registra carico
   type: LotType;
   quantity: number;
   category: string;
   allocationMethod: LotAllocationMethod;
-  totalCostCents: number | null; // non raccolto nel dialog "Registra carico", opzionale
+  totalCostCents: number | null; // costo di ripartizione per capo, non raccolto nel dialog, opzionale
+  pricePaidCents?: number | null; // "Prezzo pagato" al fornitore per l'intero carico, facoltativo nel dialog
 }
 
 export type ShipmentStatus = "shipped" | "in_transit" | "out_for_delivery";
@@ -173,4 +176,33 @@ export interface Shipment {
   shippedAt: string; // "14 lug"
   expectedDeliveryAt: string; // "18 lug"
   priceCents: number;
+}
+
+// ---------------------------------------------------------------------------
+// Attività (offerte + vendite) — condivise tra Home (card offerte/vendite) e
+// Notifiche v2 (gruppi Vendite/Offerte + popup controfferta + anteprima).
+// Importi in centesimi. `time` è relativo ("12 min", "3 h", "ieri").
+// ---------------------------------------------------------------------------
+
+export type OfferStatus = "pending" | "accepted" | "rejected" | "counter";
+
+export interface Offer {
+  id: string;
+  itemLabel: string; // "Burberry · Trench"
+  sku: string;
+  marketplace: Marketplace;
+  offerCents: number; // prezzo offerto dall'acquirente
+  listPriceCents: number; // prezzo di listino
+  time: string; // "1 h"
+  status: OfferStatus;
+  counterCents?: number; // controfferta inviata dal venditore, se status === "counter"
+}
+
+export interface Sale {
+  id: string;
+  itemLabel: string;
+  sku: string;
+  marketplace: Marketplace;
+  priceCents: number;
+  time: string; // "12 min"
 }

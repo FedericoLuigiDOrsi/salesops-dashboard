@@ -85,22 +85,20 @@ devono restare identici tra mobile e web; gli **organismi** possono divergere
 ### Route (`app/`)
 ```
 /                         app/page.tsx            Home dashboard (StatTiles, coda azioni, notifiche recenti)
-/capi                     app/capi/page.tsx       Inventario — preset (Lavorazione/Catalogo/Ricerca) × viste (Tabella/Card/Kanban)
-/capi/[id]                app/capi/[id]/page.tsx   Scheda prodotto (pagina piena)
-/capi/@modal/(.)[id]      intercepting route       Scheda in overlay (Sheet) sopra la lista — URL condivisibile, refresh-safe
-/capi/[id]/review         review scheda            ⚠️ S-10, bloccata su 2 decisioni (vedi §6)
-/capi/[id]/foto/[label]   slot foto etichettato
+/inventario               app/inventario/page.tsx **Inventario unificato** (v2): catalogo capi + stato listing per piattaforma in una vista. Toolbar ricerca, seg Tutti/Bozze/A catalogo/Venduti (conteggi live), filtri Categoria/Taglia/Prezzo/Piattaforma, viste Tabella/Griglia, drawer Automazioni
+/pubblicazione            app/pubblicazione/page.tsx  Pubblicazione multipiattaforma — **stub placeholder** ("in lavorazione", come nel mockup)
 /notifiche                app/notifiche/page.tsx  Inbox (badge live, "segna tutte lette", raggruppo per giorno)
-/inventario               app/inventario/page.tsx Stato pubblicazione per piattaforma (Vinted/Grailed/Depop) + fulfillment
-/contabilita              app/contabilita/page.tsx  KPI settimana, andamento 8 settimane (recharts), distribuzione piattaforma/categoria, cassa/settlement, transazioni, Fornitori+carico
+/contabilita              app/contabilita/page.tsx  KPI settimana, andamento 8 settimane (recharts), distribuzione piattaforma/categoria, cassa/settlement, transazioni, Fornitori, **Storico carichi** + dialog carico esteso (nome/prezzo/data)
 /logistica                app/logistica/page.tsx  Spedizioni raggruppate per piattaforma (corriere/tracking/stato/consegna)
+/capi                     app/capi/*              ⚠️ **DEPRECATA** (v2): fuori dal nav, superata da /inventario. File non rimossi (catalog list/kanban/detail-overlay/review + flusso Crea capo /capi/nuovo/foto/[label] ancora on-disk e raggiungibili via URL)
 /login                    app/login/page.tsx       Login — scelta metodo social-first + form email, validazione zod  [UI mock, pre-login → fuori dall'AppShell]
 /registrazione            app/registrazione/page.tsx  Registrazione — social-first + form email (hint password live + conferma)  [UI mock] → submit success punta a /onboarding?step=browser
 /onboarding               app/onboarding/page.tsx  Tour prodotto (welcome→bozza) + continuazione post-signup (browser→canali→fatto via ?step=)  [UI mock, fuori dall'AppShell]
-/mobile/*.html            public/mobile/           Prototipi HTML (onboarding, cattura foto, shell, auth)
+/mobile/*.html            public/mobile/           Prototipi HTML (onboarding, cattura foto, shell v2, auth)
 ```
 Impostazioni non è più una route: è il **modal** `SettingsModal` (8 pannelli), aperto dal bottone account
-nell'AppShell (rail desktop o app-bar mobile). `app/impostazioni/` e `SettingsView.tsx` rimossi.
+nell'AppShell (rail desktop o app-bar mobile). `app/impostazioni/` e `SettingsView.tsx` rimossi. Nav v2:
+Home · Inventario · Pubblicazione · Notifiche · Contabilità · Logistica (Capi fuori). FAB Crea capo → `/capi/nuovo/foto/fronte`.
 
 ### Componenti (`components/maat/`)
 AppShell · CatalogCard · CatalogEntryDetail · CatalogKanban · CatalogTable · EntrySheet ·
@@ -108,14 +106,16 @@ ReviewForm · AttributeField · PhotoCaptureFlow · PhotoGrid · PhotoSlot · No
 NotificationRow · HomeDashboard · SettingsModal · StatTile · StatusBadge · SegmentedFilter ·
 Sequence · ConfirmGateButton · EmptyState · AuthLayout · SocialButtons · PasswordInput ·
 onboarding/OnboardingFlow · accounting/AccountingView · accounting/RegistraCaricoDialog ·
-logistics/LogisticsView · inventory/InventoryView
+logistics/LogisticsView · inventory/InventoryView (v2 unificato) · inventory/AutomazioniDrawer ·
+publishing/PublishingView
 
 ### Stato & dati (`lib/`)
 `maat-store.tsx` · `notifications-store.tsx` (context, badge live) · `settings-store.tsx` (context: modal
 Impostazioni + profilo/ruolo + brand, condiviso rail/app-bar/SettingsModal) · `catalog-presets.ts` (i 3
-preset-operazione) · `catalog-stats.ts` (conteggi condivisi Home/capi) · `maat-mock.ts` · `tenant-mock.ts` ·
-`accounting-mock.ts` · `logistics-mock.ts` · `suppliers-mock.ts` · `inventory-mock.ts` · `measures.ts` (ArUco).
-Tipi in `types/maat.ts`.
+preset-operazione, usati solo da /capi deprecata) · `catalog-stats.ts` · `maat-mock.ts` · `tenant-mock.ts` ·
+`accounting-mock.ts` · `logistics-mock.ts` · `suppliers-mock.ts` (+`loadHistory`) · `inventory-mock.ts`
+(v2: `InventoryItem` unificato capo+listing) · `measures.ts` (ArUco).
+Tipi in `types/maat.ts` (`Lot` esteso: `name`/`executedAt`/`pricePaidCents`).
 
 ---
 
@@ -153,6 +153,24 @@ Tipi in `types/maat.ts`.
       **Fuori scope**: role-gate reale (resta cosmetico, nessuna route protetta), entità `suppliers`/`carichi`
       come tabelle vere (restano stato locale in `AccountingView`). Sorgente design:
       `public/mobile/maat-shell-account.html`. Deriva dal batch HTML di Marco 20/07.
+- [x] **Fase 8** — Shell **v2** (ri-architettura, da mockup aggiornato `maat-shell-account.html` v2, build multi-agent):
+      **Nav/IA**: "Capi" esce dal menu, **Inventario** diventa la destinazione primaria, +**Pubblicazione**;
+      tabbar mobile Inventario/FAB/Notifiche. **Inventario unificato** (`app/inventario` + `inventory/`): fonde
+      catalogo capi + stato listing per piattaforma — toolbar ricerca, seg stato Tutti/Bozze/A catalogo/Venduti
+      (conteggi live), filtri Categoria/Taglia/Prezzo/Piattaforma, viste Tabella/Griglia, pill piattaforma per
+      stato, **drawer Automazioni** (auto-delist · repricing · auto-relist · pubblicazione multipiattaforma, con
+      switch/chip/stepper/select, stato locale). **Contabilità** +Storico carichi + dialog carico esteso
+      (nome/prezzo/data). **Pubblicazione** = stub placeholder. `/capi` **deprecata** (fuori dal nav, file non
+      rimossi). Sorgente design: `public/mobile/maat-shell-account.html` (v2). Deriva dal batch HTML di Marco 20/07.
+- [x] **Fase 9** — Shell v2, seconda tornata (le 3 aree rimandate dalla Fase 8, multi-agent):
+      **Home v2** (`HomeDashboard`): box "Panoramica" configurabile (8 metriche, popover con checkbox) + card
+      Offerte/Vendite con accetta/rifiuta inline. **Notifiche v2** (`NotificationInbox` + `notifications/*`):
+      inbox segmentata Tutte/Vendite/Offerte/Spedizioni con conteggi, gruppi, **popup risposta offerta**
+      (rifiuta/controfferta con input €/accetta) e **anteprima articolo** da una vendita (piattaforme +
+      spedizione reale letta da `logistics-mock` per SKU + stampa etichetta), modale "attività recente".
+      **Settings Metodi di pagamento**: pannello Carta/Apple/Google/PayPal + form carta **mock puro** (nessun
+      PSP, nessun invio dati). Tipi condivisi `Offer`/`Sale` in `types/maat.ts`, dati in `lib/activity-mock.ts`.
+      Con questo lo shell v2 è **completo al 100%** rispetto al mockup `maat-shell-account.html` v2.
 
 Piano originale completo: era in `~/.claude/plans/jaunty-stirring-raven.md` (locale — se serve
 storicizzarlo, va copiato qui in `docs/`).

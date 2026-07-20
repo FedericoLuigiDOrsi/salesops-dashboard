@@ -7,6 +7,7 @@ import {
   User,
   Users,
   CreditCard,
+  Wallet,
   Bell,
   Shield,
   Globe,
@@ -34,7 +35,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { useSettings, type SettingsSection } from "@/lib/settings-store";
+import { useSettings, type SettingsSection, type PaymentMethod } from "@/lib/settings-store";
 import { BRAND_TONES, PHOTO_AESTHETICS } from "@/lib/tenant-mock";
 
 const NAV_GROUPS: { label: string; items: { section: SettingsSection; label: string; icon: typeof Cog }[] }[] = [
@@ -45,6 +46,7 @@ const NAV_GROUPS: { label: string; items: { section: SettingsSection; label: str
       { section: "account", label: "Account", icon: User },
       { section: "dipendenti", label: "Dipendenti", icon: Users },
       { section: "piano", label: "Piano e fatturazione", icon: CreditCard },
+      { section: "pagamento", label: "Metodi di pagamento", icon: Wallet },
       { section: "notifiche", label: "Notifiche", icon: Bell },
       { section: "privacy", label: "Privacy", icon: Shield },
     ],
@@ -53,6 +55,13 @@ const NAV_GROUPS: { label: string; items: { section: SettingsSection; label: str
     label: "Altro",
     items: [{ section: "lingua", label: "Lingua", icon: Globe }],
   },
+];
+
+const PAYMENT_METHODS: { id: PaymentMethod; label: string; badge: string }[] = [
+  { id: "card", label: "Carta", badge: "" },
+  { id: "apple", label: "Apple Pay", badge: "AP" },
+  { id: "google", label: "Google Pay", badge: "GP" },
+  { id: "paypal", label: "PayPal", badge: "PP" },
 ];
 
 const TEAM = [
@@ -80,7 +89,8 @@ const PLANS: { id: string; name: string; price: string; current?: boolean; feats
 ];
 
 export function SettingsModal() {
-  const { isOpen, close, section, goto, profile, setProfile, brand, setBrand } = useSettings();
+  const { isOpen, close, section, goto, profile, setProfile, brand, setBrand, paymentMethod, setPaymentMethod } =
+    useSettings();
   const router = useRouter();
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -279,6 +289,12 @@ export function SettingsModal() {
                   sub="Piano attuale: Team · 29€/mese"
                   onClick={() => goto("piano")}
                 />
+                <SettingsListRow
+                  icon={Wallet}
+                  title="Metodi di pagamento"
+                  sub="Carta salvata · •••• 4242"
+                  onClick={() => goto("pagamento")}
+                />
               </div>
             </div>
           )}
@@ -370,6 +386,81 @@ export function SettingsModal() {
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {section === "pagamento" && (
+            <div className="flex flex-col gap-6">
+              <div>
+                <h2 className="text-xl font-bold tracking-tight">Metodi di pagamento</h2>
+                <p className="text-sm text-muted-foreground">Scegli come pagare l&apos;abbonamento MAAT.</p>
+              </div>
+
+              <div role="radiogroup" aria-label="Metodo di pagamento" className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {PAYMENT_METHODS.map((m) => {
+                  const selected = paymentMethod === m.id;
+                  return (
+                    <button
+                      key={m.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={selected}
+                      onClick={() => setPaymentMethod(m.id)}
+                      className={cn(
+                        "relative flex flex-col items-center gap-2 rounded-xl border p-4 text-center transition-colors",
+                        selected ? "border-primary bg-primary/[.06]" : "border-border bg-card hover:bg-accent"
+                      )}
+                    >
+                      {selected && (
+                        <span className="absolute right-2 top-2 flex size-4 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                          <Check className="size-2.5" />
+                        </span>
+                      )}
+                      <span className="flex size-9 items-center justify-center rounded-md bg-muted font-mono text-xs font-semibold">
+                        {m.id === "card" ? <CreditCard className="size-4" /> : m.badge}
+                      </span>
+                      <span className="text-sm font-medium">{m.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {paymentMethod === "card" ? (
+                <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5">
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="cardNumber">Numero carta</Label>
+                    <Input id="cardNumber" className="font-mono" placeholder="•••• •••• •••• 4242" maxLength={19} />
+                  </div>
+                  <div className="flex gap-3">
+                    <div className="flex flex-1 flex-col gap-1.5">
+                      <Label htmlFor="cardExpiry">Scadenza</Label>
+                      <Input id="cardExpiry" className="font-mono" placeholder="MM/AA" maxLength={5} />
+                    </div>
+                    <div className="flex flex-1 flex-col gap-1.5">
+                      <Label htmlFor="cardCvv">CVV</Label>
+                      <Input id="cardCvv" className="font-mono" placeholder="•••" maxLength={4} />
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="cardHolder">Intestatario</Label>
+                    <Input id="cardHolder" placeholder="Nome e cognome" />
+                  </div>
+                  <Button type="button" className="self-start">
+                    Salva carta
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex flex-col items-start gap-3 rounded-xl border border-dashed border-border p-6 text-sm text-muted-foreground">
+                  <p>
+                    Verrai reindirizzato a{" "}
+                    <span className="font-semibold text-foreground">
+                      {PAYMENT_METHODS.find((m) => m.id === paymentMethod)?.label}
+                    </span>{" "}
+                    per completare il collegamento del metodo di pagamento.
+                  </p>
+                  <Button type="button">Connetti</Button>
+                </div>
+              )}
             </div>
           )}
 

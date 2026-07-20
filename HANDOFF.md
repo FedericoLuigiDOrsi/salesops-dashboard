@@ -161,9 +161,16 @@ Tipi in `types/maat.ts` (`Lot` esteso: `name`/`executedAt`/`pricePaidCents`).
       stato, **drawer Automazioni** (auto-delist · repricing · auto-relist · pubblicazione multipiattaforma, con
       switch/chip/stepper/select, stato locale). **Contabilità** +Storico carichi + dialog carico esteso
       (nome/prezzo/data). **Pubblicazione** = stub placeholder. `/capi` **deprecata** (fuori dal nav, file non
-      rimossi). **Fuori scope v2, rimandati**: Home ridisegnata (panoramica configurabile + offerte/vendite),
-      Notifiche rifatte (vendite/offerte + controfferta + anteprima articolo), Settings Metodi di pagamento.
-      Sorgente design: `public/mobile/maat-shell-account.html` (v2). Deriva dal batch HTML di Marco 20/07.
+      rimossi). Sorgente design: `public/mobile/maat-shell-account.html` (v2). Deriva dal batch HTML di Marco 20/07.
+- [x] **Fase 9** — Shell v2, seconda tornata (le 3 aree rimandate dalla Fase 8, multi-agent):
+      **Home v2** (`HomeDashboard`): box "Panoramica" configurabile (8 metriche, popover con checkbox) + card
+      Offerte/Vendite con accetta/rifiuta inline. **Notifiche v2** (`NotificationInbox` + `notifications/*`):
+      inbox segmentata Tutte/Vendite/Offerte/Spedizioni con conteggi, gruppi, **popup risposta offerta**
+      (rifiuta/controfferta con input €/accetta) e **anteprima articolo** da una vendita (piattaforme +
+      spedizione reale letta da `logistics-mock` per SKU + stampa etichetta), modale "attività recente".
+      **Settings Metodi di pagamento**: pannello Carta/Apple/Google/PayPal + form carta **mock puro** (nessun
+      PSP, nessun invio dati). Tipi condivisi `Offer`/`Sale` in `types/maat.ts`, dati in `lib/activity-mock.ts`.
+      Con questo lo shell v2 è **completo al 100%** rispetto al mockup `maat-shell-account.html` v2.
 
 Piano originale completo: era in `~/.claude/plans/jaunty-stirring-raven.md` (locale — se serve
 storicizzarlo, va copiato qui in `docs/`).

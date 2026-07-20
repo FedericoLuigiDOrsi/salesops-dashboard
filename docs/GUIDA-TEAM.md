@@ -154,7 +154,9 @@ Per capire cosa è già "in Fase 2" e cosa è ancora "solo HTML":
 | Logistica | `maat-shell-account.html` v2 (`#logistica`) | `app/logistica` (+ `LogisticsView`) | ✅ entrambi (mock) |
 | Inventario unificato (capi + listing + automazioni) | `maat-shell-account.html` v2 (`#inventario` + `#autoDrawer`) | `app/inventario` (+ `InventoryView` v2, `AutomazioniDrawer`) | ✅ entrambi (mock; sostituisce sia `/capi` sia la vecchia `InventoryView` listing) |
 | Pubblicazione | `maat-shell-account.html` v2 (`#pubblicazione`) | `app/pubblicazione` (+ `PublishingView`) | ✅ entrambi (stub placeholder in entrambi) |
-| Home v2 · Notifiche v2 (offerte/controfferta) · Settings pagamento | `maat-shell-account.html` v2 | — | 🔵 solo HTML (rimandati alla prossima tornata) |
+| Home v2 (panoramica configurabile + offerte/vendite) | `maat-shell-account.html` v2 (`#home`) | `app/page.tsx` (+ `HomeDashboard`, `home-mock`) | ✅ entrambi (mock) |
+| Notifiche v2 (offerte/controfferta/anteprima) | `maat-shell-account.html` v2 (`#notifiche` + `#offPop`/`#artPreview`/`#actModal`) | `app/notifiche` (+ `NotificationInbox`, `notifications/OfferPopup`·`ArticlePreview`·`ActivityModal`) | ✅ entrambi (mock) |
+| Settings · Metodi di pagamento | `maat-shell-account.html` v2 (`#settings` pane pagamento) | `SettingsModal` (pane `pagamento`) | ✅ entrambi (form carta mock, no PSP) |
 
 Libreria completa degli atomi/molecole/pattern (in HTML `@dsCard`): `dedalo-os/.../maat-ds/`.
 

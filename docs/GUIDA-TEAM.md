@@ -148,6 +148,7 @@ Per capire cosa è già "in Fase 2" e cosa è ancora "solo HTML":
 | Notifiche | — | `NotificationInbox` · `NotificationRow` | ✅ solo React |
 | Home dashboard | — | `HomeDashboard` · `StatTile` | ✅ solo React |
 | Impostazioni | — | `SettingsView` | ✅ solo React |
+| Auth (login + registrazione) | `public/mobile/maat-auth.html` | `app/login` · `app/registrazione` (+ `AuthLayout`) | ✅ entrambi (UI mock, no OAuth) |
 
 Libreria completa degli atomi/molecole/pattern (in HTML `@dsCard`): `dedalo-os/.../maat-ds/`.
 

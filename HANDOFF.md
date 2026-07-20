@@ -6,7 +6,7 @@
 > Questo documento è la fonte di verità per riprendere lo sviluppo: tienilo aggiornato
 > a fine di ogni sessione.
 
-Ultimo aggiornamento: 2026-07-17 · Owner: Federico D'Orsi
+Ultimo aggiornamento: 2026-07-20 · Owner: Federico D'Orsi
 
 > 👥 **Onboarding team e metodo di lavoro (HTML-first → Next.js):** [`docs/GUIDA-TEAM.md`](docs/GUIDA-TEAM.md).
 > Questo file è invece la vista "stato + backlog" per riprendere lo sviluppo.
@@ -92,14 +92,16 @@ devono restare identici tra mobile e web; gli **organismi** possono divergere
 /capi/[id]/foto/[label]   slot foto etichettato
 /notifiche                app/notifiche/page.tsx  Inbox (badge live, "segna tutte lette", raggruppo per giorno)
 /impostazioni             app/impostazioni/page.tsx  Tabs Profilo + Brand tenant
-/mobile/*.html            public/mobile/           Prototipi HTML (onboarding, cattura foto, shell)
+/login                    app/login/page.tsx       Login — scelta metodo social-first + form email, validazione zod  [UI mock, pre-login → fuori dall'AppShell]
+/registrazione            app/registrazione/page.tsx  Registrazione — social-first + form email (hint password live + conferma)  [UI mock]
+/mobile/*.html            public/mobile/           Prototipi HTML (onboarding, cattura foto, shell, auth)
 ```
 
 ### Componenti (`components/maat/`)
 AppShell · CatalogCard · CatalogEntryDetail · CatalogKanban · CatalogTable · EntrySheet ·
 ReviewForm · AttributeField · PhotoCaptureFlow · PhotoGrid · PhotoSlot · NotificationInbox ·
 NotificationRow · HomeDashboard · SettingsView · StatTile · StatusBadge · SegmentedFilter ·
-Sequence · ConfirmGateButton · EmptyState
+Sequence · ConfirmGateButton · EmptyState · AuthLayout · SocialButtons · PasswordInput
 
 ### Stato & dati (`lib/`)
 `maat-store.tsx` · `notifications-store.tsx` (context, badge live) · `catalog-presets.ts` (i 3 preset-operazione) ·
@@ -117,6 +119,10 @@ Tipi in `types/maat.ts`.
 - [x] **Fase 3** — Inventario + scheda: fix lookup per `id`, preset-operazione, overlay scheda via
       Intercepting + Parallel Routes.
 - [x] **Fase 4** — Notifiche (store condiviso + badge) · Home reale · Profilo/Brand tenant.
+- [x] **Fase 5** — Auth UI (login + registrazione, flusso **combo social-first**): route `/login` e `/registrazione`
+      fuori dall'`AppShell` (isolamento via prefissi in `AppShell.tsx`), validazione `zod` + hint password live
+      (8/speciale/maiuscola) + conferma password, submit mock → `/`. Social Google/Apple = **placeholder** (manca OAuth).
+      Sorgente design: `public/mobile/maat-auth.html`. Deriva dal batch HTML di Marco 20/07.
 
 Piano originale completo: era in `~/.claude/plans/jaunty-stirring-raven.md` (locale — se serve
 storicizzarlo, va copiato qui in `docs/`).
@@ -145,7 +151,7 @@ gestione bozze (S-15) · elimina & recupera (S-16) · listing & fulfillment (S-1
 settings pubblicazione (S-04) · logistics (S-21) · stato degradato (S-22).
 
 ### 🔵 Backlog ALTA (gap di prodotto emersi in review, senza schermata)
-Login/Auth Supabase (S-26 — la app parte "dopo il login" ma il login non esiste) · timeline auto-delist
+Login/Auth (S-26): 🟢 **UI FATTA 2026-07-20** — route `/login` + `/registrazione` (mock, social-first); manca il backend Supabase/OAuth · timeline auto-delist
 "venduto→rimosso" (S-23, la killer feature) · connessioni marketplace OAuth (S-24) · repricing/ribasso
 multi-select (S-24r) · sessione batch multi-select (S-25 — l'ICP fa decine di capi/giorno) · magazzino
 fisico + QR (S-25m) · ordini/bundle multi-capo (S-27) · analytics/KPI (S-26a, MEDIA).

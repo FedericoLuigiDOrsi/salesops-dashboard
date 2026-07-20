@@ -1,0 +1,2833 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MAAT — App Shell · Sistema di navigazione</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* ============================================================
+   MAAT — TOKEN CONTRACT (da MAAT Design System · palette MP076)
+   ============================================================ */
+:root{
+  /* neutrals */
+  --bg:#F6F7ED; --surface:#FFFFFF; --surface-dark:#001F3F;
+  --ink:#001F3F; --ink-2:#5B6670; --ink-3:#9AA0A6;
+  --text-on-dark:#F6F7ED; --hairline:rgba(0,31,63,.10);
+  /* accent */
+  --fluo:#DBE64C; --fluo-press:#C8D43B; --on-fluo:#001F3F;
+  --focus-ring:0 0 0 3px rgba(219,230,76,.45);
+  /* status */
+  --green:#00804C; --blue:#1E488F; --red:#E5484D;
+  --status-locale:#5B6670; --status-bozza:#DBE64C; --status-confermato:#00804C;
+  --tint-bozza:rgba(219,230,76,.24); --tint-conf:rgba(0,128,76,.12);
+  --tint-locale:rgba(91,102,112,.14); --tint-rej:rgba(229,72,77,.12);
+  --tint-ink-soft:rgba(0,31,63,.05); --tint-ink-soft-h:rgba(0,31,63,.10);
+  --surface-sunken:#ECEDE3; --track-neutral:#E0E1D6; --slot-empty-bg:#FBFBF5; --slot-empty-border:#C7CDB8;
+  /* on-dark helpers */
+  --on-dark-2:rgba(246,247,237,.62); --on-dark-hover:rgba(246,247,237,.09); --on-dark-line:rgba(246,247,237,.12);
+  /* shape */
+  --r-sm:8px; --r-slot:10px; --r-card:14px; --r-pill:999px;
+  --r-btn-sm:10px; --r-btn:12px; --r-btn-lg:14px;
+  --e1:0 1px 2px rgba(0,31,63,.04), 0 6px 20px rgba(0,31,63,.06);
+  --e2:0 2px 6px rgba(0,31,63,.08), 0 16px 40px rgba(0,31,63,.10);
+  /* type */
+  --font:'Geist', system-ui, -apple-system, sans-serif;
+  --mono:'JetBrains Mono', ui-monospace, monospace;
+  /* space */
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px; --s7:48px; --s8:64px;
+  /* motion */
+  --dur-fast:120ms; --dur-base:180ms; --dur-slow:400ms; --ease:cubic-bezier(.22,1,.36,1);
+  /* layout */
+  --rail:64px; --sidebar-w:216px; --tabbar-h:66px;
+  /* z-scale */
+  --z-nav:20; --z-appbar:30; --z-sheet:60; --z-wizard:70; --z-toast:90;
+}
+
+*{box-sizing:border-box; margin:0; padding:0}
+html,body{height:100%}
+body{
+  font-family:var(--font); background:var(--bg); color:var(--ink);
+  font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+button{font:inherit; color:inherit; cursor:pointer; background:none; border:none}
+a{color:inherit; text-decoration:none}
+.mono{font-family:var(--mono); font-feature-settings:"tnum"; letter-spacing:-.01em}
+.overline{font-family:var(--mono); font-size:12px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-3)}
+:focus-visible{outline:none; box-shadow:var(--focus-ring); border-radius:var(--r-sm)}
+::selection{background:var(--tint-bozza)}
+
+svg.ico{width:22px; height:22px; stroke:currentColor; stroke-width:1.5; fill:none; stroke-linecap:round; stroke-linejoin:round; flex:none}
+svg.ico.sm{width:18px; height:18px}
+svg.ico.lg{width:26px; height:26px}
+.ico-fill circle{fill:currentColor; stroke:none}
+
+/* ============================================================
+   APP SHELL LAYOUT
+   ============================================================ */
+.app{
+  display:grid; grid-template-columns:var(--sidebar-w) 1fr;
+  height:100dvh; overflow:hidden;
+  transition:grid-template-columns var(--dur-base) var(--ease);
+}
+.app[data-collapsed="true"]{grid-template-columns:var(--rail) 1fr}
+
+/* ---------- SIDEBAR (desktop) ---------- */
+.sidebar{
+  background:var(--surface-dark); color:var(--text-on-dark);
+  display:flex; flex-direction:column; gap:var(--s1);
+  padding:var(--s4) var(--s2) var(--s3);
+  overflow:visible; position:relative;
+}
+.sidebar .nav-item .ico, .sidebar .hero-add .ico{width:20px; height:20px}
+.brand{display:flex; align-items:center; gap:var(--s2); padding:0 var(--s2) var(--s2)}
+.brand-mark{
+  width:32px; height:32px; border-radius:9px; background:var(--fluo); color:var(--on-fluo);
+  display:grid; place-items:center; font-weight:800; font-size:16px; letter-spacing:-.02em; flex:none;
+}
+.brand-name{font-weight:700; font-size:17px; letter-spacing:.02em}
+.rail-toggle{
+  margin-left:auto; width:28px; height:28px; border-radius:8px; color:var(--on-dark-2);
+  display:grid; place-items:center; transition:background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+.rail-toggle:hover{background:var(--on-dark-hover); color:var(--text-on-dark)}
+.app[data-collapsed="true"] .rail-toggle .ico{transform:rotate(180deg)}
+
+.hero-add{
+  display:flex; align-items:center; gap:var(--s2); justify-content:flex-start;
+  background:var(--fluo); color:var(--on-fluo); font-weight:600; font-size:14px;
+  padding:10px var(--s3); border-radius:var(--r-btn); margin:var(--s2) var(--s1) var(--s3);
+  transition:background var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
+  white-space:nowrap;
+}
+.hero-add:hover{background:var(--fluo-press)}
+.hero-add:active{transform:translateY(1px)}
+.hero-add .ico{stroke-width:2}
+
+.nav{display:flex; flex-direction:column; gap:2px}
+.nav-item{
+  display:flex; align-items:center; gap:var(--s2);
+  padding:9px var(--s3); border-radius:var(--r-btn); color:var(--on-dark-2); font-size:14px;
+  font-weight:500; white-space:nowrap; position:relative;
+  transition:background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+.nav-item:hover{background:var(--on-dark-hover); color:var(--text-on-dark)}
+.nav-item[aria-current="page"]{background:var(--fluo); color:var(--on-fluo); font-weight:600}
+.nav-item .badge-count{
+  margin-left:auto; font-family:var(--mono); font-size:11px; font-weight:600;
+  background:var(--on-dark-hover); color:var(--text-on-dark); padding:1px 7px; border-radius:var(--r-pill);
+}
+.nav-item[aria-current="page"] .badge-count{background:rgba(0,31,63,.14); color:var(--on-fluo)}
+
+.side-foot{margin-top:auto; padding-top:var(--s3); border-top:1px solid var(--on-dark-line)}
+.avatar{
+  width:34px; height:34px; border-radius:var(--r-pill); flex:none; display:grid; place-items:center;
+  background:#3A4A5E; color:var(--text-on-dark); font-weight:600; font-size:13px; font-family:var(--mono);
+}
+.avatar.ring{box-shadow:0 0 0 2px var(--surface-dark), 0 0 0 4px var(--fluo)}
+
+/* ---------- account (compact bar + popup menu) ---------- */
+.acct{position:relative}
+.acct-btn{
+  display:flex; align-items:center; gap:var(--s2); width:100%; padding:var(--s1) var(--s2);
+  border-radius:var(--r-btn); transition:background var(--dur-fast) var(--ease);
+}
+.acct-btn:hover{background:var(--on-dark-hover)}
+.acct-btn .avatar{width:30px; height:30px; font-size:12px}
+.acct-id{display:flex; flex-direction:column; align-items:flex-start; line-height:1.15; min-width:0; flex:1}
+.acct-id b{font-weight:600; font-size:13px; max-width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.acct-id .role-tag{font-family:var(--mono); font-size:10px; color:var(--on-dark-2); text-transform:uppercase; letter-spacing:.06em}
+.acct-btn .acct-caret{width:16px; height:16px; color:var(--on-dark-2); flex:none; transition:transform var(--dur-fast) var(--ease)}
+.acct-btn[aria-expanded="true"] .acct-caret{transform:rotate(180deg)}
+
+.acct-menu{
+  position:absolute; left:0; right:0; bottom:calc(100% + var(--s2)); min-width:224px; z-index:var(--z-sheet);
+  background:var(--surface); border:1px solid var(--hairline); border-radius:var(--r-card); box-shadow:var(--e2);
+  padding:var(--s2); transform-origin:bottom left; animation:acctIn var(--dur-base) var(--ease);
+}
+.acct-menu[hidden]{display:none}
+@keyframes acctIn{from{opacity:0; transform:translateY(6px) scale(.98)} to{opacity:1; transform:none}}
+.acct-menu-head{display:flex; align-items:center; gap:var(--s2); padding:var(--s2) var(--s2) var(--s3)}
+.acct-menu-head .avatar{width:36px; height:36px}
+.acct-menu-id{display:flex; flex-direction:column; line-height:1.2; min-width:0}
+.acct-menu-id b{font-size:14px; font-weight:600; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.acct-menu-id span{font-family:var(--mono); font-size:11px; color:var(--ink-2); text-transform:uppercase; letter-spacing:.04em}
+.acct-menu-sep{height:1px; background:var(--hairline); margin:var(--s2) calc(-1 * var(--s2))}
+.acct-item{
+  display:flex; align-items:center; gap:var(--s3); width:100%; text-align:left;
+  padding:9px var(--s2); border-radius:var(--r-btn-sm); color:var(--ink); font-size:14px; font-weight:500;
+  transition:background var(--dur-fast) var(--ease);
+}
+.acct-item:hover{background:var(--surface-sunken)}
+.acct-item .ico{width:18px; height:18px; color:var(--ink-2)}
+.acct-item .acct-end{margin-left:auto; display:inline-flex; align-items:center; gap:6px; color:var(--ink-3)}
+.acct-item kbd{font-family:var(--mono); font-size:10px; color:var(--ink-3); background:var(--tint-ink-soft); padding:2px 6px; border-radius:6px}
+.acct-item .acct-chev{width:16px; height:16px; color:var(--ink-3)}
+.acct-item.danger{color:var(--red)}
+.acct-item.danger .ico{color:var(--red)}
+.acct-item.danger:hover{background:var(--tint-rej)}
+
+/* collapsed rail: hide labels */
+.app[data-collapsed="true"] .brand-name,
+.app[data-collapsed="true"] .hero-add span,
+.app[data-collapsed="true"] .nav-item span,
+.app[data-collapsed="true"] .nav-item .badge-count,
+.app[data-collapsed="true"] .acct-id,
+.app[data-collapsed="true"] .acct-caret{display:none}
+.app[data-collapsed="true"] .hero-add{justify-content:center; padding:10px}
+.app[data-collapsed="true"] .nav-item{justify-content:center; padding:9px}
+.app[data-collapsed="true"] .brand{justify-content:center; padding-inline:0}
+.app[data-collapsed="true"] .rail-toggle{position:absolute; top:var(--s4); right:-14px; background:var(--surface-dark); box-shadow:0 0 0 1px var(--on-dark-line)}
+.app[data-collapsed="true"] .acct-btn{justify-content:center}
+
+/* ---------- CONTENT HOST ---------- */
+.host{position:relative; overflow:hidden; display:flex; flex-direction:column; min-width:0}
+
+/* mobile app bar (hidden on desktop) */
+.appbar{display:none}
+
+.scroll{overflow-y:auto; overflow-x:hidden; flex:1; scroll-behavior:smooth}
+.panel{display:none; padding:var(--s6) var(--s7) var(--s8)}
+.panel.active{display:block; animation:panelIn var(--dur-base) var(--ease)}
+@keyframes panelIn{from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:none}}
+
+.page-head{display:flex; align-items:flex-end; justify-content:space-between; gap:var(--s4); margin-bottom:var(--s6)}
+.page-head .kicker{margin-bottom:6px}
+.page-title{font-size:28px; font-weight:700; letter-spacing:-.02em; line-height:1.05}
+.page-sub{color:var(--ink-2); margin-top:6px; max-width:60ch}
+
+/* ---------- TAB BAR (mobile) ---------- */
+.tabbar{display:none}
+
+/* ============================================================
+   REUSABLE COMPONENTS (from DS vocabulary)
+   ============================================================ */
+.btn{display:inline-flex; align-items:center; gap:var(--s2); font-weight:600; font-size:14px;
+  padding:10px var(--s4); border-radius:var(--r-btn); transition:background var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease)}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--fluo); color:var(--on-fluo)}
+.btn-primary:hover{background:var(--fluo-press)}
+.btn-ghost{box-shadow:inset 0 0 0 1px var(--hairline); color:var(--ink)}
+.btn-ghost:hover{background:var(--ink); color:var(--text-on-dark)}
+.btn-sm{padding:7px var(--s3); border-radius:var(--r-btn-sm); font-size:13px}
+
+.iconbtn{width:38px; height:38px; border-radius:var(--r-btn); display:grid; place-items:center; color:var(--ink-2);
+  background:var(--tint-ink-soft); transition:background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease); position:relative}
+.iconbtn:hover{background:var(--tint-ink-soft-h); color:var(--ink)}
+.iconbtn.nude{background:none}
+.iconbtn .dot{position:absolute; top:8px; right:8px; width:8px; height:8px; border-radius:var(--r-pill); background:var(--fluo); box-shadow:0 0 0 2px var(--surface)}
+
+/* status badge */
+.badge{display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600;
+  padding:3px 10px; border-radius:var(--r-pill); line-height:1.4; white-space:nowrap}
+.badge .bd{width:7px; height:7px; border-radius:var(--r-pill); flex:none}
+.badge-bozza{background:var(--tint-locale); color:var(--ink-2)} .badge-bozza .bd{background:var(--ink-3)}
+.badge-conf{background:var(--tint-conf); color:var(--green)} .badge-conf .bd{background:var(--green)}
+.badge-locale{background:var(--tint-locale); color:var(--ink-2)} .badge-locale .bd{background:var(--status-locale)}
+.badge-pub{background:rgba(30,72,143,.12); color:var(--blue)} .badge-pub .bd{background:var(--blue)}
+.badge-rej{background:var(--tint-rej); color:var(--red)} .badge-rej .bd{background:var(--red)}
+
+/* segmented filter (exclusive → active near-black) */
+.seg{display:inline-flex; background:var(--surface-sunken); padding:3px; border-radius:var(--r-pill); gap:2px; flex-wrap:wrap}
+.seg button{padding:6px 14px; border-radius:var(--r-pill); font-size:13px; font-weight:500; color:var(--ink-2);
+  transition:background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease)}
+.seg button[aria-pressed="true"]{background:var(--ink); color:var(--text-on-dark)}
+.seg button .seg-n{font-family:var(--mono); font-size:11px; font-weight:600; margin-left:6px; color:var(--ink-3); font-feature-settings:"tnum"}
+.seg button[aria-pressed="true"] .seg-n{color:var(--text-on-dark); opacity:.72}
+
+/* chip (additive tag → active fluo) */
+.chip{display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:var(--r-pill);
+  font-size:13px; font-weight:500; color:var(--ink); box-shadow:inset 0 0 0 1px var(--hairline);
+  transition:background var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease)}
+.chip[aria-pressed="true"]{background:var(--fluo); box-shadow:none; color:var(--on-fluo)}
+.chip .ico{width:15px;height:15px}
+
+/* search */
+.search{display:flex; align-items:center; gap:var(--s2); background:var(--surface); box-shadow:inset 0 0 0 1px var(--hairline);
+  padding:10px var(--s4); border-radius:var(--r-pill); color:var(--ink-3); flex:1; min-width:0; max-width:440px;
+  transition:box-shadow var(--dur-fast) var(--ease)}
+.search:focus-within{box-shadow:inset 0 0 0 1px var(--ink), var(--focus-ring)}
+.search input{border:none; outline:none; background:none; flex:1; min-width:0; font:inherit; color:var(--ink)}
+.search input::placeholder{color:var(--ink-3)}
+
+/* stat tile */
+.stat-row{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:var(--s3); margin-bottom:var(--s6)}
+.stat{background:var(--surface); border:1px solid var(--hairline); border-radius:var(--r-card); padding:var(--s4) var(--s5); box-shadow:var(--e1)}
+.stat .stat-num{font-family:var(--mono); font-size:30px; font-weight:600; letter-spacing:-.02em; line-height:1; font-feature-settings:"tnum"}
+.stat .stat-lab{display:flex; align-items:center; gap:7px; margin-top:10px; color:var(--ink-2); font-size:13px}
+.stat .stat-lab .bd{width:8px; height:8px; border-radius:var(--r-pill); flex:none}
+
+/* catalog card grid */
+.catalog-card-tools{display:flex; align-items:center; gap:var(--s3); flex-wrap:wrap; margin-bottom:var(--s5)}
+.catalog-card-tools .catalog-filters{display:flex; align-items:center; gap:var(--s3); flex-wrap:wrap}
+.catalog-card-tools .catalog-select{margin-left:auto}
+.catalog-card-tools .selection-count{font-family:var(--mono); font-size:11px; font-weight:600}
+.catalog-card-tools .catalog-select[aria-pressed="true"]{background:var(--ink); color:var(--text-on-dark); box-shadow:none}
+.cgrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(218px,1fr)); gap:var(--s4); align-items:stretch}
+.ccard{position:relative; min-width:0; display:flex; flex-direction:column; background:var(--surface); border:1.5px solid var(--hairline);
+  border-radius:var(--r-card); overflow:hidden; box-shadow:var(--e1); transition:border-color var(--dur-fast) var(--ease); cursor:pointer}
+.ccard[hidden]{display:none}
+.ccard:hover{border-color:rgba(0,31,63,.24)}
+.ccard .card-open{position:absolute; inset:0 0 48px; z-index:2; width:100%; border-radius:var(--r-card) var(--r-card) 0 0; cursor:pointer}
+.ccard .card-open:focus-visible{outline:none; box-shadow:inset var(--focus-ring)}
+.ccard .thumb{aspect-ratio:1/1; width:100%; background:var(--photo,var(--surface-sunken)); display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden}
+.ccard .garment{width:44%; height:44%; opacity:.5}
+.ccard .garment path{fill:none; stroke:var(--ink-3); stroke-width:1.3; stroke-linecap:round; stroke-linejoin:round; vector-effect:non-scaling-stroke}
+.ccard .thumb .badge{position:absolute; right:9px; top:9px; box-shadow:0 1px 2px rgba(0,31,63,.08)}
+.pipeline-glyph{position:absolute; top:9px; left:9px; display:grid; grid-template-columns:repeat(2,8px); grid-template-rows:repeat(2,8px); gap:3px;
+  padding:5px; background:rgba(255,255,255,.84); border-radius:7px}
+.pipeline-glyph i{width:8px; height:8px; border-radius:2.5px}
+.pipeline-glyph .done{background:var(--ink)}
+.pipeline-glyph .todo{background:transparent; box-shadow:inset 0 0 0 1px var(--hairline)}
+.pipeline-glyph .next{background:transparent; box-shadow:inset 0 0 0 1.5px var(--fluo)}
+.ccheck{position:absolute; top:9px; left:9px; z-index:3; width:28px; height:28px; border-radius:7px; display:grid; place-items:center;
+  background:rgba(255,255,255,.94); border:1.5px solid var(--hairline); visibility:hidden}
+.ccheck .ico{width:16px; height:16px; opacity:0; stroke-width:2.2}
+.catalog-selecting .pipeline-glyph{visibility:hidden}
+.catalog-selecting .ccheck{visibility:visible}
+.catalog-selecting .ccard.selected{border-color:var(--fluo)}
+.catalog-selecting .ccard.selected .ccheck{background:var(--fluo); border-color:var(--fluo)}
+.catalog-selecting .ccard.selected .ccheck .ico{opacity:1}
+.ccard .cbody{padding:var(--s3) var(--s3) 10px}
+.ccard .cbrand{font-weight:600; font-size:15px; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.ccard .cmeta{color:var(--ink-2); font-size:13px; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.ccard .cfoot{display:flex; align-items:center; justify-content:space-between; gap:var(--s2); min-height:28px; margin-top:var(--s3); padding-top:var(--s3); border-top:1px solid var(--hairline)}
+.ccard .csku{font-family:var(--mono); font-size:11px; color:var(--ink-3); white-space:nowrap}
+.ccard .cprice{font-family:var(--mono); font-size:15px; font-weight:600; white-space:nowrap}
+.ccard .cchannels{display:flex; align-items:center; gap:6px; margin-top:6px}
+.ccard .cchan{width:16px; height:16px; border-radius:50%; background:var(--ink); color:var(--text-on-dark); font-size:9px; font-weight:600; display:flex; align-items:center; justify-content:center; flex:none}
+.ccard .cfresh{font-family:var(--mono); font-size:11px; color:var(--ink-3)}
+.ccard .caction{position:relative; z-index:4; min-height:48px; margin-top:auto; padding:0 var(--s3) var(--s3); visibility:visible}
+.ccard .caction button{width:100%; min-height:36px; padding:8px var(--s3); border:1px solid var(--hairline); border-radius:var(--r-btn-sm);
+  background:var(--bg); color:var(--ink); font-size:13px; font-weight:600; transition:background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease)}
+.ccard .caction button:hover{border-color:rgba(0,31,63,.28)}
+.ccard .caction button.primary{background:var(--fluo); border-color:var(--fluo); color:var(--on-fluo)}
+.ccard .caction button.primary:hover{background:var(--fluo-press); border-color:var(--fluo-press)}
+.ccard .caction button:focus-visible{outline:none; box-shadow:var(--focus-ring)}
+.catalog-selecting .ccard .caction{visibility:hidden; pointer-events:none}
+.badge-live{background:var(--fluo); color:var(--on-fluo)} .badge-live .bd{background:var(--ink)}
+.badge-sold{background:var(--ink); color:var(--text-on-dark)} .badge-sold .bd{background:var(--text-on-dark)}
+
+/* notification rows */
+.card{background:var(--surface); border:1px solid var(--hairline); border-radius:var(--r-card); box-shadow:var(--e1)}
+.section-h{display:flex; align-items:center; justify-content:space-between; margin:var(--s6) 0 var(--s3)}
+.section-h h3{font-size:16px; font-weight:600}
+.nrow{display:flex; align-items:center; gap:var(--s4); padding:var(--s4); border-bottom:1px solid var(--hairline)}
+.nrow:last-child{border-bottom:none}
+.nrow .nic{width:40px; height:40px; border-radius:var(--r-btn); background:var(--tint-ink-soft); display:grid; place-items:center; color:var(--ink-2); flex:none}
+.nrow .nbody{flex:1; min-width:0}
+.nrow .ntitle{font-weight:500; font-size:14px}
+.nrow .nmeta{color:var(--ink-2); font-size:13px; margin-top:1px}
+.nrow .nmeta .mono{color:var(--ink)}
+.nrow .ntime{font-family:var(--mono); font-size:11px; color:var(--ink-3); white-space:nowrap}
+.nrow.unread .nic{background:var(--tint-bozza); color:#5f6a12}
+
+/* inventory matrix */
+.tablewrap{overflow-x:auto; border:1px solid var(--hairline); border-radius:var(--r-card); background:var(--surface); box-shadow:var(--e1)}
+table.inv{width:100%; border-collapse:collapse; min-width:560px}
+table.inv th, table.inv td{text-align:left; padding:14px var(--s4); border-bottom:1px solid var(--hairline); font-size:14px}
+table.inv thead th{font-family:var(--mono); font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3)}
+table.inv tbody tr:last-child td{border-bottom:none}
+table.inv .item-c{display:flex; align-items:center; gap:var(--s3)}
+table.inv .mini{width:38px; height:38px; border-radius:var(--r-sm); background:var(--surface-sunken); display:grid; place-items:center; color:var(--slot-empty-border); flex:none}
+table.inv .mini .ico{width:20px;height:20px}
+.lchip{display:inline-flex; align-items:center; gap:5px; font-size:12px; font-family:var(--mono); padding:3px 8px; border-radius:var(--r-pill); font-weight:500}
+.lchip.active{background:var(--tint-conf); color:var(--green)}
+.lchip.delisted{background:var(--tint-locale); color:var(--ink-2)}
+.lchip.pending{background:var(--tint-bozza); color:#5f6a12}
+
+/* list rows (altro) */
+.list{background:var(--surface); border:1px solid var(--hairline); border-radius:var(--r-card); box-shadow:var(--e1); overflow:hidden}
+.lrow{display:flex; align-items:center; gap:var(--s4); padding:var(--s4) var(--s5); border-bottom:1px solid var(--hairline); width:100%; text-align:left;
+  transition:background var(--dur-fast) var(--ease)}
+.lrow:last-child{border-bottom:none}
+.lrow:hover{background:var(--surface-sunken)}
+.lrow .lic{width:40px; height:40px; border-radius:var(--r-btn); background:var(--tint-ink-soft); display:grid; place-items:center; color:var(--ink-2); flex:none}
+.lrow .lbody{flex:1; min-width:0}
+.lrow .ltitle{font-weight:600; font-size:15px; display:flex; align-items:center; gap:8px}
+.lrow .lsub{color:var(--ink-2); font-size:13px; margin-top:1px}
+.lrow .chev{color:var(--ink-3)}
+.lrow[disabled]{opacity:.5; cursor:not-allowed}
+.lock-tag{font-family:var(--mono); font-size:10px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3);
+  border:1px solid var(--hairline); padding:2px 7px; border-radius:var(--r-pill)}
+
+/* toggle */
+.toggle{display:inline-flex; align-items:center; gap:var(--s3); cursor:pointer; user-select:none}
+.toggle .track{width:46px; height:27px; border-radius:var(--r-pill); background:#D7D9CC; position:relative; transition:background var(--dur-base) var(--ease); flex:none}
+.toggle .knob{position:absolute; top:3px; left:3px; width:21px; height:21px; border-radius:var(--r-pill); background:#fff; box-shadow:0 1px 3px rgba(0,31,63,.2); transition:transform var(--dur-base) var(--ease)}
+.toggle[aria-pressed="true"] .track{background:var(--fluo)}
+.toggle[aria-pressed="true"] .knob{transform:translateX(19px)}
+
+/* banner */
+.banner{display:flex; align-items:center; gap:var(--s3); padding:var(--s3) var(--s4); border-radius:var(--r-btn); font-size:14px; margin-bottom:var(--s5)}
+.banner-warn{background:var(--tint-bozza); color:#5f6a12}
+.banner .ico{flex:none}
+
+.empty-hint{color:var(--ink-3); font-size:13px; text-align:center; padding:var(--s5)}
+
+/* logistica — spedizioni in corso per piattaforma (tabella) */
+.ship-group{margin-bottom:var(--s5)}
+.ship-plat{display:inline-flex; align-items:center; gap:var(--s2)}
+.pf-dot{width:20px; height:20px; border-radius:50%; background:var(--ink); color:var(--text-on-dark); font-family:var(--mono); font-size:10px; font-weight:600; display:grid; place-items:center; flex:none}
+.ship-count{font-family:var(--mono); font-size:12px; color:var(--ink-3)}
+.ship-table{min-width:900px}
+.ship-table th, .ship-table td{white-space:nowrap}
+.ship-table .col-name{font-weight:600; min-width:200px}
+.ship-table .col-sku{padding-left:var(--s5)}
+.ship-table tbody tr{cursor:pointer}
+.ship-table tbody tr:focus-visible{outline:none; box-shadow:inset var(--focus-ring)}
+.ship-empty{background:var(--surface); border:1px dashed var(--slot-empty-border); border-radius:var(--r-btn); color:var(--ink-3); font-size:13px; text-align:center; padding:var(--s5)}
+
+/* ============================================================
+   WIZARD OVERLAY (P2C launcher — hides nav, full screen)
+   ============================================================ */
+.wizard{position:fixed; inset:0; z-index:var(--z-wizard); background:var(--bg); display:flex; flex-direction:column;
+  opacity:0; visibility:hidden; transition:opacity var(--dur-base) var(--ease), visibility var(--dur-base)}
+body.wizard-open .wizard{opacity:1; visibility:visible}
+.wizard-inner{transform:translateY(12px); transition:transform var(--dur-slow) var(--ease); display:flex; flex-direction:column; height:100%}
+body.wizard-open .wizard-inner{transform:none}
+.wz-frame{flex:1; width:100%; border:0; display:block; background:var(--bg)}
+/* onboarding overlay (first-run, hosts onboarding flow in iframe over the whole app) */
+.onbov{position:fixed; inset:0; z-index:80; background:var(--surface-dark);
+  opacity:0; visibility:hidden; transition:opacity var(--dur-base) var(--ease), visibility var(--dur-base)}
+body.onbov-open .onbov{opacity:1; visibility:visible}
+.onbov-frame{width:100%; height:100%; border:0; display:block; background:var(--surface-dark)}
+.wz-bar{display:flex; align-items:center; gap:var(--s4); padding:var(--s4) var(--s5); border-bottom:1px solid var(--hairline)}
+.wz-bar .wz-title{font-weight:600; font-size:16px}
+.wz-steps{display:flex; align-items:center; gap:var(--s2); margin-left:auto}
+.wz-steps .st{display:flex; align-items:center; gap:8px; color:var(--ink-3); font-size:13px}
+.wz-steps .st .sd{width:9px; height:9px; border-radius:var(--r-pill); background:var(--track-neutral)}
+.wz-steps .st.cur{color:var(--ink); font-weight:600} .wz-steps .st.cur .sd{background:var(--fluo)}
+.wz-steps .st.done .sd{background:var(--green)}
+.wz-steps .sep{width:20px; height:1px; background:var(--hairline)}
+.wz-body{flex:1; overflow-y:auto; display:grid; place-items:center; padding:var(--s6)}
+.wz-choice{width:100%; max-width:620px}
+.wz-choice > .overline{text-align:center; display:block; margin-bottom:6px}
+.wz-choice h2{text-align:center; font-size:24px; font-weight:700; letter-spacing:-.02em; margin-bottom:var(--s6)}
+.modes{display:grid; grid-template-columns:1fr 1fr; gap:var(--s4)}
+.mode{background:var(--surface); border:1px solid var(--hairline); border-radius:var(--r-card); padding:var(--s6) var(--s5); text-align:center;
+  box-shadow:var(--e1); transition:transform var(--dur-base) var(--ease), box-shadow var(--dur-base) var(--ease), border-color var(--dur-base) var(--ease)}
+.mode:hover{transform:translateY(-4px); box-shadow:var(--e2); border-color:var(--fluo)}
+.mode .mic{width:60px; height:60px; border-radius:var(--r-card); background:var(--tint-bozza); color:var(--on-fluo); display:grid; place-items:center; margin:0 auto var(--s4)}
+.mode .mic .ico{width:30px; height:30px; stroke-width:1.5}
+.mode h4{font-size:17px; font-weight:600}
+.mode p{color:var(--ink-2); font-size:13px; margin-top:6px}
+.wz-note{text-align:center; margin-top:var(--s6); color:var(--ink-3); font-size:13px}
+.wz-note a{color:var(--ink-2); text-decoration:underline; text-underline-offset:2px}
+
+/* toast */
+.toast{position:fixed; left:50%; bottom:var(--s6); transform:translateX(-50%) translateY(20px); z-index:var(--z-toast);
+  background:var(--ink); color:var(--text-on-dark); padding:12px var(--s5); border-radius:var(--r-btn); font-size:14px; font-weight:500;
+  box-shadow:var(--e2); opacity:0; visibility:hidden; transition:opacity var(--dur-base) var(--ease), transform var(--dur-base) var(--ease), visibility var(--dur-base)}
+.toast.show{opacity:1; visibility:visible; transform:translateX(-50%)}
+
+/* ============================================================
+   SETTINGS MODAL (quadrato centrale · account · dipendenti · piano)
+   ============================================================ */
+.settings{position:fixed; inset:0; z-index:var(--z-wizard); display:grid; place-items:center; padding:var(--s5);
+  opacity:0; visibility:hidden; transition:opacity var(--dur-base) var(--ease), visibility var(--dur-base)}
+.settings.open{opacity:1; visibility:visible}
+.settings-backdrop{position:absolute; inset:0; background:rgba(0,31,63,.42)}
+.settings-card{position:relative; z-index:1; width:min(900px,96vw); height:min(620px,88vh); background:var(--surface);
+  border-radius:var(--r-card); box-shadow:var(--e2); overflow:hidden; display:grid; grid-template-columns:236px 1fr;
+  transform:translateY(10px) scale(.99); transition:transform var(--dur-base) var(--ease)}
+.settings.open .settings-card{transform:none}
+.set-close{position:absolute; top:14px; right:14px; z-index:3; width:34px; height:34px; border-radius:var(--r-btn); color:var(--ink-2);
+  display:grid; place-items:center; transition:background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease)}
+.set-close:hover{background:var(--surface-sunken); color:var(--ink)}
+
+.set-nav{background:var(--bg); border-right:1px solid var(--hairline); padding:var(--s4) var(--s3); display:flex; flex-direction:column; gap:var(--s4); overflow-y:auto}
+.set-search{display:flex; align-items:center; gap:var(--s2); background:var(--surface); box-shadow:inset 0 0 0 1px var(--hairline);
+  padding:8px var(--s3); border-radius:var(--r-pill); color:var(--ink-3)}
+.set-search input{border:none; outline:none; background:none; flex:1; min-width:0; font:inherit; font-size:13px; color:var(--ink)}
+.set-group{display:flex; flex-direction:column; gap:2px}
+.set-glabel{font-family:var(--mono); font-size:10px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3); padding:0 var(--s2) var(--s1)}
+.set-item{display:flex; align-items:center; gap:var(--s2); padding:8px var(--s2); border-radius:var(--r-btn-sm); color:var(--ink-2);
+  font-size:14px; font-weight:500; text-align:left; transition:background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease)}
+.set-item .ico{color:var(--ink-3); width:18px; height:18px}
+.set-item:hover{background:var(--tint-ink-soft); color:var(--ink)}
+.set-item[aria-current="true"]{background:var(--ink); color:var(--text-on-dark)}
+.set-item[aria-current="true"] .ico{color:var(--text-on-dark)}
+.set-nav-foot{margin-top:auto; padding-top:var(--s2); border-top:1px solid var(--hairline)}
+.set-item.danger{color:var(--red)}
+.set-item.danger .ico{color:var(--red)}
+.set-item.danger:hover{background:var(--tint-rej); color:var(--red)}
+
+.set-main{overflow-y:auto; padding:var(--s6) var(--s6) var(--s7)}
+.set-pane{display:none}
+.set-pane.active{display:block; animation:panelIn var(--dur-base) var(--ease)}
+.set-h{font-size:20px; font-weight:700; letter-spacing:-.01em}
+.set-sub{color:var(--ink-2); font-size:14px; margin-top:4px; margin-bottom:var(--s5)}
+.set-placeholder{color:var(--ink-3); font-size:14px; background:var(--surface-sunken); border-radius:var(--r-card); padding:var(--s6); text-align:center}
+.linklike{color:var(--ink); font-weight:600; text-decoration:underline; text-underline-offset:2px}
+
+/* account pane */
+.acc-profile{display:flex; align-items:center; gap:var(--s3); padding:var(--s4); border:1px solid var(--hairline); border-radius:var(--r-card); margin-bottom:var(--s4)}
+
+/* dipendenti */
+.emp-head{display:flex; align-items:flex-end; justify-content:space-between; gap:var(--s3); margin-bottom:var(--s4); flex-wrap:wrap}
+.seat-meter{font-family:var(--mono); color:var(--ink)}
+.emp-list{display:flex; flex-direction:column; border:1px solid var(--hairline); border-radius:var(--r-card); overflow:hidden}
+.emp-row{display:flex; align-items:center; gap:var(--s3); padding:var(--s3) var(--s4); border-bottom:1px solid var(--hairline)}
+.emp-row:last-child{border-bottom:none}
+.emp-id{min-width:0; flex:1}
+.emp-name{font-weight:600; font-size:14px; display:flex; align-items:center; gap:8px}
+.emp-mail{font-family:var(--mono); font-size:12px; color:var(--ink-3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.emp-role{font-size:12px; color:var(--ink-2); white-space:nowrap}
+.tag-you{font-family:var(--mono); font-size:9px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; background:var(--tint-bozza); color:#5f6a12; padding:1px 6px; border-radius:var(--r-pill)}
+
+/* piani */
+.plan-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(184px,1fr)); gap:var(--s3)}
+.plan{border:1.5px solid var(--hairline); border-radius:var(--r-card); padding:var(--s5) var(--s4); display:flex; flex-direction:column; gap:var(--s3); background:var(--surface)}
+.plan.current{border-color:var(--fluo); box-shadow:0 0 0 3px rgba(219,230,76,.18)}
+.plan-name{font-weight:700; font-size:16px; display:flex; align-items:center; gap:8px}
+.plan-badge{font-family:var(--mono); font-size:9px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; background:var(--fluo); color:var(--on-fluo); padding:2px 8px; border-radius:var(--r-pill)}
+.plan-price{font-family:var(--mono); font-size:26px; font-weight:600; letter-spacing:-.02em; line-height:1}
+.plan-price small{font-size:12px; color:var(--ink-3); font-weight:500; letter-spacing:0}
+.plan-feats{display:flex; flex-direction:column; gap:8px; margin:var(--s1) 0 var(--s2); flex:1}
+.plan-feat{display:flex; align-items:flex-start; gap:8px; font-size:13px; color:var(--ink-2)}
+.plan-feat .ico{color:var(--green); width:16px; height:16px; margin-top:1px; flex:none; stroke-width:2.4}
+.plan .btn{width:100%; justify-content:center}
+.plan .btn[disabled]{opacity:.55; cursor:default}
+
+@media (max-width:680px){
+  .settings{padding:0}
+  .settings-card{width:100vw; height:100dvh; border-radius:0; grid-template-columns:1fr; grid-template-rows:auto 1fr}
+  .set-nav{flex-direction:row; align-items:center; gap:var(--s2); overflow-x:auto; border-right:none; border-bottom:1px solid var(--hairline); padding:var(--s3)}
+  .set-search{display:none}
+  .set-group{flex-direction:row}
+  .set-glabel{display:none}
+  .set-item span{display:inline}
+  .set-item{white-space:nowrap}
+  .set-main{padding:var(--s5) var(--s4) var(--s7)}
+  .emp-role, .emp-mail{display:none}
+}
+
+/* ============================================================
+   RESPONSIVE — tablet rail (768–1023) + mobile tabbar (<768)
+   ============================================================ */
+@media (max-width:1023px) and (min-width:768px){
+  .app{grid-template-columns:var(--rail) 1fr}
+  .app .brand-name, .app .hero-add span, .app .nav-item span, .app .nav-item .badge-count, .app .acct-id, .app .acct-caret{display:none}
+  .app .hero-add{justify-content:center; padding:10px}
+  .app .nav-item{justify-content:center; padding:9px}
+  .app .brand{justify-content:center; padding-inline:0}
+  .app .acct-btn{justify-content:center}
+  .rail-toggle{display:none}
+  .panel{padding:var(--s6) var(--s5) var(--s8)}
+}
+
+@media (max-width:767px){
+  .app{grid-template-columns:1fr}
+  .sidebar{display:none}
+  .host{padding-bottom:0}
+  /* mobile app bar */
+  .appbar{display:flex; align-items:center; gap:var(--s3); padding:var(--s4) var(--s4);
+    background:var(--surface); border-bottom:1px solid var(--hairline); position:sticky; top:0; z-index:var(--z-appbar)}
+  .appbar .brand-mark{width:32px; height:32px; font-size:16px}
+  .appbar .ab-name{font-weight:700; font-size:17px; letter-spacing:.02em}
+  .appbar .ab-sp{margin-left:auto}
+  .panel{padding:var(--s5) var(--s4) calc(var(--tabbar-h) + var(--s7))}
+  .page-head{flex-direction:column; align-items:flex-start; gap:var(--s3)}
+  .page-title{font-size:23px}
+  .stat-row{grid-template-columns:1fr 1fr}
+  /* bottom tab bar */
+  .tabbar{display:flex; position:fixed; left:0; right:0; bottom:0; height:calc(var(--tabbar-h) + env(safe-area-inset-bottom));
+    padding-bottom:env(safe-area-inset-bottom); background:var(--surface); border-top:1px solid var(--hairline);
+    z-index:var(--z-nav); box-shadow:0 -2px 12px rgba(0,31,63,.05)}
+  .tab{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:var(--ink-3);
+    font-size:11px; font-weight:500; position:relative; transition:color var(--dur-fast) var(--ease)}
+  .tab .ico{width:24px; height:24px}
+  .tab[aria-current="page"]{color:var(--ink)}
+  .tab[aria-current="page"] .ico{color:var(--ink)}
+  .tab[aria-current="page"]::before{content:""; position:absolute; top:0; width:26px; height:3px; border-radius:0 0 3px 3px; background:var(--fluo)}
+  /* hero add (center, raised) */
+  .tab-add{flex:0 0 auto; width:76px; display:flex; align-items:flex-start; justify-content:center}
+  .tab-add button{width:56px; height:56px; margin-top:-18px; border-radius:var(--r-pill); background:var(--fluo); color:var(--on-fluo);
+    display:grid; place-items:center; box-shadow:0 6px 18px rgba(219,230,76,.5), 0 2px 6px rgba(0,31,63,.12);
+    transition:transform var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease)}
+  .tab-add button:active{transform:translateY(1px)}
+  .tab-add button .ico{width:28px; height:28px; stroke-width:2.25}
+  .wz-steps .st span{display:none}
+  .wz-bar{padding:var(--s4)}
+  .modes{grid-template-columns:1fr}
+  .panel .search{max-width:none}
+  .catalog-card-tools{align-items:stretch}
+  .catalog-card-tools .catalog-filters{flex:1}
+  .catalog-card-tools .catalog-select{margin-left:0}
+  .cgrid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:var(--s3)}
+}
+@media (max-width:767px){ .desk-only{display:none} }
+@media (min-width:768px){ .mob-only{display:none} }
+
+/* ============================================================
+   QR HANDOFF — acquisizione da telefono (overlay inline)
+   Stili raccolti sotto .qrflow; alias di token locali per riuso.
+   ============================================================ */
+.qrflow{position:fixed; inset:0; z-index:var(--z-wizard); background:var(--bg); color:var(--ink);
+  display:flex; flex-direction:column; overflow:hidden;
+  opacity:0; visibility:hidden; transition:opacity var(--dur-base) var(--ease), visibility var(--dur-base);
+  --secondary:var(--surface-sunken); --border:var(--hairline); --border-strong:rgba(0,31,63,.18);
+  --amber:#C8A21B; --danger:var(--red); --sans:var(--font); --dur:var(--dur-base);}
+body.qr-open .qrflow{opacity:1; visibility:visible;}
+.qrflow-inner{display:flex; flex-direction:column; height:100%; transform:translateY(12px); transition:transform var(--dur-slow) var(--ease);}
+body.qr-open .qrflow-inner{transform:none;}
+.qrflow svg{display:block;}
+
+.qrflow .hf-bar{display:flex; align-items:center; gap:14px; padding:14px 20px; border-bottom:1px solid var(--border); background:var(--bg); flex:none; z-index:5;}
+.qrflow .hf-bar .ib{width:38px; height:38px; border-radius:var(--r-pill); display:grid; place-items:center; color:var(--ink-2); background:var(--surface); border:1px solid var(--border); transition:background var(--dur) var(--ease), color var(--dur) var(--ease);}
+.qrflow .hf-bar .ib:hover{background:var(--secondary); color:var(--ink);}
+.qrflow .hf-bar .bar-title{font-weight:600; font-size:15px;}
+.qrflow .hf-bar .bar-step{margin-left:auto; font-family:var(--mono); font-size:11px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3);}
+.qrflow .hf-bar .brand-mark{width:30px; height:30px; border-radius:8px; font-size:15px;}
+
+.qrflow .hf-stage{flex:1; overflow-y:auto; overflow-x:hidden; display:flex; flex-direction:column; padding:40px 32px;}
+.qrflow .qr-view{display:none; flex:1;}
+.qrflow .qr-view.active{display:flex; flex-direction:column;}
+.qrflow .qr-col{width:100%; max-width:460px; margin:auto; animation:qrViewIn var(--dur-base) var(--ease);}
+.qrflow .hf-grid{width:100%; max-width:960px; margin:auto; display:grid; grid-template-columns:1fr 320px; gap:56px; align-items:center; animation:qrViewIn var(--dur-base) var(--ease);}
+@keyframes qrViewIn{from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;}}
+
+/* vista scelta / upload — titoli condivisi */
+.qrflow .vtitle{font-weight:700; font-size:26px; letter-spacing:-.02em; line-height:1.15; margin-top:8px;}
+.qrflow .vsub{color:var(--ink-2); font-size:14px; line-height:1.5; margin-top:10px;}
+
+/* choice cards */
+.qrflow .choices{display:flex; flex-direction:column; gap:14px; margin-top:24px;}
+.qrflow .choice{display:flex; align-items:center; gap:16px; width:100%; text-align:left; background:var(--surface); border:1px solid var(--border); border-radius:var(--r-card); padding:20px 18px; box-shadow:var(--e1); cursor:pointer; transition:border-color var(--dur) var(--ease), transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease);}
+.qrflow .choice:hover{border-color:rgba(0,31,63,.24); transform:translateY(-2px); box-shadow:var(--e2);}
+.qrflow .choice:active{transform:translateY(0);}
+.qrflow .choice-icon{width:52px; height:52px; border-radius:var(--r-slot); background:var(--secondary); display:grid; place-items:center; flex:none; color:var(--ink);}
+.qrflow .choice-icon.rec{background:var(--fluo); color:var(--on-fluo);}
+.qrflow .choice-icon .ico{width:24px; height:24px;}
+.qrflow .choice-main{flex:1; min-width:0;}
+.qrflow .choice-title{font-weight:600; font-size:16px; display:flex; align-items:center; gap:8px;}
+.qrflow .rec-badge{font-family:var(--mono); font-weight:600; font-size:9px; letter-spacing:.08em; text-transform:uppercase; background:var(--fluo); color:var(--on-fluo); padding:2px 7px; border-radius:var(--r-pill);}
+.qrflow .choice-desc{display:block; font-size:13px; color:var(--ink-2); line-height:1.4; margin-top:3px;}
+.qrflow .choice .chev{color:var(--ink-3); flex:none;}
+
+/* aux / requisiti */
+.qrflow .aux-group{background:var(--secondary); border-radius:var(--r-card); padding:14px; display:flex; flex-direction:column; gap:11px; margin-top:20px;}
+.qrflow .aux-item{display:flex; align-items:flex-start; gap:9px;}
+.qrflow .aux-item>svg{color:var(--ink-2); flex:none; margin-top:1px;}
+.qrflow .aux-item p{font-size:12px; line-height:1.4; color:var(--ink-2); flex:1;}
+.qrflow .aux-item p b{color:var(--ink); font-weight:600;}
+.qrflow .aux-div{height:1px; background:var(--border);}
+.qrflow .req-row{display:flex; align-items:center; justify-content:space-between;}
+.qrflow .req-title{font-family:var(--mono); font-weight:600; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-2);}
+.qrflow .req-max{font-size:12px; color:var(--ink-3);}
+.qrflow .req-group{display:flex; flex-direction:column; gap:7px;}
+.qrflow .req-label{font-size:11px; font-weight:600; color:var(--ink-3);}
+.qrflow .chips{display:flex; flex-wrap:wrap; gap:6px;}
+.qrflow .chip{display:inline-flex; align-items:center; gap:6px; border:1px solid var(--border); background:var(--surface); border-radius:var(--r-pill); padding:5px 10px; font-weight:500; font-size:12px; color:var(--ink); box-shadow:none;}
+.qrflow .chip.opt{color:var(--ink-3); background:transparent;}
+.qrflow .aux-note{font-size:12px; color:var(--ink-2);}
+
+/* CTA condivise (scelta/upload) */
+.qrflow .qr-cta{width:100%; height:50px; border-radius:var(--r-pill); display:flex; align-items:center; justify-content:center; gap:8px; font-weight:600; font-size:15px; margin-top:18px; transition:background var(--dur) var(--ease), transform var(--dur) var(--ease);}
+.qrflow .qr-cta:active{transform:translateY(1px);}
+.qrflow .qr-cta.primary{background:var(--fluo); color:var(--on-fluo);}
+.qrflow .qr-cta.primary:hover{background:var(--fluo-press);}
+.qrflow .qr-cta.primary[disabled]{opacity:.45; pointer-events:none;}
+.qrflow .qr-cta.ghost{background:var(--surface); border:1px solid var(--border-strong); color:var(--ink);}
+.qrflow .qr-cta.ghost:hover{background:var(--secondary);}
+
+/* dropzone */
+.qrflow .dropzone{margin-top:24px; border:2px dashed var(--border-strong); border-radius:var(--r-card); background:var(--surface); padding:34px 24px; text-align:center; cursor:pointer; transition:border-color var(--dur) var(--ease), background var(--dur) var(--ease);}
+.qrflow .dropzone:hover{border-color:var(--ink-3); background:var(--secondary);}
+.qrflow .dropzone.drag{border-color:var(--fluo); background:rgba(219,230,76,.12);}
+.qrflow .dz-ic{width:56px; height:56px; border-radius:var(--r-card); background:var(--secondary); display:grid; place-items:center; margin:0 auto 14px; color:var(--ink-2); transition:background var(--dur) var(--ease), color var(--dur) var(--ease);}
+.qrflow .dropzone.drag .dz-ic{background:var(--fluo); color:var(--on-fluo);}
+.qrflow .dz-title{font-weight:600; font-size:16px; color:var(--ink);}
+.qrflow .dz-sub{color:var(--ink-2); font-size:13px; margin-top:6px;}
+.qrflow .dz-link{color:var(--ink); font-weight:600; text-decoration:underline; text-underline-offset:2px;}
+.qrflow .dz-formats{display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap; margin-top:14px;}
+.qrflow .dz-fmt{font-family:var(--mono); font-size:10px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3); border:1px solid var(--border); border-radius:var(--r-pill); padding:3px 9px;}
+.qrflow .dz-meta{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:18px;}
+.qrflow .dz-count{font-family:var(--mono); font-size:12px; color:var(--ink-2);}
+.qrflow .dz-count b{color:var(--ink);}
+.qrflow .dz-hint{font-size:12px; color:var(--ink-3);}
+.qrflow .dz-hint.warn{color:var(--amber);}
+.qrflow .dz-hint.ok{color:var(--green);}
+.qrflow .dz-bar{height:6px; border-radius:var(--r-pill); background:var(--secondary); overflow:hidden; margin-top:10px;}
+.qrflow .dz-bar i{display:block; height:100%; width:0; background:var(--fluo); border-radius:var(--r-pill); transition:width .3s var(--ease);}
+.qrflow .dz-files{display:flex; flex-wrap:wrap; gap:8px; margin-top:14px;}
+.qrflow .dz-file{display:inline-flex; align-items:center; gap:7px; max-width:100%; padding:5px 7px 5px 5px; border:1px solid var(--border); border-radius:var(--r-pill); background:var(--surface); font-size:12px; animation:qrPop .2s var(--ease);}
+.qrflow .dz-file .thumb{width:22px; height:22px; border-radius:6px; background:var(--secondary); display:grid; place-items:center; color:var(--ink-3); flex:none;}
+.qrflow .dz-file .thumb svg{width:13px; height:13px;}
+.qrflow .dz-file .fname{overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:130px; color:var(--ink);}
+.qrflow .dz-file .fx{width:18px; height:18px; border-radius:var(--r-pill); display:grid; place-items:center; color:var(--ink-3); flex:none; cursor:pointer;}
+.qrflow .dz-file .fx:hover{background:var(--secondary); color:var(--ink);}
+.qrflow .dz-file .fx svg{width:12px; height:12px;}
+
+.qrflow .eyebrow{font-family:var(--mono); font-weight:600; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-2);}
+.qrflow .hf-main h1{font-weight:700; font-size:30px; letter-spacing:-.02em; line-height:1.08; margin-top:10px;}
+.qrflow .hf-main .lead{color:var(--ink-2); font-size:15px; line-height:1.5; margin-top:10px; max-width:46ch;}
+.qrflow .qr-row{display:flex; gap:22px; align-items:stretch; margin-top:26px;}
+.qrflow .qr-card{position:relative; width:216px; height:216px; flex:none; background:var(--surface); border:1px solid var(--border); border-radius:var(--r-card); box-shadow:var(--e2); padding:16px; display:grid; place-items:center;}
+.qrflow .qr{width:100%; height:100%; position:relative;}
+.qrflow .qr-logo{position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:44px; height:44px; border-radius:11px; background:var(--fluo); color:var(--on-fluo); display:grid; place-items:center; font-weight:800; font-size:22px; letter-spacing:-.02em; box-shadow:0 0 0 6px #fff;}
+.qrflow .qr-scan{position:absolute; left:16px; right:16px; height:2px; background:linear-gradient(90deg,transparent,rgba(0,31,63,.35),transparent); border-radius:2px; top:16px; animation:qrScan 2.6s var(--ease) infinite;}
+@keyframes qrScan{0%,100%{transform:translateY(0); opacity:0;} 12%{opacity:1;} 50%{transform:translateY(184px); opacity:1;} 88%{opacity:1;}}
+.qrflow .qr-side{display:flex; flex-direction:column; justify-content:center; gap:14px; min-width:0;}
+.qrflow .steps{list-style:none; display:flex; flex-direction:column; gap:13px;}
+.qrflow .steps li{display:flex; gap:12px; align-items:flex-start; font-size:14px; line-height:1.4; color:var(--ink);}
+.qrflow .steps li b{font-weight:600;}
+.qrflow .steps .n{flex:none; width:24px; height:24px; border-radius:var(--r-pill); background:var(--surface-dark); color:var(--text-on-dark); font-family:var(--mono); font-size:12px; font-weight:600; display:grid; place-items:center; margin-top:1px;}
+.qrflow .steps li .st-sub{color:var(--ink-2); font-size:12.5px;}
+.qrflow .store{display:flex; align-items:center; gap:10px; margin-top:22px; flex-wrap:wrap;}
+.qrflow .qr-store-badge{display:inline-flex; align-items:center; gap:8px; padding:8px 13px; border-radius:var(--r-pill); border:1px solid var(--border-strong); background:var(--surface); font-size:13px; font-weight:600; color:var(--ink); transition:background var(--dur) var(--ease);}
+.qrflow .qr-store-badge:hover{background:var(--secondary);}
+.qrflow .qr-store-badge svg{width:16px; height:16px;}
+.qrflow .store .hint{font-size:12.5px; color:var(--ink-3);}
+.qrflow .status{display:inline-flex; align-items:center; gap:12px; margin-top:24px; padding:11px 16px; border-radius:var(--r-pill); background:var(--surface); border:1px solid var(--border); box-shadow:var(--e1);}
+.qrflow .status .sdot{width:9px; height:9px; border-radius:var(--r-pill); flex:none; background:var(--amber); animation:qrBeat 1.6s ease-in-out infinite;}
+@keyframes qrBeat{0%,100%{box-shadow:0 0 0 0 rgba(200,162,27,.45);} 60%{box-shadow:0 0 0 7px rgba(200,162,27,0);}}
+.qrflow .status .stxt{font-size:13.5px; font-weight:500; color:var(--ink);}
+.qrflow .status .stxt b{font-weight:600;}
+.qrflow .status .prog{width:64px; height:6px; border-radius:var(--r-pill); background:var(--secondary); overflow:hidden; display:none;}
+.qrflow .status .prog i{display:block; height:100%; width:0; background:var(--fluo); border-radius:var(--r-pill); transition:width .4s var(--ease);}
+.qrflow .status.connected .sdot{background:var(--green); animation:none;}
+.qrflow .status.connected .prog{display:block;}
+.qrflow .status.ready .sdot{background:var(--green); animation:none;}
+.qrflow .status.ready{border-color:var(--fluo); box-shadow:0 0 0 3px rgba(219,230,76,.20);}
+
+.qrflow .hf-aside{display:flex; flex-direction:column; align-items:center; gap:14px;}
+.qrflow .device{position:relative; width:300px; height:632px; border-radius:44px; background:#0A1626; padding:11px;
+  box-shadow:0 0 0 2px rgba(0,31,63,.35), 0 30px 60px rgba(0,31,63,.28), inset 0 0 0 2px rgba(255,255,255,.04);}
+.qrflow .device .notch{position:absolute; top:11px; left:50%; transform:translateX(-50%); width:132px; height:26px; background:#0A1626; border-radius:0 0 16px 16px; z-index:6;}
+.qrflow .screen{position:relative; width:100%; height:100%; border-radius:34px; overflow:hidden; background:radial-gradient(120% 90% at 50% 22%, #14263c 0%, #0b1a2b 55%, #071320 100%); display:flex; flex-direction:column;}
+.qrflow .vf{position:relative; flex:1; overflow:hidden;}
+.qrflow .vf .garment{position:absolute; top:52%; left:50%; transform:translate(-50%,-50%); width:150px; height:auto; opacity:.5;}
+.qrflow .vf .garment path{fill:none; stroke:rgba(246,247,237,.5); stroke-width:2; stroke-linecap:round; stroke-linejoin:round; vector-effect:non-scaling-stroke;}
+.qrflow .vf .grid{position:absolute; inset:0; background:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px) 0 0/100% 33.33%, linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px) 0 0/33.33% 100%;}
+.qrflow .vf .guides{position:absolute; inset:44px 28px 96px; pointer-events:none;}
+.qrflow .vf .guides span{position:absolute; width:26px; height:26px; border:2px solid var(--fluo); opacity:.85;}
+.qrflow .vf .guides .tl{top:0; left:0; border-right:0; border-bottom:0; border-radius:6px 0 0 0;}
+.qrflow .vf .guides .tr{top:0; right:0; border-left:0; border-bottom:0; border-radius:0 6px 0 0;}
+.qrflow .vf .guides .bl{bottom:0; left:0; border-right:0; border-top:0; border-radius:0 0 0 6px;}
+.qrflow .vf .guides .br{bottom:0; right:0; border-left:0; border-top:0; border-radius:0 0 6px 0;}
+.qrflow .vf-top{position:absolute; top:34px; left:14px; right:14px; display:flex; align-items:center; gap:8px; z-index:4; transition:opacity var(--dur) var(--ease);}
+.qrflow .vf-chip{display:inline-flex; align-items:center; gap:7px; padding:5px 11px; border-radius:var(--r-pill); background:rgba(7,19,32,.42); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); font-family:var(--mono); font-size:10px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:rgba(246,247,237,.72);}
+.qrflow .vf-chip .cd{width:6px; height:6px; border-radius:var(--r-pill); background:var(--fluo); opacity:.85; flex:none;}
+.qrflow .vf-help{margin-left:auto; width:24px; height:24px; border-radius:var(--r-pill); background:rgba(7,19,32,.42); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); color:rgba(246,247,237,.6); display:grid; place-items:center; font-family:var(--mono); font-size:12px; font-weight:600;}
+.qrflow .vf-coach{position:absolute; left:16px; right:16px; bottom:16px; z-index:4; text-align:center; font-size:11.5px; line-height:1.35; color:rgba(246,247,237,.62); transition:opacity .5s var(--ease);}
+.qrflow .vf-coach .kbd{font-family:var(--mono); color:rgba(246,247,237,.8);}
+.qrflow .screen.understood .vf-coach{opacity:.24;}
+.qrflow .screen.understood .vf-top{opacity:.42;}
+.qrflow .controls{position:relative; z-index:5; display:flex; align-items:center; gap:12px; padding:14px 16px calc(14px + env(safe-area-inset-bottom)); background:linear-gradient(180deg, rgba(7,19,32,0) 0%, rgba(7,19,32,.55) 40%, rgba(7,19,32,.85) 100%);}
+.qrflow .thumbs{display:flex; gap:5px; width:60px; flex:none; overflow:hidden;}
+.qrflow .thumbs .th{width:26px; height:26px; border-radius:6px; background:#22364d; border:1px solid rgba(255,255,255,.14); flex:none; display:grid; place-items:center; animation:qrPop .28s var(--ease);}
+.qrflow .thumbs .th svg{width:13px; height:13px; opacity:.55;}
+@keyframes qrPop{from{transform:scale(.4); opacity:0;} to{transform:scale(1); opacity:1;}}
+.qrflow .thumbs .more{align-self:center; font-family:var(--mono); font-size:10px; color:rgba(246,247,237,.6);}
+.qrflow .shutter{width:58px; height:58px; border-radius:var(--r-pill); background:transparent; border:3px solid rgba(246,247,237,.9); display:grid; place-items:center; margin:0 auto; flex:none; transition:transform .1s var(--ease);}
+.qrflow .shutter::after{content:""; width:44px; height:44px; border-radius:var(--r-pill); background:#F6F7ED; transition:transform .1s var(--ease);}
+.qrflow .shutter:active{transform:scale(.94);}
+.qrflow .shutter:active::after{transform:scale(.9);}
+.qrflow .shutter.pulse{animation:qrShutter 2s ease-in-out infinite;}
+@keyframes qrShutter{0%,100%{box-shadow:0 0 0 0 rgba(219,230,76,0);} 50%{box-shadow:0 0 0 8px rgba(219,230,76,.18);}}
+.qrflow .send{width:60px; flex:none; height:40px; border-radius:var(--r-pill); background:rgba(246,247,237,.14); color:rgba(246,247,237,.55); font-size:12px; font-weight:600; display:grid; place-items:center; transition:background var(--dur) var(--ease), color var(--dur) var(--ease); pointer-events:none;}
+.qrflow .send.on{background:var(--fluo); color:var(--on-fluo); pointer-events:auto; animation:qrSendGlow 1.8s ease-in-out infinite;}
+@keyframes qrSendGlow{0%,100%{box-shadow:0 6px 16px rgba(219,230,76,.35);} 50%{box-shadow:0 6px 22px rgba(219,230,76,.6);}}
+.qrflow .aside-cap{font-size:12px; color:var(--ink-3); display:flex; align-items:center; gap:7px;}
+.qrflow .aside-cap .dot{width:6px; height:6px; border-radius:var(--r-pill); background:var(--fluo);}
+.qrflow .flash{position:absolute; inset:0; background:#F6F7ED; opacity:0; pointer-events:none; z-index:7;}
+.qrflow .flash.go{animation:qrFlash .32s ease;}
+@keyframes qrFlash{0%{opacity:0;} 18%{opacity:.75;} 100%{opacity:0;}}
+@media (max-width:900px){
+  .qrflow .hf-stage{align-items:flex-start; padding:28px 20px 48px;}
+  .qrflow .hf-grid{grid-template-columns:1fr; gap:36px; max-width:520px;}
+  .qrflow .hf-aside{order:-1;}
+  .qrflow .device{width:270px; height:568px;}
+  .qrflow .qr-row{flex-direction:column;}
+  .qrflow .qr-side{align-items:flex-start;}
+}
+@media (max-width:520px){
+  .qrflow .hf-main h1{font-size:25px;}
+  .qrflow .qr-card{width:190px; height:190px;}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.001ms !important; transition-duration:.001ms !important}
+  .scroll{scroll-behavior:auto}
+}
+
+/* ============================================================
+   CONTABILITÀ — pannello di controllo economico
+   Approccio dataviz: monocromatico navy + emphasis fluo.
+   Nessuna palette categoriale (identità = etichette, non colore).
+   ============================================================ */
+.co-toolbar{display:flex; align-items:center; gap:var(--s3); flex-wrap:wrap; margin-bottom:var(--s5)}
+.co-toolbar .co-spacer{margin-left:auto}
+.co-secline{display:flex; align-items:baseline; justify-content:space-between; gap:var(--s3); margin:var(--s6) 0 var(--s3); flex-wrap:wrap}
+.co-secline .overline{margin:0}
+.co-secline .co-note{font-family:var(--mono); font-size:11px; color:var(--ink-3)}
+
+/* seg su fondo scuro (feature card) */
+.seg.seg-dark{background:rgba(246,247,237,.10)}
+.seg.seg-dark button{color:var(--on-dark-2)}
+.seg.seg-dark button[aria-pressed="true"]{background:var(--fluo); color:var(--on-fluo)}
+
+/* --- KPI tiles (valore + delta + sparkline) --- */
+.kpi-row{display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:var(--s3)}
+.kpi{background:var(--surface); border:1px solid var(--hairline); border-radius:var(--r-card); padding:var(--s4) var(--s5); box-shadow:var(--e1); position:relative; overflow:hidden}
+.kpi.kpi-hero{background:var(--surface-dark); color:var(--text-on-dark); border-color:transparent}
+.kpi-top{display:flex; align-items:center; gap:var(--s2); color:var(--ink-2); font-size:13px; font-weight:500}
+.kpi.kpi-hero .kpi-top{color:var(--on-dark-2)}
+.kpi-top .ico{width:16px; height:16px; flex:none}
+.kpi-val{font-family:var(--mono); font-size:29px; font-weight:600; letter-spacing:-.02em; line-height:1; margin-top:12px; font-feature-settings:"tnum"}
+.kpi-hero .kpi-val{font-size:34px}
+.kpi-val small{font-size:14px; font-weight:500; color:var(--ink-3); letter-spacing:0}
+.kpi-hero .kpi-val small{color:var(--on-dark-2)}
+.kpi-foot{display:flex; align-items:center; gap:var(--s2); margin-top:10px; flex-wrap:wrap}
+.kpi-note{font-size:12px; color:var(--ink-3)}
+.kpi-hero .kpi-note{color:var(--on-dark-2)}
+.kpi-spark{margin-top:var(--s3)}
+.kpi-spark svg{display:block; width:100%; height:40px; overflow:visible}
+
+.delta{display:inline-flex; align-items:center; gap:3px; font-family:var(--mono); font-size:12px; font-weight:600; padding:2px 8px; border-radius:var(--r-pill); font-feature-settings:"tnum"}
+.delta .ico{width:13px; height:13px; stroke-width:2.4}
+.delta.up{background:var(--tint-conf); color:var(--green)}
+.delta.down{background:var(--tint-rej); color:var(--red)}
+.delta.flat{background:var(--tint-locale); color:var(--ink-2)}
+.kpi-hero .delta.up{background:rgba(0,128,76,.22); color:#8fe0b8}
+
+/* --- griglia card grafici --- */
+.co-grid2{display:grid; grid-template-columns:1fr 1fr; gap:var(--s4); margin-top:var(--s4)}
+.chart-card{background:var(--surface); border:1px solid var(--hairline); border-radius:var(--r-card); box-shadow:var(--e1); padding:var(--s5); min-width:0}
+.chart-head{display:flex; align-items:flex-start; justify-content:space-between; gap:var(--s3); margin-bottom:var(--s5); flex-wrap:wrap}
+.chart-head h3{font-size:16px; font-weight:600}
+.chart-head .chart-sub{color:var(--ink-2); font-size:13px; margin-top:2px}
+.chart-tot{font-family:var(--mono); font-size:12px; color:var(--ink-2); text-align:right; white-space:nowrap}
+.chart-tot b{display:block; color:var(--ink); font-size:17px; font-weight:600}
+
+/* --- istogramma settimanale (colonne) --- */
+.colchart{display:grid; grid-template-columns:auto 1fr; gap:var(--s4); --h:210px}
+.col-yaxis{display:flex; flex-direction:column; justify-content:space-between; height:var(--h); padding-bottom:24px;
+  font-family:var(--mono); font-size:10px; color:var(--ink-3); text-align:right; font-feature-settings:"tnum"}
+.col-plot{position:relative; min-width:0}
+.col-grid{position:absolute; left:0; right:0; top:0; bottom:24px; display:flex; flex-direction:column; justify-content:space-between}
+.col-grid i{display:block; height:1px; background:var(--hairline)}
+.cols{position:relative; height:var(--h); display:flex; align-items:flex-end; gap:3px; padding-bottom:24px}
+.colwrap{flex:1; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; position:relative; cursor:default}
+.colwrap:focus-visible{outline:none}
+.colwrap:focus-visible .col{box-shadow:var(--focus-ring)}
+.col{width:100%; max-width:24px; height:0; background:var(--ink); border-radius:4px 4px 0 0;
+  transition:height var(--dur-slow) var(--ease), background var(--dur-fast) var(--ease)}
+.colwrap:hover .col{background:#0A2E52}
+.colwrap.cur .col{background:var(--fluo)}
+.col-x{position:absolute; bottom:0; font-family:var(--mono); font-size:10px; color:var(--ink-3); white-space:nowrap}
+.colwrap.cur .col-x{color:var(--ink); font-weight:600}
+.col-cap{position:absolute; top:-19px; font-family:var(--mono); font-size:11px; font-weight:600; color:var(--ink); white-space:nowrap;
+  opacity:0; transition:opacity var(--dur-fast) var(--ease)}
+.colwrap.cur .col-cap{opacity:1}
+
+/* --- tooltip riusabile (hover/focus) --- */
+.has-tip{position:relative}
+.tip{position:absolute; bottom:calc(100% + 9px); left:50%; transform:translateX(-50%) translateY(4px);
+  background:var(--ink); color:var(--text-on-dark); padding:7px 10px; border-radius:var(--r-btn-sm); font-size:12px; line-height:1.4;
+  white-space:nowrap; box-shadow:var(--e2); opacity:0; visibility:hidden; z-index:6; pointer-events:none;
+  transition:opacity var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease)}
+.tip b{font-family:var(--mono); color:var(--fluo)}
+.tip .tip-mut{color:var(--on-dark-2)}
+.tip::after{content:""; position:absolute; top:100%; left:50%; transform:translateX(-50%); border:5px solid transparent; border-top-color:var(--ink)}
+.has-tip:hover .tip, .colwrap:focus-visible .tip, .hbar:hover .tip{opacity:1; visibility:visible; transform:translateX(-50%)}
+
+/* --- barre orizzontali ranked (piattaforme / categorie) --- */
+.hbars{display:flex; flex-direction:column; gap:var(--s5)}
+.hbar{display:grid; grid-template-columns:1fr auto; gap:7px 12px; align-items:center; position:relative}
+.hbar-lab{display:flex; align-items:center; gap:9px; font-size:14px; font-weight:500; min-width:0}
+.hbar-lab .pf-dot{width:24px; height:24px; font-size:9px; background:var(--surface-sunken); color:var(--ink-2); box-shadow:inset 0 0 0 1px var(--hairline)}
+.hbar.top .hbar-lab .pf-dot{background:var(--fluo); color:var(--on-fluo); box-shadow:none}
+.hbar-lab .lab-t{white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.hbar-val{font-family:var(--mono); font-size:14px; font-weight:600; text-align:right; white-space:nowrap; font-feature-settings:"tnum"}
+.hbar-val .pct{color:var(--ink-3); font-weight:500; margin-left:7px; font-size:12px}
+.hbar-track{grid-column:1 / -1; height:10px; border-radius:var(--r-pill); background:var(--surface-sunken); overflow:hidden}
+.hbar-fill{height:100%; width:0; border-radius:var(--r-pill); background:var(--ink); transition:width var(--dur-slow) var(--ease)}
+.hbar.top .hbar-fill{background:var(--fluo)}
+.hbar .tip{left:auto; right:0; transform:translateX(0) translateY(4px)}
+.hbar .tip::after{left:24px}
+.hbar:hover .tip{transform:translateX(0)}
+
+/* --- feature: categoria più venduta --- */
+.co-feature{position:relative; overflow:hidden; background:var(--surface-dark); color:var(--text-on-dark);
+  border-radius:var(--r-card); box-shadow:var(--e2); padding:var(--s6); margin-top:var(--s4)}
+.co-feature::before{content:""; position:absolute; right:-60px; top:-60px; width:220px; height:220px; border-radius:50%;
+  background:radial-gradient(circle, rgba(219,230,76,.22), transparent 70%)}
+.co-feat-head{display:flex; align-items:center; justify-content:space-between; gap:var(--s3); margin-bottom:var(--s5); position:relative; flex-wrap:wrap}
+.co-feat-head .overline{color:var(--fluo)}
+.co-feat-body{display:grid; grid-template-columns:1.4fr 1fr; gap:var(--s6); align-items:center; position:relative}
+.co-feat-main .feat-eyebrow{font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--on-dark-2)}
+.co-feat-main .feat-name{font-size:30px; font-weight:700; letter-spacing:-.02em; line-height:1.05; margin:8px 0 12px}
+.co-feat-main .feat-sub{color:var(--on-dark-2); font-size:14px; max-width:42ch}
+.co-feat-stats{display:grid; grid-template-columns:1fr 1fr; gap:var(--s4) var(--s5); padding-left:var(--s6); border-left:1px solid var(--on-dark-line)}
+.co-feat-stats .fst .fst-n{font-family:var(--mono); font-size:24px; font-weight:600; letter-spacing:-.02em; line-height:1}
+.co-feat-stats .fst .fst-l{color:var(--on-dark-2); font-size:12px; margin-top:5px}
+.co-feat-stats .fst .fst-n.accent{color:var(--fluo)}
+
+/* --- barra composizione cassa (stacked, status) --- */
+.stackbar{display:flex; height:18px; gap:2px; margin:var(--s2) 0 var(--s4)}
+.stackbar .sgm{height:100%; border-radius:3px; transition:flex-basis var(--dur-slow) var(--ease)}
+.stackbar .sgm:first-child{border-radius:var(--r-pill) 3px 3px var(--r-pill)}
+.stackbar .sgm:last-child{border-radius:3px var(--r-pill) var(--r-pill) 3px}
+.stack-legend{display:flex; flex-wrap:wrap; gap:var(--s3) var(--s5)}
+.stack-legend .lg{display:flex; align-items:center; gap:8px; font-size:13px; color:var(--ink-2)}
+.stack-legend .lg .sw{width:11px; height:11px; border-radius:3px; flex:none}
+.stack-legend .lg b{font-family:var(--mono); color:var(--ink); font-weight:600}
+
+/* --- tabella transazioni (net figures) --- */
+.tx-table{min-width:820px}
+.tx-table td.num, .tx-table th.num{text-align:right; font-family:var(--mono); font-feature-settings:"tnum"; white-space:nowrap}
+.tx-table td.neg{color:var(--ink-2)}
+.tx-table td.net{font-weight:600; color:var(--ink)}
+.tx-table .tx-date{font-family:var(--mono); font-size:12px; color:var(--ink-3); white-space:nowrap}
+.tx-table .tx-cat{color:var(--ink-2); font-size:12px}
+.tx-table tbody tr{transition:background var(--dur-fast) var(--ease)}
+.tx-table tbody tr:hover{background:var(--surface-sunken)}
+.tx-foot td{font-weight:600; border-top:2px solid var(--hairline)}
+
+@media (max-width:900px){
+  .co-grid2{grid-template-columns:1fr}
+  .co-feat-body{grid-template-columns:1fr; gap:var(--s5)}
+  .co-feat-stats{padding-left:0; border-left:none; padding-top:var(--s5); border-top:1px solid var(--on-dark-line)}
+}
+@media (max-width:560px){
+  .kpi-val{font-size:25px}
+  .co-feature{padding:var(--s5)}
+  .co-feat-main .feat-name{font-size:24px}
+  .colchart{--h:180px; gap:var(--s2)}
+  .col-x{font-size:9px}
+}
+
+/* ============================================================
+   CATEGORIE — confronto di tutte le categorie
+   ============================================================ */
+.lead-row{display:grid; grid-template-columns:repeat(3,1fr); gap:var(--s3); margin-top:var(--s4)}
+.lead-card{position:relative; overflow:hidden; background:var(--surface); border:1px solid var(--hairline);
+  border-radius:var(--r-card); box-shadow:var(--e1); padding:var(--s5)}
+.lead-card.feat{background:var(--surface-dark); color:var(--text-on-dark); border-color:transparent}
+.lead-card.feat::before{content:""; position:absolute; right:-50px; top:-50px; width:170px; height:170px; border-radius:50%;
+  background:radial-gradient(circle, rgba(219,230,76,.20), transparent 70%)}
+.lead-top{display:flex; align-items:center; gap:8px; font-family:var(--mono); font-size:11px; font-weight:600;
+  letter-spacing:.08em; text-transform:uppercase; color:var(--ink-3); position:relative}
+.lead-card.feat .lead-top{color:var(--fluo)}
+.lead-top .ico{width:15px; height:15px; flex:none}
+.lead-name{font-size:19px; font-weight:700; letter-spacing:-.01em; line-height:1.15; margin:12px 0 8px; position:relative}
+.lead-metric{font-family:var(--mono); font-size:27px; font-weight:600; letter-spacing:-.02em; line-height:1; position:relative}
+.lead-card.feat .lead-metric{color:var(--fluo)}
+.lead-sub{font-size:12px; color:var(--ink-2); margin-top:8px; position:relative}
+.lead-card.feat .lead-sub{color:var(--on-dark-2)}
+
+.cat-table{min-width:720px}
+.cat-table .cat-name{font-weight:600; white-space:nowrap}
+.cat-table .lead-star{color:#B9A400; margin-right:6px}
+.cat-table tr.lead td:first-child{box-shadow:inset 3px 0 0 var(--fluo)}
+.cat-table .c-sub{display:block; font-family:var(--mono); font-size:11px; font-weight:500; color:var(--ink-3); margin-top:3px}
+.cat-table tbody tr{transition:background var(--dur-fast) var(--ease)}
+.cat-table tbody tr:hover{background:var(--surface-sunken)}
+.cat-insight{display:flex; align-items:flex-start; gap:10px; margin-top:var(--s4); color:var(--ink-2); font-size:13px}
+.cat-insight .ico{color:var(--ink-3); flex:none; margin-top:1px; width:18px; height:18px}
+.cat-insight b{color:var(--ink); font-weight:600}
+
+@media (max-width:900px){ .lead-row{grid-template-columns:1fr} }
+
+/* ============================================================
+   AZIONI RAPIDE (home) + FORNITORI (contabilità) + CARICO (modale)
+   ============================================================ */
+/* quick action cards */
+.qact-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:var(--s3); margin-bottom:var(--s6)}
+.qact{display:flex; align-items:center; gap:var(--s3); text-align:left; padding:var(--s4); background:var(--surface);
+  border:1px solid var(--hairline); border-radius:var(--r-card); box-shadow:var(--e1);
+  transition:transform var(--dur-base) var(--ease), box-shadow var(--dur-base) var(--ease), border-color var(--dur-base) var(--ease)}
+.qact:hover{transform:translateY(-2px); box-shadow:var(--e2); border-color:rgba(0,31,63,.24)}
+.qact:active{transform:translateY(0)}
+.qact .qic{width:46px; height:46px; border-radius:var(--r-btn); background:var(--tint-ink-soft); color:var(--ink);
+  display:grid; place-items:center; flex:none}
+.qact .qic.accent{background:var(--fluo); color:var(--on-fluo)}
+.qact .qbody{flex:1; min-width:0}
+.qact .qtitle{font-weight:600; font-size:15px}
+.qact .qsub{color:var(--ink-2); font-size:13px; margin-top:2px}
+.qact .qchev{color:var(--ink-3); flex:none}
+
+/* fornitori */
+.co-privacy{display:flex; align-items:flex-start; gap:var(--s3); padding:var(--s3) var(--s4); margin-bottom:var(--s3);
+  background:var(--surface-sunken); border:1px solid var(--hairline); border-radius:var(--r-btn); font-size:13px; color:var(--ink-2); line-height:1.45}
+.co-privacy .ico{color:var(--ink-2); flex:none; margin-top:1px}
+.co-privacy b{color:var(--ink); font-weight:600}
+.sup-list{background:var(--surface); border:1px solid var(--hairline); border-radius:var(--r-card); box-shadow:var(--e1); overflow:hidden}
+.sup-row{display:flex; align-items:center; gap:var(--s3); padding:var(--s3) var(--s4); border-bottom:1px solid var(--hairline)}
+.sup-row:last-child{border-bottom:none}
+.sup-row .sup-av{width:38px; height:38px; border-radius:var(--r-pill); flex:none; display:grid; place-items:center;
+  background:var(--surface-dark); color:var(--text-on-dark); font-size:13px; font-weight:600}
+.sup-row .sup-id{flex:1; min-width:0}
+.sup-row .sup-name{font-weight:600; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.sup-row .sup-meta{color:var(--ink-2); font-size:12px; margin-top:1px; font-family:var(--mono)}
+.sup-row .sup-fig{font-family:var(--mono); font-size:13px; font-weight:600; color:var(--ink); white-space:nowrap; text-align:right}
+.sup-row.just-added{animation:supIn var(--dur-slow) var(--ease)}
+@keyframes supIn{from{background:var(--tint-bozza)} to{background:transparent}}
+
+/* carico — modale centrale */
+.crc{position:fixed; inset:0; z-index:var(--z-wizard); display:grid; place-items:center; padding:var(--s5);
+  opacity:0; visibility:hidden; transition:opacity var(--dur-base) var(--ease), visibility var(--dur-base)}
+.crc.open{opacity:1; visibility:visible}
+.crc-backdrop{position:absolute; inset:0; background:rgba(0,31,63,.42)}
+.crc-card{position:relative; z-index:1; width:min(560px,96vw); max-height:92dvh; background:var(--surface);
+  border-radius:var(--r-card); box-shadow:var(--e2); overflow:hidden; display:flex; flex-direction:column;
+  transform:translateY(10px) scale(.99); transition:transform var(--dur-base) var(--ease)}
+.crc.open .crc-card{transform:none}
+.crc-head{display:flex; align-items:center; gap:var(--s3); padding:var(--s5) var(--s5) var(--s4); border-bottom:1px solid var(--hairline)}
+.crc-head .crc-hic{width:40px; height:40px; border-radius:var(--r-btn); background:var(--fluo); color:var(--on-fluo); display:grid; place-items:center; flex:none}
+.crc-head .crc-htx{flex:1; min-width:0}
+.crc-head .crc-htitle{font-size:18px; font-weight:700; letter-spacing:-.01em}
+.crc-head .crc-hsub{color:var(--ink-2); font-size:13px; margin-top:2px}
+.crc-close{width:34px; height:34px; border-radius:var(--r-btn); color:var(--ink-2); display:grid; place-items:center; flex:none;
+  transition:background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease)}
+.crc-close:hover{background:var(--surface-sunken); color:var(--ink)}
+.crc-body{overflow-y:auto; padding:var(--s5); display:flex; flex-direction:column; gap:var(--s5)}
+.crc-foot{display:flex; align-items:center; gap:var(--s3); padding:var(--s4) var(--s5); border-top:1px solid var(--hairline)}
+.crc-foot .btn{flex:1; justify-content:center}
+.crc-foot .btn-primary[disabled]{opacity:.5; pointer-events:none}
+
+/* form fields */
+.frow{display:flex; flex-direction:column; gap:var(--s2)}
+.frow > .flabel{font-size:13px; font-weight:600; color:var(--ink-2)}
+.frow .fhint{font-size:12px; color:var(--ink-3)}
+.seg.seg-wide{display:flex; width:100%}
+.seg.seg-wide button{flex:1; justify-content:center; gap:8px; padding:10px 12px}
+.seg.seg-wide button .ico{width:16px; height:16px}
+.crc-select{position:relative}
+.crc-select select{appearance:none; -webkit-appearance:none; width:100%; padding:11px var(--s7) 11px var(--s4);
+  border:1px solid var(--hairline); border-radius:var(--r-btn); background:var(--surface); color:var(--ink); font:inherit; font-size:14px; cursor:pointer;
+  transition:border-color var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease)}
+.crc-select select:focus{outline:none; border-color:var(--fluo); box-shadow:var(--focus-ring)}
+.crc-select .sel-caret{position:absolute; right:var(--s4); top:50%; transform:translateY(-50%); color:var(--ink-2); pointer-events:none}
+.crc-input{width:100%; padding:11px var(--s4); border:1px solid var(--hairline); border-radius:var(--r-btn);
+  background:var(--surface); color:var(--ink); font:inherit; font-size:14px; transition:border-color var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease)}
+.crc-input:focus{outline:none; border-color:var(--fluo); box-shadow:var(--focus-ring)}
+.crc-input::placeholder{color:var(--ink-3)}
+.crc-input[hidden]{display:none}
+/* stepper */
+.stepper{display:inline-flex; align-items:stretch; align-self:flex-start; border:1px solid var(--hairline);
+  border-radius:var(--r-btn); overflow:hidden; background:var(--surface); transition:border-color var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease)}
+.stepper:focus-within{border-color:var(--fluo); box-shadow:var(--focus-ring)}
+.stepper .st-btn{width:46px; display:grid; place-items:center; color:var(--ink); font-size:22px; line-height:1; transition:background var(--dur-fast) var(--ease)}
+.stepper .st-btn:hover{background:var(--surface-sunken)}
+.stepper .st-btn:active{background:var(--track-neutral)}
+.stepper .st-btn:disabled{color:var(--ink-3); cursor:not-allowed; background:transparent}
+.stepper .st-mid{display:flex; align-items:baseline; gap:6px; padding:8px var(--s4); min-width:120px; justify-content:center;
+  border-left:1px solid var(--hairline); border-right:1px solid var(--hairline)}
+.stepper .st-input{width:58px; border:none; background:none; text-align:right; padding:0; color:var(--ink);
+  font-family:var(--mono); font-size:22px; font-weight:600; -moz-appearance:textfield}
+.stepper .st-input::-webkit-outer-spin-button, .stepper .st-input::-webkit-inner-spin-button{-webkit-appearance:none; margin:0}
+.stepper .st-input:focus{outline:none}
+.stepper .st-unit{font-family:var(--mono); font-size:12px; color:var(--ink-2)}
+@media (max-width:600px){
+  .crc{padding:0}
+  .crc-card{width:100vw; max-height:100dvh; height:100dvh; border-radius:0}
+  .qact-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== ICON SPRITE (Lucide-style, inline · no CDN) ===== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.7V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.7"/><path d="M9.5 21v-6h5v6"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="1.6"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.6"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.6"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.6"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24"><path d="M12 3 3.5 7.5v9L12 21l8.5-4.5v-9L12 3z"/><path d="M3.6 7.6 12 12l8.4-4.4"/><path d="M12 12v9"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24" class="ico-fill"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M18 8.5a6 6 0 0 0-12 0c0 6-2.5 8-2.5 8h17S18 14.5 18 8.5"/><path d="M13.7 20.5a2 2 0 0 1-3.4 0"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></symbol>
+  <symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 8.5a2 2 0 0 1 2-2h1.8l1.1-1.7h6.2l1.1 1.7H18a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><circle cx="12" cy="12.5" r="3.4"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 15.5V4"/><path d="M7.5 8.5 12 4l4.5 4.5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></symbol>
+  <symbol id="i-wallet" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2.2"/><path d="M3 10.5h18"/><circle cx="16.5" cy="14.7" r="1.15" class="dotf"/></symbol>
+  <symbol id="i-truck" viewBox="0 0 24 24"><path d="M3.5 6.5h10v9h-10z"/><path d="M13.5 9.5H17l3.5 3.2v2.8h-7z"/><circle cx="7" cy="17.5" r="1.7"/><circle cx="17.3" cy="17.5" r="1.7"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 6h9"/><path d="M17 6h3"/><circle cx="15" cy="6" r="2"/><path d="M4 12h3"/><path d="M11 12h9"/><circle cx="9" cy="12" r="2"/><path d="M4 18h9"/><path d="M17 18h3"/><circle cx="15" cy="18" r="2"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></symbol>
+  <symbol id="i-chevL" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M4 12.5 9.5 18 20 6.5"/></symbol>
+  <symbol id="i-shirt" viewBox="0 0 24 24"><path d="M8 3 4 5.5 2.5 8 5 10.5 6.5 9v11h11V9l1.5 1.5L21 8l-1.5-2.5L15.5 3l-1.5 2a2.4 2.4 0 0 1-4 0z"/></symbol>
+  <symbol id="i-tag" viewBox="0 0 24 24"><path d="M3.5 3.5h7l9.6 9.6a2 2 0 0 1 0 2.8l-4.2 4.2a2 2 0 0 1-2.8 0L3.5 10.5z"/><circle cx="7.6" cy="7.6" r="1.4"/></symbol>
+  <symbol id="i-coins" viewBox="0 0 24 24"><circle cx="9" cy="9" r="5.5"/><path d="M14.5 5.3A5.5 5.5 0 1 1 15 18.4"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-cog" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.1"/><path d="M12 2.5v3M12 18.5v3M4.6 4.6l2.1 2.1M17.3 17.3l2.1 2.1M2.5 12h3M18.5 12h3M4.6 19.4l2.1-2.1M17.3 6.7l2.1-2.1"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17"/><path d="M12 3.5c2.6 2.4 2.6 14.6 0 17M12 3.5c-2.6 2.4-2.6 14.6 0 17"/></symbol>
+  <symbol id="i-zap" viewBox="0 0 24 24"><path d="M13 2.5 4.5 13.5H11l-1 8 9-11.5H12z"/></symbol>
+  <symbol id="i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.6 8.4 13 13l-4.6 2.6L11 11z"/></symbol>
+  <symbol id="i-logout" viewBox="0 0 24 24"><path d="M14 21H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8"/><path d="M18 15.5 21.5 12 18 8.5"/><path d="M21.5 12H9"/></symbol>
+  <symbol id="i-caret" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 3-5.5 6.5-5.5s6.5 1.9 6.5 5.5"/><path d="M16 5a3.5 3.5 0 0 1 0 7"/><path d="M17.5 14.4c2.4.5 4 2 4 5.6"/></symbol>
+  <symbol id="i-card" viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="2.2"/><path d="M3 10h18"/><path d="M7 15h4"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 7.6-7 9-4-1.4-7-4.5-7-9V6z"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5 20 12 7 19.5z"/></symbol>
+  <symbol id="i-trend" viewBox="0 0 24 24"><path d="M3 16.5 9 10l4 4 8-8.5"/><path d="M15 5.5h6v6"/></symbol>
+  <symbol id="i-bars" viewBox="0 0 24 24"><path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/></symbol>
+  <symbol id="i-layers" viewBox="0 0 24 24"><path d="M12 3 3 8l9 5 9-5z"/><path d="M3.5 12 12 16.7 20.5 12"/><path d="M3.5 16 12 20.7 20.5 16"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3.5v11"/><path d="M7.5 10 12 14.5 16.5 10"/><path d="M4 16v2.5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V16"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="16" rx="2.2"/><path d="M3.5 9.5h17"/><path d="M8 3v4M16 3v4"/></symbol>
+  <symbol id="i-percent" viewBox="0 0 24 24"><path d="M5 19 19 5"/><circle cx="7.5" cy="7.5" r="2.5"/><circle cx="16.5" cy="16.5" r="2.5"/></symbol>
+  <symbol id="i-receipt" viewBox="0 0 24 24"><path d="M5 3.5v17l2-1.4 2 1.4 2-1.4 2 1.4 2-1.4 2 1.4v-17z"/><path d="M8.5 8.5h7M8.5 12h7M8.5 15.5h4"/></symbol>
+  <symbol id="i-repeat" viewBox="0 0 24 24"><path d="M4 9V8a3 3 0 0 1 3-3h10l-2.5-2.5M20 15v1a3 3 0 0 1-3 3H7l2.5 2.5"/></symbol>
+  <symbol id="i-vault" viewBox="0 0 24 24"><rect x="3.5" y="4" width="17" height="16" rx="2.2"/><circle cx="11" cy="12" r="3.5"/><path d="M11 8.5v-1M11 16.5v-1M7.5 12h-1M15.5 12h1"/></symbol>
+  <symbol id="i-load" viewBox="0 0 24 24"><path d="M4 13.5V18a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4.5"/><path d="M4 13.5h5a3 3 0 0 0 6 0h5"/><path d="M12 3v7.5"/><path d="M8.5 7 12 10.5 15.5 7"/></symbol>
+</svg>
+<style>.dotf{fill:currentColor; stroke:none}</style>
+
+<!-- ============================ APP ============================ -->
+<div class="app" id="app" data-collapsed="false">
+
+  <!-- ---------- SIDEBAR (desktop / tablet rail) ---------- -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">M</div>
+      <span class="brand-name">MAAT</span>
+      <button class="rail-toggle" id="railToggle" aria-label="Comprimi menu"><svg class="ico sm"><use href="#i-chevL"/></svg></button>
+    </div>
+
+    <a class="hero-add" href="#nuovo" data-wizard aria-label="Crea capo">
+      <svg class="ico"><use href="#i-plus"/></svg><span>Crea capo</span>
+    </a>
+
+    <nav class="nav" aria-label="Navigazione principale">
+      <a class="nav-item" data-route="home" href="#home"><svg class="ico"><use href="#i-home"/></svg><span>Home</span></a>
+      <a class="nav-item" data-route="catalogo" href="#catalogo"><svg class="ico"><use href="#i-grid"/></svg><span>Capi</span><span class="badge-count">96</span></a>
+      <a class="nav-item" data-route="notifiche" href="#notifiche"><svg class="ico"><use href="#i-bell"/></svg><span>Notifiche</span><span class="badge-count">3</span></a>
+      <a class="nav-item" data-route="inventario" href="#inventario"><svg class="ico"><use href="#i-box"/></svg><span>Inventario</span></a>
+      <a class="nav-item" data-route="contabilita" href="#contabilita"><svg class="ico"><use href="#i-wallet"/></svg><span>Contabilità</span></a>
+      <a class="nav-item" data-route="logistica" href="#logistica"><svg class="ico"><use href="#i-truck"/></svg><span>Logistica</span></a>
+    </nav>
+
+    <div class="side-foot">
+      <button class="acct-btn" id="acctBtn" type="button" aria-haspopup="dialog" aria-label="Account e impostazioni">
+        <span class="avatar ring">FD</span>
+        <span class="acct-id"><b>Federico D.</b><span class="role-tag" id="roleTagSide">Admin</span></span>
+        <svg class="ico acct-caret"><use href="#i-caret"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ---------- CONTENT HOST ---------- -->
+  <div class="host">
+
+    <!-- mobile app bar -->
+    <header class="appbar">
+      <div class="brand-mark">M</div>
+      <span class="ab-name">MAAT</span>
+      <span class="ab-sp"></span>
+      <button class="iconbtn nude" data-route="notifiche" aria-label="Notifiche"><svg class="ico"><use href="#i-bell"/></svg><span class="dot"></span></button>
+      <button class="avatar" id="appbarAcct" style="width:34px;height:34px" aria-label="Account">FD</button>
+    </header>
+
+    <div class="scroll" id="scroll">
+
+      <!-- ===================== HOME (S-00) ===================== -->
+      <section class="panel" data-panel="home" aria-labelledby="h-home">
+        <div class="page-head">
+          <div>
+            <div class="overline kicker">Dashboard</div>
+            <h1 class="page-title" id="h-home">Ciao, Federico</h1>
+            <p class="page-sub">3 capi richiedono attenzione oggi. 12 bozze in attesa di revisione.</p>
+          </div>
+          <button class="btn btn-primary desk-only" data-wizard><svg class="ico sm"><use href="#i-plus"/></svg>Crea capo</button>
+        </div>
+
+        <div class="stat-row">
+          <div class="stat"><div class="stat-num">96</div><div class="stat-lab"><span class="bd" style="background:var(--ink-2)"></span>Capi a catalogo</div></div>
+          <div class="stat"><div class="stat-num">12</div><div class="stat-lab"><span class="bd" style="background:var(--status-bozza)"></span>Bozze da revisionare</div></div>
+          <div class="stat"><div class="stat-num">27</div><div class="stat-lab"><span class="bd" style="background:var(--blue)"></span>Pubblicati</div></div>
+          <div class="stat"><div class="stat-num">9</div><div class="stat-lab"><span class="bd" style="background:var(--green)"></span>Venduti · 30gg</div></div>
+        </div>
+
+        <div class="section-h"><h3>Azioni rapide</h3></div>
+        <div class="qact-grid">
+          <button class="qact" type="button" data-carico>
+            <span class="qic accent"><svg class="ico"><use href="#i-load"/></svg></span>
+            <span class="qbody"><span class="qtitle">Registra carico</span><span class="qsub">Segna un carico ricevuto da un fornitore</span></span>
+            <svg class="ico sm qchev"><use href="#i-chev"/></svg>
+          </button>
+          <button class="qact" type="button" data-route="contabilita">
+            <span class="qic"><svg class="ico"><use href="#i-wallet"/></svg></span>
+            <span class="qbody"><span class="qtitle">Fornitori e contabilità</span><span class="qsub">Lista fornitori e riepilogo carichi</span></span>
+            <svg class="ico sm qchev"><use href="#i-chev"/></svg>
+          </button>
+        </div>
+
+        <div class="section-h"><h3>Notifiche recenti</h3><a class="btn btn-sm btn-ghost" data-route="notifiche">Vedi tutte</a></div>
+        <div class="card">
+          <div class="nrow unread">
+            <div class="nic"><svg class="ico sm"><use href="#i-coins"/></svg></div>
+            <div class="nbody"><div class="ntitle">Capo venduto</div><div class="nmeta">Stone Island bomber · <span class="mono">Vinted</span> · <span class="mono">92 €</span></div></div>
+            <div class="ntime">12 min</div>
+          </div>
+          <div class="nrow unread">
+            <div class="nic"><svg class="ico sm"><use href="#i-tag"/></svg></div>
+            <div class="nbody"><div class="ntitle">Offerta ricevuta</div><div class="nmeta">Burberry trench · <span class="mono">Grailed</span> · <span class="mono">45 €</span></div></div>
+            <div class="ntime">1 h</div>
+          </div>
+          <div class="nrow">
+            <div class="nic"><svg class="ico sm"><use href="#i-truck"/></svg></div>
+            <div class="nbody"><div class="ntitle">Reso pronto al ritiro</div><div class="nmeta">Levi's 501 · <span class="mono">SKU B-074</span></div></div>
+            <div class="ntime">3 h</div>
+          </div>
+          <div class="nrow">
+            <div class="nic"><svg class="ico sm"><use href="#i-check"/></svg></div>
+            <div class="nbody"><div class="ntitle">Bozza pronta da revisionare</div><div class="nmeta">Carhartt Detroit jacket · <span class="mono">SKU —</span></div></div>
+            <div class="ntime">ieri</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== CATALOGO (S-12) ===================== -->
+      <section class="panel" data-panel="catalogo" aria-labelledby="h-cat">
+        <div class="page-head">
+          <div>
+            <div class="overline kicker">I tuoi capi · Tenant DirtyTag</div>
+            <h1 class="page-title" id="h-cat">Capi</h1>
+          </div>
+          <button class="btn btn-primary desk-only" data-wizard><svg class="ico sm"><use href="#i-plus"/></svg>Crea capo</button>
+        </div>
+
+        <div style="display:flex; gap:var(--s3); align-items:center; flex-wrap:wrap; margin-bottom:var(--s4)">
+          <div class="search"><svg class="ico sm"><use href="#i-search"/></svg><input placeholder="Cerca per SKU, brand o codice legacy…"></div>
+        </div>
+        <div style="display:flex; gap:var(--s3); align-items:center; flex-wrap:wrap; margin-bottom:var(--s4)">
+          <div class="seg" id="capiSeg" role="group" aria-label="Sezione capi">
+            <button data-seg="tutti" aria-pressed="true">Tutti<span class="seg-n" data-n="tutti">0</span></button>
+            <button data-seg="bozze" aria-pressed="false">Bozze<span class="seg-n" data-n="bozze">0</span></button>
+            <button data-seg="catalogo" aria-pressed="false">Catalogo<span class="seg-n" data-n="catalogo">0</span></button>
+          </div>
+        </div>
+        <div class="catalog-card-tools">
+          <div class="catalog-filters">
+            <button class="chip" aria-pressed="false"><svg class="ico"><use href="#i-tag"/></svg>Brand</button>
+            <button class="chip" aria-pressed="false">Taglia</button>
+            <button class="chip" aria-pressed="false">Categoria</button>
+          </div>
+          <button class="btn btn-sm btn-ghost catalog-select" id="catalogSelect" type="button" aria-pressed="false">
+            <svg class="ico sm"><use href="#i-check"/></svg><span id="catalogSelectLabel">Seleziona</span><span class="selection-count" id="catalogSelectionCount" hidden>0</span>
+          </button>
+        </div>
+
+        <div class="cgrid" aria-label="Griglia capi">
+          <article class="ccard" data-status="confermato" style="--photo:#E4E7DE" role="group">
+            <span class="ccheck" aria-hidden="true"><svg class="ico"><use href="#i-check"/></svg></span>
+            <div class="thumb">
+              <div class="pipeline-glyph" role="img" aria-label="Moduli: Foto, Copy e Stock completati; Lista è il prossimo"><i class="done"></i><i class="done"></i><i class="done"></i><i class="next"></i></div>
+              <span class="badge badge-conf"><span class="bd"></span>Confermato</span>
+              <svg class="garment" viewBox="0 0 48 48" aria-hidden="true"><path d="M18 8 L24 12 L30 8 L38 14 L34 21 L30 18.5 L30 41 L18 41 L18 18.5 L14 21 L10 14 Z"/></svg>
+            </div>
+            <div class="cbody"><div class="cbrand">Stone Island</div><div class="cmeta">Bomber · Taglia L</div><div class="cfoot"><span class="csku">SKU B-091</span><span class="cprice">180 €</span></div></div>
+            <div class="caction"><button class="primary" type="button" data-card-action="Pubblica">Pubblica</button></div>
+          </article>
+          <article class="ccard" data-status="live" style="--photo:#E6E4DB" role="group">
+            <span class="ccheck" aria-hidden="true"><svg class="ico"><use href="#i-check"/></svg></span>
+            <div class="thumb">
+              <div class="pipeline-glyph" role="img" aria-label="Moduli Foto, Copy, Stock e Lista completati"><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i></div>
+              <span class="badge badge-live"><span class="bd"></span>Live</span>
+              <svg class="garment" viewBox="0 0 48 48" aria-hidden="true"><path d="M18 8 L24 12 L30 8 L38 14 L34 21 L30 18.5 L30 41 L18 41 L18 18.5 L14 21 L10 14 Z"/></svg>
+            </div>
+            <div class="cbody"><div class="cbrand">Burberry</div><div class="cmeta">Trench · Taglia M</div><div class="cfoot"><span class="csku">SKU B-088</span><span class="cprice">240 €</span></div><div class="cchannels"><span class="cchan">V</span><span class="cchan">G</span><span class="cfresh">3g fa</span></div></div>
+            <div class="caction"><button type="button" data-card-action="Vedi annuncio">Vedi annuncio</button></div>
+          </article>
+          <article class="ccard" data-status="bozza" style="--photo:#E7E5D6" role="group">
+            <span class="ccheck" aria-hidden="true"><svg class="ico"><use href="#i-check"/></svg></span>
+            <div class="thumb">
+              <div class="pipeline-glyph" role="img" aria-label="Modulo Foto completato; Copy è il prossimo; Stock e Lista da fare"><i class="done"></i><i class="next"></i><i class="todo"></i><i class="todo"></i></div>
+              <span class="badge badge-bozza"><span class="bd"></span>Bozza</span>
+              <svg class="garment" viewBox="0 0 48 48" aria-hidden="true"><path d="M18 8 L24 12 L30 8 L38 14 L34 21 L30 18.5 L30 41 L18 41 L18 18.5 L14 21 L10 14 Z"/></svg>
+            </div>
+            <div class="cbody"><div class="cbrand">Carhartt</div><div class="cmeta">Detroit jacket · Taglia L</div><div class="cfoot"><span class="csku">SKU —</span><span class="cprice">— €</span></div></div>
+            <div class="caction"><button type="button" data-card-action="Completa">Completa</button></div>
+          </article>
+          <article class="ccard" data-status="bozza" style="--photo:#DFE4E9" role="group">
+            <span class="ccheck" aria-hidden="true"><svg class="ico"><use href="#i-check"/></svg></span>
+            <div class="thumb">
+              <div class="pipeline-glyph" role="img" aria-label="Modulo Foto completato; Copy è il prossimo; Stock e Lista da fare"><i class="done"></i><i class="next"></i><i class="todo"></i><i class="todo"></i></div>
+              <span class="badge badge-bozza"><span class="bd"></span>Bozza</span>
+              <svg class="garment" viewBox="0 0 48 48" aria-hidden="true"><path d="M16 10 H32 V14 H16 Z"/><path d="M16 14 L17.5 41 L22.5 41 L24 22 L25.5 41 L30.5 41 L32 14"/></svg>
+            </div>
+            <div class="cbody"><div class="cbrand">Levi's</div><div class="cmeta">501 · W32 L34</div><div class="cfoot"><span class="csku">SKU —</span><span class="cprice">65 €</span></div></div>
+            <div class="caction"><button type="button" data-card-action="Completa">Completa</button></div>
+          </article>
+          <article class="ccard" data-status="live" style="--photo:#DEE3E8" role="group">
+            <span class="ccheck" aria-hidden="true"><svg class="ico"><use href="#i-check"/></svg></span>
+            <div class="thumb">
+              <div class="pipeline-glyph" role="img" aria-label="Moduli Foto, Copy, Stock e Lista completati"><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i></div>
+              <span class="badge badge-live"><span class="bd"></span>Live</span>
+              <svg class="garment" viewBox="0 0 48 48" aria-hidden="true"><path d="M17 11 C20 14 28 14 31 11 L36 16 L36 20 L33 21 L33 40 L15 40 L15 21 L12 20 L12 16 Z"/><path d="M15 25 H33 M15 30 H33 M15 35 H33"/></svg>
+            </div>
+            <div class="cbody"><div class="cbrand">The North Face</div><div class="cmeta">Nuptse 700 · Taglia M</div><div class="cfoot"><span class="csku">SKU B-090</span><span class="cprice">150 €</span></div><div class="cchannels"><span class="cchan">V</span><span class="cfresh">1g fa</span></div></div>
+            <div class="caction"><button type="button" data-card-action="Vedi annuncio">Vedi annuncio</button></div>
+          </article>
+          <article class="ccard" data-status="venduto" style="--photo:#E2E4DC" role="group">
+            <span class="ccheck" aria-hidden="true"><svg class="ico"><use href="#i-check"/></svg></span>
+            <div class="thumb">
+              <div class="pipeline-glyph" role="img" aria-label="Moduli Foto, Copy, Stock e Lista completati"><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i></div>
+              <span class="badge badge-sold"><span class="bd"></span>Venduto</span>
+              <svg class="garment" viewBox="0 0 48 48" aria-hidden="true"><path d="M18 8 L24 12 L30 8 L38 14 L34 21 L30 18.5 L30 41 L18 41 L18 18.5 L14 21 L10 14 Z"/></svg>
+            </div>
+            <div class="cbody"><div class="cbrand">Ralph Lauren</div><div class="cmeta">Camicia oxford · Taglia L</div><div class="cfoot"><span class="csku">SKU B-074</span><span class="cprice">40 €</span></div></div>
+            <div class="caction"><button type="button" data-card-action="Archivia">Archivia</button></div>
+          </article>
+        </div>
+        <div class="empty-hint" id="capiEmpty" hidden></div>
+      </section>
+
+      <!-- ===================== INVENTARIO (S-17) ===================== -->
+      <section class="panel" data-panel="inventario" aria-labelledby="h-inv">
+        <div class="page-head">
+          <div>
+            <div class="overline kicker">Inventario · Listing & fulfillment</div>
+            <h1 class="page-title" id="h-inv">Inventario</h1>
+            <p class="page-sub">Stato di pubblicazione per piattaforma e avanzamento delle spedizioni.</p>
+          </div>
+        </div>
+
+        <div class="banner banner-warn"><svg class="ico sm"><use href="#i-box"/></svg>1 listing richiede rimozione manuale dalla piattaforma (nessuna API).</div>
+
+        <div class="tablewrap">
+          <table class="inv">
+            <thead><tr><th>Capo</th><th>Vinted</th><th>Grailed</th><th>Depop</th><th>Fulfillment</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><div class="item-c"><span class="mini"><svg class="ico"><use href="#i-shirt"/></svg></span><div><div style="font-weight:600">Stone Island</div><div class="csku mono">SKU B-091</div></div></div></td>
+                <td><span class="lchip active">active</span></td><td><span class="lchip active">active</span></td><td><span class="lchip delisted">delisted</span></td>
+                <td><span class="badge badge-locale"><span class="bd"></span>—</span></td>
+              </tr>
+              <tr>
+                <td><div class="item-c"><span class="mini"><svg class="ico"><use href="#i-shirt"/></svg></span><div><div style="font-weight:600">Ralph Lauren</div><div class="csku mono">SKU B-074</div></div></div></td>
+                <td><span class="lchip delisted">venduto</span></td><td><span class="lchip pending">pending</span></td><td><span class="lchip delisted">delisted</span></td>
+                <td><span class="badge badge-pub"><span class="bd"></span>In transito</span></td>
+              </tr>
+              <tr>
+                <td><div class="item-c"><span class="mini"><svg class="ico"><use href="#i-shirt"/></svg></span><div><div style="font-weight:600">Burberry</div><div class="csku mono">SKU B-088</div></div></div></td>
+                <td><span class="lchip active">active</span></td><td><span class="lchip active">active</span></td><td><span class="lchip active">active</span></td>
+                <td><span class="badge badge-locale"><span class="bd"></span>—</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ===================== NOTIFICHE (Inbox · S-11/nav-flow) ===================== -->
+      <section class="panel" data-panel="notifiche" aria-labelledby="h-notif">
+        <div class="page-head">
+          <div>
+            <div class="overline kicker">Inbox</div>
+            <h1 class="page-title" id="h-notif">Notifiche</h1>
+            <p class="page-sub">Vendite, offerte, resi e bozze pronte. Le non lette sono in evidenza.</p>
+          </div>
+        </div>
+        <div class="seg" role="group" aria-label="Filtro notifiche" style="margin-bottom:var(--s5)">
+          <button aria-pressed="true">Tutte</button><button aria-pressed="false">Non lette · 3</button>
+        </div>
+        <div class="card">
+          <div class="nrow unread">
+            <div class="nic"><svg class="ico sm"><use href="#i-coins"/></svg></div>
+            <div class="nbody"><div class="ntitle">Capo venduto</div><div class="nmeta">Stone Island bomber · <span class="mono">Vinted</span> · <span class="mono">92 €</span></div></div>
+            <div class="ntime">12 min</div>
+          </div>
+          <div class="nrow unread">
+            <div class="nic"><svg class="ico sm"><use href="#i-tag"/></svg></div>
+            <div class="nbody"><div class="ntitle">Offerta ricevuta</div><div class="nmeta">Burberry trench · <span class="mono">Grailed</span> · <span class="mono">45 €</span></div></div>
+            <div class="ntime">1 h</div>
+          </div>
+          <div class="nrow unread">
+            <div class="nic"><svg class="ico sm"><use href="#i-check"/></svg></div>
+            <div class="nbody"><div class="ntitle">Bozza pronta da revisionare</div><div class="nmeta">Carhartt Detroit jacket · <span class="mono">MP-0043</span></div></div>
+            <div class="ntime">2 h</div>
+          </div>
+          <div class="nrow">
+            <div class="nic"><svg class="ico sm"><use href="#i-truck"/></svg></div>
+            <div class="nbody"><div class="ntitle">Reso pronto al ritiro</div><div class="nmeta">Levi's 501 · <span class="mono">SKU B-074</span></div></div>
+            <div class="ntime">3 h</div>
+          </div>
+          <div class="nrow">
+            <div class="nic"><svg class="ico sm"><use href="#i-box"/></svg></div>
+            <div class="nbody"><div class="ntitle">Delisting completato</div><div class="nmeta">Ralph Lauren oxford · <span class="mono">Depop</span></div></div>
+            <div class="ntime">ieri</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== CONTABILITÀ ===================== -->
+      <section class="panel" data-panel="contabilita" aria-labelledby="h-conta">
+        <div class="page-head">
+          <div>
+            <div class="overline kicker">Contabilità · Tenant DirtyTag</div>
+            <h1 class="page-title" id="h-conta">Contabilità</h1>
+            <p class="page-sub">Pannello di controllo economico: vendite, distribuzione dei canali e delle categorie, cassa e settlement.</p>
+          </div>
+          <button class="btn btn-ghost desk-only" type="button"><svg class="ico sm"><use href="#i-download"/></svg>Esporta CSV</button>
+        </div>
+
+        <!-- toolbar periodo -->
+        <div class="co-toolbar">
+          <div class="seg" role="group" aria-label="Periodo panoramica">
+            <button data-range="7" aria-pressed="false">7 giorni</button>
+            <button data-range="30" aria-pressed="true">30 giorni</button>
+            <button data-range="90" aria-pressed="false">90 giorni</button>
+            <button data-range="anno" aria-pressed="false">Anno</button>
+          </div>
+          <span class="co-spacer"></span>
+          <span class="badge badge-conf"><span class="bd"></span>Dati in tempo reale</span>
+          <span class="kpi-note mono">Aggiornato 19 lug, 09:14</span>
+        </div>
+
+        <!-- ===== QUESTA SETTIMANA — KPI ===== -->
+        <div class="co-secline">
+          <div class="overline">Questa settimana · 13–19 lug</div>
+          <span class="co-note">vs settimana precedente (06–12 lug)</span>
+        </div>
+        <div class="kpi-row">
+          <div class="kpi kpi-hero">
+            <div class="kpi-top"><svg class="ico"><use href="#i-wallet"/></svg>Ricavi settimana</div>
+            <div class="kpi-val">€ 2.680</div>
+            <div class="kpi-foot">
+              <span class="delta up"><svg class="ico"><use href="#i-trend"/></svg>+14,5%</span>
+              <span class="kpi-note">+ € 340 vs sett. prec.</span>
+            </div>
+            <div class="kpi-spark" aria-hidden="true">
+              <svg viewBox="0 0 100 40" preserveAspectRatio="none">
+                <polygon points="0,40 0,36 14.3,28.75 28.6,32.6 42.9,23.6 57.1,18.3 71.4,20.85 85.7,11.25 100,4 100,40" fill="rgba(219,230,76,.16)"/>
+                <polyline points="0,36 14.3,28.75 28.6,32.6 42.9,23.6 57.1,18.3 71.4,20.85 85.7,11.25 100,4" fill="none" stroke="#DBE64C" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-top"><svg class="ico"><use href="#i-bars"/></svg>Pezzi venduti</div>
+            <div class="kpi-val">21 <small>pezzi</small></div>
+            <div class="kpi-foot">
+              <span class="delta up"><svg class="ico"><use href="#i-trend"/></svg>+16,7%</span>
+              <span class="kpi-note">18 la scorsa settimana</span>
+            </div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-top"><svg class="ico"><use href="#i-tag"/></svg>Prezzo medio di vendita</div>
+            <div class="kpi-val">€ 128</div>
+            <div class="kpi-foot">
+              <span class="delta up"><svg class="ico"><use href="#i-trend"/></svg>+2,4%</span>
+              <span class="kpi-note">min € 41 · max € 228</span>
+            </div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-top"><svg class="ico"><use href="#i-vault"/></svg>Netto stimato</div>
+            <div class="kpi-val">€ 2.190</div>
+            <div class="kpi-foot">
+              <span class="delta up"><svg class="ico"><use href="#i-percent"/></svg>margine 81,7%</span>
+              <span class="kpi-note">dopo commissioni e spedizioni</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== CATEGORIA PIÙ VENDUTA (feature) ===== -->
+        <div class="co-feature" id="coFeature">
+          <div class="co-feat-head">
+            <div class="overline">Categoria più venduta</div>
+            <div class="seg seg-dark" role="group" aria-label="Finestra categoria">
+              <button data-period="15" aria-pressed="false">15 giorni</button>
+              <button data-period="30" aria-pressed="true">30 giorni</button>
+            </div>
+          </div>
+          <div class="co-feat-body">
+            <div class="co-feat-main">
+              <div class="feat-eyebrow">In testa negli ultimi 30 giorni</div>
+              <div class="feat-name" data-f="cat">Giacche &amp; capispalla</div>
+              <p class="feat-sub"><span data-f="rank">Davanti a Felpe &amp; maglieria (23%)</span>. Traino delle vendite del periodo, con lo scontrino medio più alto del catalogo.</p>
+            </div>
+            <div class="co-feat-stats">
+              <div class="fst"><div class="fst-n accent"><span data-f="eur">3.980</span> <span style="font-size:15px">€</span></div><div class="fst-l">Ricavi periodo</div></div>
+              <div class="fst"><div class="fst-n"><span data-f="pcs">24</span></div><div class="fst-l">Pezzi venduti</div></div>
+              <div class="fst"><div class="fst-n"><span data-f="share">35%</span></div><div class="fst-l">Quota sul venduto</div></div>
+              <div class="fst"><div class="fst-n" style="color:#8fe0b8"><span data-f="delta">+12%</span></div><div class="fst-l">vs periodo prec.</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== ANDAMENTO VENDITE SETTIMANALI ===== -->
+        <div class="chart-card" id="coWeekly" style="margin-top:var(--s4)">
+          <div class="chart-head">
+            <div>
+              <h3>Andamento vendite settimanali</h3>
+              <div class="chart-sub">Ultime 8 settimane · settimana in corso evidenziata</div>
+            </div>
+            <div class="seg" role="group" aria-label="Misura andamento">
+              <button data-meas="eur" aria-pressed="true">€ Ricavi</button>
+              <button data-meas="pcs" aria-pressed="false">Pezzi</button>
+            </div>
+          </div>
+          <div class="colchart">
+            <div class="col-yaxis"><span>2.800</span><span>2.100</span><span>1.400</span><span>700</span><span>0</span></div>
+            <div class="col-plot">
+              <div class="col-grid" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+              <div class="cols">
+                <div class="colwrap has-tip" tabindex="0" role="img" data-week="25/5" data-eur="1180" data-pcs="9" aria-label="Settimana 25 maggio: 1.180 euro, 9 pezzi">
+                  <span class="col-cap"></span><span class="col" style="height:42.1%"></span><span class="col-x">25/5</span>
+                  <span class="tip">25/5 · <b>€ 1.180</b> · <span class="tip-mut">9 pz</span></span>
+                </div>
+                <div class="colwrap has-tip" tabindex="0" role="img" data-week="1/6" data-eur="1520" data-pcs="12" aria-label="Settimana 1 giugno: 1.520 euro, 12 pezzi">
+                  <span class="col-cap"></span><span class="col" style="height:54.3%"></span><span class="col-x">1/6</span>
+                  <span class="tip">1/6 · <b>€ 1.520</b> · <span class="tip-mut">12 pz</span></span>
+                </div>
+                <div class="colwrap has-tip" tabindex="0" role="img" data-week="8/6" data-eur="1340" data-pcs="10" aria-label="Settimana 8 giugno: 1.340 euro, 10 pezzi">
+                  <span class="col-cap"></span><span class="col" style="height:47.9%"></span><span class="col-x">8/6</span>
+                  <span class="tip">8/6 · <b>€ 1.340</b> · <span class="tip-mut">10 pz</span></span>
+                </div>
+                <div class="colwrap has-tip" tabindex="0" role="img" data-week="15/6" data-eur="1760" data-pcs="14" aria-label="Settimana 15 giugno: 1.760 euro, 14 pezzi">
+                  <span class="col-cap"></span><span class="col" style="height:62.9%"></span><span class="col-x">15/6</span>
+                  <span class="tip">15/6 · <b>€ 1.760</b> · <span class="tip-mut">14 pz</span></span>
+                </div>
+                <div class="colwrap has-tip" tabindex="0" role="img" data-week="22/6" data-eur="2010" data-pcs="16" aria-label="Settimana 22 giugno: 2.010 euro, 16 pezzi">
+                  <span class="col-cap"></span><span class="col" style="height:71.8%"></span><span class="col-x">22/6</span>
+                  <span class="tip">22/6 · <b>€ 2.010</b> · <span class="tip-mut">16 pz</span></span>
+                </div>
+                <div class="colwrap has-tip" tabindex="0" role="img" data-week="29/6" data-eur="1890" data-pcs="15" aria-label="Settimana 29 giugno: 1.890 euro, 15 pezzi">
+                  <span class="col-cap"></span><span class="col" style="height:67.5%"></span><span class="col-x">29/6</span>
+                  <span class="tip">29/6 · <b>€ 1.890</b> · <span class="tip-mut">15 pz</span></span>
+                </div>
+                <div class="colwrap has-tip" tabindex="0" role="img" data-week="6/7" data-eur="2340" data-pcs="18" aria-label="Settimana 6 luglio: 2.340 euro, 18 pezzi">
+                  <span class="col-cap"></span><span class="col" style="height:83.6%"></span><span class="col-x">6/7</span>
+                  <span class="tip">6/7 · <b>€ 2.340</b> · <span class="tip-mut">18 pz</span></span>
+                </div>
+                <div class="colwrap cur has-tip" tabindex="0" role="img" data-week="13/7" data-eur="2680" data-pcs="21" aria-label="Settimana in corso 13 luglio: 2.680 euro, 21 pezzi">
+                  <span class="col-cap"></span><span class="col" style="height:95.7%"></span><span class="col-x">13/7</span>
+                  <span class="tip">13/7 · <b>€ 2.680</b> · <span class="tip-mut">21 pz</span></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== DISTRIBUZIONI ===== -->
+        <div class="co-grid2">
+          <!-- Per piattaforma -->
+          <div class="chart-card">
+            <div class="chart-head">
+              <div>
+                <h3>Distribuzione per piattaforma</h3>
+                <div class="chart-sub">Ricavi ultimi 30 giorni</div>
+              </div>
+              <div class="chart-tot">Totale<b>€ 11.490</b></div>
+            </div>
+            <div class="hbars">
+              <div class="hbar top has-tip">
+                <div class="hbar-lab"><span class="pf-dot">V</span><span class="lab-t">Vinted</span></div>
+                <div class="hbar-val">€ 4.820<span class="pct">42%</span></div>
+                <div class="hbar-track"><span class="hbar-fill" style="width:100%"></span></div>
+                <span class="tip">Vinted · <b>€ 4.820</b> · <span class="tip-mut">51 vendite · 42%</span></span>
+              </div>
+              <div class="hbar has-tip">
+                <div class="hbar-lab"><span class="pf-dot">D</span><span class="lab-t">Depop</span></div>
+                <div class="hbar-val">€ 2.760<span class="pct">24%</span></div>
+                <div class="hbar-track"><span class="hbar-fill" style="width:57.3%"></span></div>
+                <span class="tip">Depop · <b>€ 2.760</b> · <span class="tip-mut">29 vendite · 24%</span></span>
+              </div>
+              <div class="hbar has-tip">
+                <div class="hbar-lab"><span class="pf-dot">G</span><span class="lab-t">Grailed</span></div>
+                <div class="hbar-val">€ 1.840<span class="pct">16%</span></div>
+                <div class="hbar-track"><span class="hbar-fill" style="width:38.2%"></span></div>
+                <span class="tip">Grailed · <b>€ 1.840</b> · <span class="tip-mut">12 vendite · 16%</span></span>
+              </div>
+              <div class="hbar has-tip">
+                <div class="hbar-lab"><span class="pf-dot">VC</span><span class="lab-t">Vestiaire</span></div>
+                <div class="hbar-val">€ 1.150<span class="pct">10%</span></div>
+                <div class="hbar-track"><span class="hbar-fill" style="width:23.9%"></span></div>
+                <span class="tip">Vestiaire · <b>€ 1.150</b> · <span class="tip-mut">9 vendite · 10%</span></span>
+              </div>
+              <div class="hbar has-tip">
+                <div class="hbar-lab"><span class="pf-dot">EB</span><span class="lab-t">eBay</span></div>
+                <div class="hbar-val">€ 920<span class="pct">8%</span></div>
+                <div class="hbar-track"><span class="hbar-fill" style="width:19.1%"></span></div>
+                <span class="tip">eBay · <b>€ 920</b> · <span class="tip-mut">19 vendite · 8%</span></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Per categoria -->
+          <div class="chart-card">
+            <div class="chart-head">
+              <div>
+                <h3>Distribuzione per categoria</h3>
+                <div class="chart-sub">Ricavi ultimi 30 giorni · 120 pezzi</div>
+              </div>
+              <div class="chart-tot">Totale<b>€ 11.490</b></div>
+            </div>
+            <div class="hbars">
+              <div class="hbar top has-tip">
+                <div class="hbar-lab"><span class="pf-dot"><svg class="ico" style="width:13px;height:13px"><use href="#i-layers"/></svg></span><span class="lab-t">Giacche &amp; capispalla</span></div>
+                <div class="hbar-val">€ 3.980<span class="pct">35%</span></div>
+                <div class="hbar-track"><span class="hbar-fill" style="width:100%"></span></div>
+                <span class="tip">Giacche &amp; capispalla · <b>€ 3.980</b> · <span class="tip-mut">24 pz · medio € 166</span></span>
+              </div>
+              <div class="hbar has-tip">
+                <div class="hbar-lab"><span class="pf-dot"><svg class="ico" style="width:13px;height:13px"><use href="#i-layers"/></svg></span><span class="lab-t">Felpe &amp; maglieria</span></div>
+                <div class="hbar-val">€ 2.640<span class="pct">23%</span></div>
+                <div class="hbar-track"><span class="hbar-fill" style="width:66.3%"></span></div>
+                <span class="tip">Felpe &amp; maglieria · <b>€ 2.640</b> · <span class="tip-mut">31 pz · medio € 85</span></span>
+              </div>
+              <div class="hbar has-tip">
+                <div class="hbar-lab"><span class="pf-dot"><svg class="ico" style="width:13px;height:13px"><use href="#i-layers"/></svg></span><span class="lab-t">Denim</span></div>
+                <div class="hbar-val">€ 1.720<span class="pct">15%</span></div>
+                <div class="hbar-track"><span class="hbar-fill" style="width:43.2%"></span></div>
+                <span class="tip">Denim · <b>€ 1.720</b> · <span class="tip-mut">18 pz · medio € 96</span></span>
+              </div>
+              <div class="hbar has-tip">
+                <div class="hbar-lab"><span class="pf-dot"><svg class="ico" style="width:13px;height:13px"><use href="#i-layers"/></svg></span><span class="lab-t">Sneakers &amp; scarpe</span></div>
+                <div class="hbar-val">€ 1.490<span class="pct">13%</span></div>
+                <div class="hbar-track"><span class="hbar-fill" style="width:37.4%"></span></div>
+                <span class="tip">Sneakers &amp; scarpe · <b>€ 1.490</b> · <span class="tip-mut">11 pz · medio € 135</span></span>
+              </div>
+              <div class="hbar has-tip">
+                <div class="hbar-lab"><span class="pf-dot"><svg class="ico" style="width:13px;height:13px"><use href="#i-layers"/></svg></span><span class="lab-t">T-shirt &amp; camicie</span></div>
+                <div class="hbar-val">€ 980<span class="pct">9%</span></div>
+                <div class="hbar-track"><span class="hbar-fill" style="width:24.6%"></span></div>
+                <span class="tip">T-shirt &amp; camicie · <b>€ 980</b> · <span class="tip-mut">22 pz · medio € 45</span></span>
+              </div>
+              <div class="hbar has-tip">
+                <div class="hbar-lab"><span class="pf-dot"><svg class="ico" style="width:13px;height:13px"><use href="#i-layers"/></svg></span><span class="lab-t">Accessori</span></div>
+                <div class="hbar-val">€ 680<span class="pct">6%</span></div>
+                <div class="hbar-track"><span class="hbar-fill" style="width:17.1%"></span></div>
+                <span class="tip">Accessori · <b>€ 680</b> · <span class="tip-mut">14 pz · medio € 49</span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== CASSA E SETTLEMENT ===== -->
+        <div class="co-secline">
+          <div class="overline">Cassa e settlement</div>
+          <span class="co-note">finestra reso 14gg · payout ~7gg</span>
+        </div>
+        <div class="kpi-row">
+          <div class="kpi">
+            <div class="kpi-top"><svg class="ico"><use href="#i-percent"/></svg>Commissioni piattaforme</div>
+            <div class="kpi-val">€ 322</div>
+            <div class="kpi-foot"><span class="kpi-note">≈ 12% del venduto · settimana</span></div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-top"><svg class="ico"><use href="#i-truck"/></svg>Spedizioni</div>
+            <div class="kpi-val">€ 168</div>
+            <div class="kpi-foot"><span class="kpi-note">21 spedizioni · media € 8</span></div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-top"><svg class="ico"><use href="#i-vault"/></svg>In escrow</div>
+            <div class="kpi-val">€ 940</div>
+            <div class="kpi-foot"><span class="delta flat">6 vendite</span><span class="kpi-note">in finestra reso</span></div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-top"><svg class="ico"><use href="#i-download"/></svg>Payout previsto</div>
+            <div class="kpi-val">€ 1.760</div>
+            <div class="kpi-foot"><span class="kpi-note">accredito stimato 21 lug</span></div>
+          </div>
+        </div>
+
+        <div class="chart-card" style="margin-top:var(--s4)">
+          <div class="chart-head">
+            <div>
+              <h3>Stato della cassa</h3>
+              <div class="chart-sub">Ripartizione dei ricavi maturati · € 11.490</div>
+            </div>
+          </div>
+          <div class="stackbar" role="img" aria-label="Liquidato 8.790 euro, payout in arrivo 1.760 euro, in escrow 940 euro">
+            <span class="sgm has-tip" style="flex:0 0 76.5%; background:var(--green)"><span class="tip">Liquidato · <b>€ 8.790</b></span></span>
+            <span class="sgm has-tip" style="flex:0 0 15.3%; background:var(--blue)"><span class="tip">Payout in arrivo · <b>€ 1.760</b></span></span>
+            <span class="sgm has-tip" style="flex:0 0 8.2%; background:var(--ink-3)"><span class="tip">In escrow · <b>€ 940</b></span></span>
+          </div>
+          <div class="stack-legend">
+            <span class="lg"><span class="sw" style="background:var(--green)"></span>Liquidato <b>€ 8.790</b></span>
+            <span class="lg"><span class="sw" style="background:var(--blue)"></span>Payout in arrivo · 7gg <b>€ 1.760</b></span>
+            <span class="lg"><span class="sw" style="background:var(--ink-3)"></span>In escrow · reso 14gg <b>€ 940</b></span>
+          </div>
+        </div>
+
+        <!-- ===== ULTIME TRANSAZIONI ===== -->
+        <div class="section-h"><h3>Ultime transazioni</h3><a class="btn btn-sm btn-ghost" href="#contabilita">Vedi tutte</a></div>
+        <div class="tablewrap">
+          <table class="inv tx-table">
+            <thead><tr>
+              <th>Data</th><th>Capo</th><th>Piattaforma</th><th class="num">Lordo</th><th class="num">Commissioni</th><th class="num">Spedizione</th><th class="num">Netto</th><th>Stato</th>
+            </tr></thead>
+            <tbody>
+              <tr>
+                <td class="tx-date">13/7</td>
+                <td><div style="font-weight:600">Stone Island · Bomber</div><div class="tx-cat">Giacche &amp; capispalla</div></td>
+                <td>Vinted</td>
+                <td class="num">172 €</td><td class="num neg">−21 €</td><td class="num neg">−8 €</td><td class="num net">143 €</td>
+                <td><span class="badge badge-conf"><span class="bd"></span>Liquidato</span></td>
+              </tr>
+              <tr>
+                <td class="tx-date">13/7</td>
+                <td><div style="font-weight:600">Burberry · Trench</div><div class="tx-cat">Giacche &amp; capispalla</div></td>
+                <td>Grailed</td>
+                <td class="num">228 €</td><td class="num neg">−27 €</td><td class="num neg">−0 €</td><td class="num net">201 €</td>
+                <td><span class="badge badge-pub"><span class="bd"></span>In escrow</span></td>
+              </tr>
+              <tr>
+                <td class="tx-date">12/7</td>
+                <td><div style="font-weight:600">The North Face · Nuptse 700</div><div class="tx-cat">Giacche &amp; capispalla</div></td>
+                <td>Vinted</td>
+                <td class="num">150 €</td><td class="num neg">−18 €</td><td class="num neg">−7 €</td><td class="num net">125 €</td>
+                <td><span class="badge badge-locale"><span class="bd"></span>In transito</span></td>
+              </tr>
+              <tr>
+                <td class="tx-date">12/7</td>
+                <td><div style="font-weight:600">Nike · Hoodie vintage</div><div class="tx-cat">Felpe &amp; maglieria</div></td>
+                <td>Depop</td>
+                <td class="num">52 €</td><td class="num neg">−6 €</td><td class="num neg">−5 €</td><td class="num net">41 €</td>
+                <td><span class="badge badge-conf"><span class="bd"></span>Liquidato</span></td>
+              </tr>
+              <tr>
+                <td class="tx-date">11/7</td>
+                <td><div style="font-weight:600">Acne Studios · Maglione lana</div><div class="tx-cat">Felpe &amp; maglieria</div></td>
+                <td>Vestiaire</td>
+                <td class="num">115 €</td><td class="num neg">−18 €</td><td class="num neg">−6 €</td><td class="num net">91 €</td>
+                <td><span class="badge badge-conf"><span class="bd"></span>Liquidato</span></td>
+              </tr>
+              <tr>
+                <td class="tx-date">11/7</td>
+                <td><div style="font-weight:600">Levi’s · Giacca denim</div><div class="tx-cat">Denim</div></td>
+                <td>Depop</td>
+                <td class="num">68 €</td><td class="num neg">−8 €</td><td class="num neg">−5 €</td><td class="num net">55 €</td>
+                <td><span class="badge badge-pub"><span class="bd"></span>In escrow</span></td>
+              </tr>
+              <tr>
+                <td class="tx-date">10/7</td>
+                <td><div style="font-weight:600">Dr. Martens · 1460</div><div class="tx-cat">Sneakers &amp; scarpe</div></td>
+                <td>Depop</td>
+                <td class="num">88 €</td><td class="num neg">−10 €</td><td class="num neg">−6 €</td><td class="num net">72 €</td>
+                <td><span class="badge badge-conf"><span class="bd"></span>Liquidato</span></td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr class="tx-foot">
+                <td colspan="3">Totale · 7 transazioni</td>
+                <td class="num">873 €</td><td class="num neg">−108 €</td><td class="num neg">−37 €</td><td class="num net">728 €</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <!-- ===== FORNITORI (carichi in ingresso) ===== -->
+        <div class="section-h">
+          <h3>Fornitori</h3>
+          <button class="btn btn-sm btn-ghost" type="button" data-carico><svg class="ico sm"><use href="#i-plus"/></svg>Nuovo carico</button>
+        </div>
+        <div class="co-privacy">
+          <svg class="ico sm"><use href="#i-shield"/></svg>
+          <div>I nomi dei tuoi fornitori restano <b>privati</b>: MAAT non ha accesso alla tua lista fornitori, la vedi e la gestisci soltanto tu.</div>
+        </div>
+        <div class="sup-list" id="supList"><!-- righe generate da JS --></div>
+      </section>
+
+      <!-- ===================== LOGISTICA ===================== -->
+      <section class="panel" data-panel="logistica" aria-labelledby="h-logi">
+        <div class="page-head">
+          <div>
+            <div class="overline kicker">Logistica</div>
+            <h1 class="page-title" id="h-logi">Logistica</h1>
+            <p class="page-sub">Spedizioni in corso, organizzate per piattaforma.</p>
+          </div>
+        </div>
+
+        <!-- ===== Vinted ===== -->
+        <div class="ship-group">
+          <div class="section-h"><h3 class="ship-plat"><span class="pf-dot">V</span>Vinted</h3><span class="ship-count">6 in corso</span></div>
+          <div class="tablewrap">
+            <table class="inv ship-table">
+              <thead><tr>
+                <th class="col-name">Capo</th><th class="col-sku">SKU</th><th>Corriere</th><th>Tracking</th><th>Destinatario</th><th>Stato</th><th>Partita</th><th>Consegna prev.</th><th>Prezzo</th>
+              </tr></thead>
+              <tbody>
+                <tr>
+                  <td class="col-name">Stone Island · Bomber</td><td class="col-sku mono">B-091</td><td>BRT</td><td class="mono">BRT-8842190</td><td>M. Rossi</td>
+                  <td><span class="badge badge-pub"><span class="bd"></span>In transito</span></td><td class="mono">14 lug</td><td class="mono">18 lug</td><td class="mono">172 €</td>
+                </tr>
+                <tr>
+                  <td class="col-name">Burberry · Trench</td><td class="col-sku mono">B-088</td><td>InPost</td><td class="mono">INP-5521048</td><td>L. Bianchi</td>
+                  <td><span class="badge badge-conf"><span class="bd"></span>In consegna</span></td><td class="mono">16 lug</td><td class="mono">18 lug</td><td class="mono">228 €</td>
+                </tr>
+                <tr>
+                  <td class="col-name">The North Face · Nuptse 700</td><td class="col-sku mono">B-090</td><td>Poste</td><td class="mono">RR118904471IT</td><td>G. Esposito</td>
+                  <td><span class="badge badge-locale"><span class="bd"></span>Spedita</span></td><td class="mono">17 lug</td><td class="mono">21 lug</td><td class="mono">150 €</td>
+                </tr>
+                <tr>
+                  <td class="col-name">Nike · Hoodie vintage</td><td class="col-sku mono">B-093</td><td>GLS</td><td class="mono">GLS-70418826</td><td>F. Romano</td>
+                  <td><span class="badge badge-pub"><span class="bd"></span>In transito</span></td><td class="mono">15 lug</td><td class="mono">19 lug</td><td class="mono">52 €</td>
+                </tr>
+                <tr>
+                  <td class="col-name">Acne Studios · Maglione lana</td><td class="col-sku mono">B-097</td><td>BRT</td><td class="mono">BRT-8850127</td><td>S. Conti</td>
+                  <td><span class="badge badge-conf"><span class="bd"></span>In consegna</span></td><td class="mono">13 lug</td><td class="mono">17 lug</td><td class="mono">115 €</td>
+                </tr>
+                <tr>
+                  <td class="col-name">Levi’s · Giacca denim</td><td class="col-sku mono">B-102</td><td>InPost</td><td class="mono">INP-5530993</td><td>A. Ricci</td>
+                  <td><span class="badge badge-locale"><span class="bd"></span>Spedita</span></td><td class="mono">17 lug</td><td class="mono">22 lug</td><td class="mono">68 €</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ===== Depop ===== -->
+        <div class="ship-group">
+          <div class="section-h"><h3 class="ship-plat"><span class="pf-dot">D</span>Depop</h3><span class="ship-count">4 in corso</span></div>
+          <div class="tablewrap">
+            <table class="inv ship-table">
+              <thead><tr>
+                <th class="col-name">Capo</th><th class="col-sku">SKU</th><th>Corriere</th><th>Tracking</th><th>Destinatario</th><th>Stato</th><th>Partita</th><th>Consegna prev.</th><th>Prezzo</th>
+              </tr></thead>
+              <tbody>
+                <tr>
+                  <td class="col-name">Dr. Martens · 1460 boots</td><td class="col-sku mono">B-099</td><td>Evri</td><td class="mono">EVR-99215540</td><td>C. Marino</td>
+                  <td><span class="badge badge-pub"><span class="bd"></span>In transito</span></td><td class="mono">15 lug</td><td class="mono">20 lug</td><td class="mono">88 €</td>
+                </tr>
+                <tr>
+                  <td class="col-name">Adidas · Track jacket</td><td class="col-sku mono">B-095</td><td>Poste</td><td class="mono">RR118990553IT</td><td>E. Greco</td>
+                  <td><span class="badge badge-pub"><span class="bd"></span>In transito</span></td><td class="mono">16 lug</td><td class="mono">20 lug</td><td class="mono">45 €</td>
+                </tr>
+                <tr>
+                  <td class="col-name">Prada · Nylon bag</td><td class="col-sku mono">B-101</td><td>DHL</td><td class="mono">DHL-6641200788</td><td>D. Bruno</td>
+                  <td><span class="badge badge-conf"><span class="bd"></span>In consegna</span></td><td class="mono">14 lug</td><td class="mono">18 lug</td><td class="mono">310 €</td>
+                </tr>
+                <tr>
+                  <td class="col-name">Ralph Lauren · Oxford</td><td class="col-sku mono">B-074</td><td>Evri</td><td class="mono">EVR-99230071</td><td>V. Gallo</td>
+                  <td><span class="badge badge-locale"><span class="bd"></span>Spedita</span></td><td class="mono">12 lug</td><td class="mono">19 lug</td><td class="mono">38 €</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </div><!-- /scroll -->
+  </div><!-- /host -->
+
+  <!-- ---------- BOTTOM TAB BAR (mobile) ---------- -->
+  <!-- Mobile: nav canonica 2 tab (Capi · Notifiche) + Crea capo centrale -->
+  <nav class="tabbar" aria-label="Navigazione principale">
+    <a class="tab" data-route="catalogo" href="#catalogo"><svg class="ico"><use href="#i-grid"/></svg>Capi</a>
+    <span class="tab-add"><button data-wizard aria-label="Crea capo"><svg class="ico"><use href="#i-plus"/></svg></button></span>
+    <a class="tab" data-route="notifiche" href="#notifiche"><svg class="ico"><use href="#i-bell"/></svg>Notifiche</a>
+  </nav>
+</div>
+
+<!-- ============================ QR HANDOFF (acquisizione da telefono) ============================ -->
+<div class="qrflow" id="qrflow" role="dialog" aria-modal="true" aria-label="Nuovo capo · Acquisizione da telefono">
+  <div class="qrflow-inner">
+    <div class="hf-bar">
+      <button class="ib" id="qrClose" type="button" aria-label="Chiudi"><svg class="ico sm"><use href="#i-x"/></svg></button>
+      <button class="ib" id="qrBack" type="button" aria-label="Indietro" hidden><svg class="ico sm"><use href="#i-chevL"/></svg></button>
+      <span class="brand-mark">M</span>
+      <span class="bar-title">Nuovo capo</span>
+      <span class="bar-step" id="qrBarStep">Acquisizione foto</span>
+    </div>
+    <div class="hf-stage">
+
+      <!-- ═══ VISTA · SCELTA (come vuoi aggiungere le foto) ═══ -->
+      <div class="qr-view active" data-view="scelta">
+        <div class="qr-col">
+          <div class="eyebrow">Scelta · Acquisizione</div>
+          <h1 class="vtitle">Come vuoi aggiungere le foto?</h1>
+          <p class="vsub">Servono almeno <span class="mono" style="color:var(--ink)">5</span> foto (max <span class="mono" style="color:var(--ink)">15</span>) per far leggere il capo all'AI.</p>
+
+          <div class="choices">
+            <button class="choice" type="button" data-choice="scatta">
+              <span class="choice-icon rec"><svg class="ico"><use href="#i-camera"/></svg></span>
+              <span class="choice-main">
+                <span class="choice-title">Scatta ora <span class="rec-badge">Consigliato</span></span>
+                <span class="choice-desc">Inquadra il QR e fotografa il capo dal telefono, con la fotocamera guidata.</span>
+              </span>
+              <svg class="ico sm chev"><use href="#i-chev"/></svg>
+            </button>
+            <button class="choice" type="button" data-choice="galleria">
+              <span class="choice-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></span>
+              <span class="choice-main">
+                <span class="choice-title">Carica dalla galleria</span>
+                <span class="choice-desc">Trascina più foto in blocco dal computer, poi assegnale agli slot.</span>
+              </span>
+              <svg class="ico sm chev"><use href="#i-chev"/></svg>
+            </button>
+          </div>
+
+          <div class="aux-group">
+            <div class="aux-item">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              <p><b>Misure automatiche (ArUco)</b> — aggiungi una foto col marker tra gli scatti opzionali: l'AI calcola le misure in automatico.</p>
+            </div>
+            <div class="aux-div"></div>
+            <div class="req-row"><span class="req-title">Set foto richiesto</span><span class="req-max mono">min 5 · max 15</span></div>
+            <div class="req-group"><span class="req-label">Obbligatorie</span><div class="chips"><span class="chip">Fronte</span><span class="chip">Retro</span><span class="chip">Etichetta brand</span></div></div>
+            <div class="req-group"><span class="req-label">Opzionali</span><div class="chips"><span class="chip opt">Taglia</span><span class="chip opt">Materiale</span><span class="chip opt">Difetti</span><span class="chip opt">Aggiuntive</span><span class="chip opt">ArUco</span></div></div>
+            <p class="aux-note">Potrai combinare scatti e galleria in acquisizione.</p>
+          </div>
+
+          <button class="qr-cta ghost" id="qrCancel" type="button">Annulla</button>
+        </div>
+      </div>
+
+      <!-- ═══ VISTA · QR (scatta dal telefono) ═══ -->
+      <div class="qr-view" data-view="qr">
+      <div class="hf-grid">
+
+        <!-- SINISTRA · istruzioni + QR -->
+        <section class="hf-main">
+          <div class="eyebrow">Photo-to-Catalog · Passo 1</div>
+          <h1>Scatta le foto dal telefono</h1>
+          <p class="lead">La fotocamera del telefono è più comoda del computer. Inquadra il codice con l'app <b>MAAT</b>: fotografi il capo dal telefono e le foto arrivano qui per l'etichettatura.</p>
+
+          <div class="qr-row">
+            <div class="qr-card">
+              <div class="qr" id="qrCode"></div>
+              <div class="qr-scan" aria-hidden="true"></div>
+              <div class="qr-logo">M</div>
+            </div>
+            <div class="qr-side">
+              <ol class="steps">
+                <li><span class="n">1</span><div>Apri <b>MAAT</b> sul telefono<div class="st-sub">Non ce l'hai? Installalo dallo store.</div></div></li>
+                <li><span class="n">2</span><div>Tocca <b>Scansiona</b> e inquadra questo QR</div></li>
+                <li><span class="n">3</span><div>Fotografa il capo<div class="st-sub">L'app ti guida scatto per scatto.</div></div></li>
+                <li><span class="n">4</span><div>Conferma dal telefono<div class="st-sub">Le foto arrivano qui per l'etichettatura.</div></div></li>
+              </ol>
+            </div>
+          </div>
+
+          <div class="store">
+            <span class="qr-store-badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.05 12.5c-.02-2.2 1.8-3.26 1.88-3.31-1.02-1.5-2.62-1.7-3.19-1.72-1.36-.14-2.65.8-3.34.8-.68 0-1.75-.78-2.88-.76-1.48.02-2.85.86-3.61 2.18-1.54 2.67-.4 6.62 1.1 8.79.73 1.06 1.6 2.25 2.74 2.21 1.1-.04 1.51-.71 2.84-.71 1.32 0 1.7.71 2.86.69 1.18-.02 1.93-1.08 2.65-2.15.84-1.23 1.18-2.42 1.2-2.48-.03-.01-2.3-.88-2.32-3.5zM14.9 5.6c.6-.73 1-1.75.89-2.76-.86.03-1.9.57-2.52 1.3-.55.64-1.04 1.68-.91 2.67.96.07 1.94-.49 2.54-1.21z"/></svg>App Store</span>
+            <span class="qr-store-badge"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M3.6 2.3c-.24.26-.38.66-.38 1.18v17.04c0 .52.14.92.4 1.17l.06.06 9.54-9.54v-.22L3.68 2.24l-.08.06zm12.9 12.72-3.18-3.18v-.22l3.18-3.18.07.04 3.77 2.14c1.08.61 1.08 1.62 0 2.24l-3.77 2.14-.07-.02zm-1.06 1.06L4.9 22.94c.35.37.94.42 1.6.05l9.87-5.6-2.83-2.85zm0-9.36 2.83-2.84L8.5 1.06c-.66-.38-1.25-.32-1.6.05l7.54 7.63z"/></svg>Google Play</span>
+            <span class="hint">Anche via web app</span>
+          </div>
+
+          <div class="status" id="qrStatus" role="status" aria-live="polite">
+            <span class="sdot"></span>
+            <span class="stxt" id="qrStatusText">In attesa del telefono…</span>
+            <span class="prog"><i id="qrStatusProg"></i></span>
+          </div>
+        </section>
+
+        <!-- DESTRA · anteprima telefono (device frame) -->
+        <aside class="hf-aside">
+          <div class="device" role="img" aria-label="Anteprima dell'app MAAT sul telefono: fotocamera guidata">
+            <div class="notch"></div>
+            <div class="screen" id="qrScreen">
+
+              <div class="vf">
+                <div class="grid"></div>
+                <svg class="garment" viewBox="0 0 48 48" aria-hidden="true"><path d="M18 8 L24 12 L30 8 L38 14 L34 21 L30 18.5 L30 41 L18 41 L18 18.5 L14 21 L10 14 Z"/></svg>
+                <div class="guides"><span class="tl"></span><span class="tr"></span><span class="bl"></span><span class="br"></span></div>
+
+                <!-- istruzioni in secondo piano -->
+                <div class="vf-top">
+                  <span class="vf-chip"><span class="cd"></span><span id="qrShotLabel">Scatto 1 · Fronte</span></span>
+                  <span class="vf-help" aria-hidden="true">?</span>
+                </div>
+                <div class="vf-coach" id="qrCoach">Inquadra tutto il capo dentro le guide · <span class="kbd">tocca</span> per scattare</div>
+                <div class="flash" id="qrFlash" aria-hidden="true"></div>
+              </div>
+
+              <div class="controls">
+                <div class="thumbs" id="qrThumbs"></div>
+                <button class="shutter pulse" id="qrShutter" type="button" aria-label="Scatta"></button>
+                <button class="send" id="qrSend" type="button" aria-label="Invia le foto al computer">Invia</button>
+              </div>
+            </div>
+          </div>
+          <div class="aside-cap"><span class="dot"></span>Anteprima interattiva · tocca lo scatto</div>
+        </aside>
+
+      </div>
+      </div><!-- /vista qr -->
+
+      <!-- ═══ VISTA · UPLOAD (carica dal computer) ═══ -->
+      <div class="qr-view" data-view="upload">
+        <div class="qr-col">
+          <div class="eyebrow">Galleria · Passo 1</div>
+          <h1 class="vtitle">Carica le foto dal computer</h1>
+          <p class="vsub">Trascina qui le foto grezze del capo, oppure sfoglia. Le etichetterai al passo successivo.</p>
+
+          <div class="dropzone" id="qrDrop" role="button" tabindex="0" aria-label="Trascina o seleziona le foto dal computer">
+            <div class="dz-ic"><svg class="ico lg"><use href="#i-upload"/></svg></div>
+            <div class="dz-title">Trascina le foto qui</div>
+            <div class="dz-sub">oppure <span class="dz-link">sfoglia dal computer</span></div>
+            <div class="dz-formats"><span class="dz-fmt">JPG</span><span class="dz-fmt">PNG</span><span class="dz-fmt">HEIC</span><span class="dz-fmt">max 20 MB</span></div>
+          </div>
+          <input type="file" id="qrFileInput" accept="image/*" multiple hidden>
+
+          <div class="dz-meta">
+            <span class="dz-count" id="qrDzCount"><b>0</b> / 15 foto</span>
+            <span class="dz-hint" id="qrDzHint">Trascina qui o seleziona · min 5</span>
+          </div>
+          <div class="dz-bar"><i id="qrDzBar"></i></div>
+          <div class="dz-files" id="qrFiles"></div>
+
+          <button class="qr-cta primary" id="qrContinue" type="button" disabled>Continua all'etichettatura</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ============================ WIZARD (P2C · S-05) ============================ -->
+<div class="wizard" id="wizard" role="dialog" aria-modal="true" aria-label="Nuovo capo · Photo-to-Catalog">
+  <div class="wizard-inner">
+    <iframe class="wz-frame" id="wzFrame" title="Nuovo capo · flusso Photo-to-Catalog"></iframe>
+  </div>
+</div>
+
+<!-- ============================ ONBOARDING (first-run) ============================ -->
+<div class="onbov" id="onbov" role="dialog" aria-modal="true" aria-label="Onboarding MAAT">
+  <iframe class="onbov-frame" id="onbFrame" title="Onboarding MAAT"></iframe>
+</div>
+
+<!-- ============================ SETTINGS (quadrato centrale) ============================ -->
+<div class="settings" id="settings" role="dialog" aria-modal="true" aria-label="Impostazioni">
+  <div class="settings-backdrop"></div>
+  <div class="settings-card">
+    <button class="set-close" id="setClose" type="button" aria-label="Chiudi impostazioni"><svg class="ico sm"><use href="#i-x"/></svg></button>
+
+    <aside class="set-nav" aria-label="Sezioni impostazioni">
+      <div class="set-search"><svg class="ico sm"><use href="#i-search"/></svg><input placeholder="Cerca" aria-label="Cerca nelle impostazioni"></div>
+      <div class="set-group" role="tablist">
+        <div class="set-glabel">Impostazioni</div>
+        <button class="set-item" type="button" role="tab" data-section="generale"><svg class="ico sm"><use href="#i-cog"/></svg><span>Generale</span></button>
+        <button class="set-item" type="button" role="tab" data-section="account"><svg class="ico sm"><use href="#i-user"/></svg><span>Account</span></button>
+        <button class="set-item" type="button" role="tab" data-section="dipendenti"><svg class="ico sm"><use href="#i-users"/></svg><span>Dipendenti</span></button>
+        <button class="set-item" type="button" role="tab" data-section="piano"><svg class="ico sm"><use href="#i-card"/></svg><span>Piano e fatturazione</span></button>
+        <button class="set-item" type="button" role="tab" data-section="notifiche"><svg class="ico sm"><use href="#i-bell"/></svg><span>Notifiche</span></button>
+        <button class="set-item" type="button" role="tab" data-section="privacy"><svg class="ico sm"><use href="#i-shield"/></svg><span>Privacy</span></button>
+      </div>
+      <div class="set-group">
+        <div class="set-glabel">Altro</div>
+        <button class="set-item" type="button" role="tab" data-section="lingua"><svg class="ico sm"><use href="#i-globe"/></svg><span>Lingua</span></button>
+        <button class="set-item" type="button" data-action="onboarding"><svg class="ico sm"><use href="#i-play"/></svg><span>Tutorial</span></button>
+        <button class="set-item" type="button" role="tab" data-section="scopri"><svg class="ico sm"><use href="#i-compass"/></svg><span>Scopri di più</span></button>
+      </div>
+      <div class="set-nav-foot">
+        <button class="set-item danger" type="button" data-action="logout"><svg class="ico sm"><use href="#i-logout"/></svg><span>Esci</span></button>
+      </div>
+    </aside>
+
+    <div class="set-main" id="setMain">
+      <!-- Generale (placeholder) -->
+      <section class="set-pane" data-pane="generale">
+        <h2 class="set-h">Generale</h2>
+        <p class="set-sub">Preferenze generali dell'area di lavoro DirtyTag.</p>
+        <div class="set-placeholder">Contenuto non ancora progettato.</div>
+      </section>
+
+      <!-- Account -->
+      <section class="set-pane" data-pane="account">
+        <h2 class="set-h">Account</h2>
+        <p class="set-sub">Il tuo profilo e la gestione del team.</p>
+        <div class="acc-profile">
+          <span class="avatar ring" style="width:48px;height:48px">FD</span>
+          <div style="flex:1; min-width:0"><div style="font-weight:600">Federico D'Orsi</div><div class="emp-mail">federico@dirtytag.it · DirtyTag</div></div>
+          <label class="toggle" id="roleToggle" role="switch" aria-pressed="true" tabindex="0">
+            <span class="lsub" style="font-size:13px">Admin</span><span class="track"><span class="knob"></span></span>
+          </label>
+        </div>
+        <div class="list">
+          <button class="lrow" type="button" data-goto="dipendenti">
+            <span class="lic"><svg class="ico sm"><use href="#i-users"/></svg></span>
+            <div class="lbody"><div class="ltitle">Dipendenti</div><div class="lsub">Account del team · 5 / 5 posti usati</div></div>
+            <span class="chev"><svg class="ico sm"><use href="#i-chev"/></svg></span>
+          </button>
+          <button class="lrow" type="button" data-goto="piano">
+            <span class="lic"><svg class="ico sm"><use href="#i-card"/></svg></span>
+            <div class="lbody"><div class="ltitle">Piano e fatturazione</div><div class="lsub">Piano attuale: <span class="mono">Team</span> · 29€/mese</div></div>
+            <span class="chev"><svg class="ico sm"><use href="#i-chev"/></svg></span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Dipendenti -->
+      <section class="set-pane" data-pane="dipendenti">
+        <div class="emp-head">
+          <div>
+            <h2 class="set-h">Dipendenti</h2>
+            <p class="set-sub" style="margin-bottom:0">Account del team DirtyTag · <span class="seat-meter">5 / 5 posti usati</span></p>
+          </div>
+          <button class="btn btn-primary" type="button" data-goto="piano"><svg class="ico sm"><use href="#i-plus"/></svg>Aggiungi dipendente</button>
+        </div>
+        <div class="emp-list">
+          <div class="emp-row">
+            <span class="avatar ring">FD</span>
+            <div class="emp-id"><div class="emp-name">Federico D'Orsi <span class="tag-you">Tu</span></div><div class="emp-mail">federico@dirtytag.it</div></div>
+            <span class="emp-role" id="empSelfRole">Admin</span>
+            <span class="badge badge-conf"><span class="bd"></span>Attivo</span>
+          </div>
+          <div class="emp-row">
+            <span class="avatar">GF</span>
+            <div class="emp-id"><div class="emp-name">Giulia Ferrari</div><div class="emp-mail">giulia@dirtytag.it</div></div>
+            <span class="emp-role">Responsabile catalogo</span>
+            <span class="badge badge-conf"><span class="bd"></span>Attivo</span>
+          </div>
+          <div class="emp-row">
+            <span class="avatar">MB</span>
+            <div class="emp-id"><div class="emp-name">Marco Bianchi</div><div class="emp-mail">marco@dirtytag.it</div></div>
+            <span class="emp-role">Fotografo</span>
+            <span class="badge badge-conf"><span class="bd"></span>Attivo</span>
+          </div>
+          <div class="emp-row">
+            <span class="avatar">SG</span>
+            <div class="emp-id"><div class="emp-name">Sofia Greco</div><div class="emp-mail">sofia@dirtytag.it</div></div>
+            <span class="emp-role">Operatore listing</span>
+            <span class="badge badge-conf"><span class="bd"></span>Attivo</span>
+          </div>
+          <div class="emp-row">
+            <span class="avatar">LM</span>
+            <div class="emp-id"><div class="emp-name">Luca Moretti</div><div class="emp-mail">luca@dirtytag.it</div></div>
+            <span class="emp-role">Magazziniere</span>
+            <span class="badge badge-bozza"><span class="bd"></span>Invitato</span>
+          </div>
+        </div>
+        <p class="set-sub" style="margin:var(--s3) 0 0">Posti esauriti sul piano Team. <button class="linklike" type="button" data-goto="piano">Aggiorna il piano</button> per aggiungere altri dipendenti.</p>
+      </section>
+
+      <!-- Piano e fatturazione (Aggiorna piano) -->
+      <section class="set-pane" data-pane="piano">
+        <h2 class="set-h">Aggiorna piano</h2>
+        <p class="set-sub">Scegli il piano più adatto al team DirtyTag. Prezzi provvisori.</p>
+        <div class="plan-grid">
+          <div class="plan">
+            <div class="plan-name">Starter</div>
+            <div class="plan-price">Gratis</div>
+            <div class="plan-feats">
+              <div class="plan-feat"><svg class="ico sm"><use href="#i-check"/></svg>2 account</div>
+              <div class="plan-feat"><svg class="ico sm"><use href="#i-check"/></svg>50 capi / mese</div>
+              <div class="plan-feat"><svg class="ico sm"><use href="#i-check"/></svg>Canali di vendita base</div>
+            </div>
+            <button class="btn btn-ghost" type="button" data-plan="Starter">Passa a Starter</button>
+          </div>
+          <div class="plan current">
+            <div class="plan-name">Team <span class="plan-badge">Attuale</span></div>
+            <div class="plan-price">29€ <small>/ mese</small></div>
+            <div class="plan-feats">
+              <div class="plan-feat"><svg class="ico sm"><use href="#i-check"/></svg>5 account</div>
+              <div class="plan-feat"><svg class="ico sm"><use href="#i-check"/></svg>Capi illimitati</div>
+              <div class="plan-feat"><svg class="ico sm"><use href="#i-check"/></svg>Pubblicazione multi-canale</div>
+              <div class="plan-feat"><svg class="ico sm"><use href="#i-check"/></svg>Misure automatiche (ArUco)</div>
+            </div>
+            <button class="btn btn-ghost" type="button" disabled>Piano attuale</button>
+          </div>
+          <div class="plan">
+            <div class="plan-name">Business</div>
+            <div class="plan-price">79€ <small>/ mese</small></div>
+            <div class="plan-feats">
+              <div class="plan-feat"><svg class="ico sm"><use href="#i-check"/></svg>Account illimitati</div>
+              <div class="plan-feat"><svg class="ico sm"><use href="#i-check"/></svg>API &amp; webhook</div>
+              <div class="plan-feat"><svg class="ico sm"><use href="#i-check"/></svg>Gestione ruoli avanzata</div>
+              <div class="plan-feat"><svg class="ico sm"><use href="#i-check"/></svg>Supporto prioritario</div>
+            </div>
+            <button class="btn btn-primary" type="button" data-plan="Business">Passa a Business</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Notifiche (placeholder) -->
+      <section class="set-pane" data-pane="notifiche">
+        <h2 class="set-h">Notifiche</h2>
+        <p class="set-sub">Come e quando ricevere gli avvisi.</p>
+        <div class="set-placeholder">Contenuto non ancora progettato.</div>
+      </section>
+
+      <!-- Privacy (placeholder) -->
+      <section class="set-pane" data-pane="privacy">
+        <h2 class="set-h">Privacy</h2>
+        <p class="set-sub">Dati dell'account e sicurezza.</p>
+        <div class="set-placeholder">Contenuto non ancora progettato.</div>
+      </section>
+
+      <!-- Lingua (placeholder) -->
+      <section class="set-pane" data-pane="lingua">
+        <h2 class="set-h">Lingua</h2>
+        <p class="set-sub">Lingua dell'interfaccia MAAT.</p>
+        <div class="set-placeholder">Contenuto non ancora progettato.</div>
+      </section>
+
+      <!-- Scopri di più (placeholder) -->
+      <section class="set-pane" data-pane="scopri">
+        <h2 class="set-h">Scopri di più</h2>
+        <p class="set-sub">Novità, guide e risorse su MAAT.</p>
+        <div class="set-placeholder">Contenuto non ancora progettato.</div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<!-- ============================ CARICO FORNITORE (registra carico) ============================ -->
+<div class="crc" id="carico" role="dialog" aria-modal="true" aria-labelledby="crcTitle">
+  <div class="crc-backdrop" data-crc-close></div>
+  <div class="crc-card">
+    <div class="crc-head">
+      <span class="crc-hic"><svg class="ico"><use href="#i-load"/></svg></span>
+      <div class="crc-htx">
+        <div class="crc-htitle" id="crcTitle">Registra carico</div>
+        <div class="crc-hsub">Un carico ricevuto da un fornitore</div>
+      </div>
+      <button class="crc-close" type="button" data-crc-close aria-label="Chiudi"><svg class="ico sm"><use href="#i-x"/></svg></button>
+    </div>
+
+    <form class="crc-body" id="crcForm">
+      <!-- tipo di carico -->
+      <div class="frow">
+        <span class="flabel">Tipo di carico</span>
+        <div class="seg seg-wide" id="crcTipo" role="group" aria-label="Tipo di carico">
+          <button type="button" data-tipo="pezzo" aria-pressed="true"><svg class="ico"><use href="#i-shirt"/></svg>Al pezzo</button>
+          <button type="button" data-tipo="ingrosso" aria-pressed="false"><svg class="ico"><use href="#i-box"/></svg>All'ingrosso</button>
+        </div>
+      </div>
+
+      <!-- quantità (pezzi / kg) -->
+      <div class="frow">
+        <span class="flabel" id="crcQtyLabel">Numero di articoli</span>
+        <div class="stepper" data-stepper>
+          <button class="st-btn" type="button" data-step="-1" aria-label="Diminuisci">−</button>
+          <div class="st-mid"><input class="st-input" id="crcQty" inputmode="numeric" value="10" aria-labelledby="crcQtyLabel"><span class="st-unit" id="crcUnit">pezzi</span></div>
+          <button class="st-btn" type="button" data-step="1" aria-label="Aumenta">+</button>
+        </div>
+        <span class="fhint" id="crcQtyHint">Quanti capi contiene il carico.</span>
+      </div>
+
+      <!-- categoria -->
+      <div class="frow">
+        <span class="flabel">Categoria</span>
+        <div class="crc-select">
+          <select id="crcCat" aria-label="Categoria del carico">
+            <option value="Mista">Mista (categorie assortite)</option>
+            <option value="Giacche &amp; capispalla">Giacche &amp; capispalla</option>
+            <option value="Felpe &amp; maglieria">Felpe &amp; maglieria</option>
+            <option value="Denim">Denim</option>
+            <option value="Sneakers &amp; scarpe">Sneakers &amp; scarpe</option>
+            <option value="T-shirt &amp; camicie">T-shirt &amp; camicie</option>
+            <option value="Accessori">Accessori</option>
+          </select>
+          <svg class="ico sm sel-caret"><use href="#i-caret"/></svg>
+        </div>
+      </div>
+
+      <!-- fornitore -->
+      <div class="frow">
+        <span class="flabel">Fornitore</span>
+        <div class="crc-select">
+          <select id="crcSup" aria-label="Fornitore"><!-- opzioni generate da JS --></select>
+          <svg class="ico sm sel-caret"><use href="#i-caret"/></svg>
+        </div>
+        <input class="crc-input" id="crcNewSup" type="text" placeholder="Nome del nuovo fornitore" autocomplete="off" hidden>
+        <div class="co-privacy">
+          <svg class="ico sm"><use href="#i-shield"/></svg>
+          <div>I nomi dei tuoi fornitori restano <b>privati</b>: MAAT non ha accesso alla tua lista, la gestisci soltanto tu.</div>
+        </div>
+      </div>
+    </form>
+
+    <div class="crc-foot">
+      <button class="btn btn-ghost" type="button" data-crc-close>Annulla</button>
+      <button class="btn btn-primary" id="crcSubmit" type="submit" form="crcForm">Registra carico</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  const app = document.getElementById('app');
+  const ROUTES = ['home','catalogo','notifiche','inventario','contabilita','logistica'];
+
+  /* ---------- routing ---------- */
+  function setRoute(r){
+    if(!ROUTES.includes(r)) r = 'home';
+    document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.dataset.panel === r));
+    document.querySelectorAll('[data-route]').forEach(el => {
+      const on = el.dataset.route === r;
+      if(el.classList.contains('nav-item') || el.classList.contains('tab')) el.setAttribute('aria-current', on ? 'page' : 'false');
+    });
+    const sc = document.getElementById('scroll'); if(sc) sc.scrollTop = 0;
+    if(location.hash.slice(1) !== r) history.replaceState(null,'','#'+r);
+  }
+  document.querySelectorAll('[data-route]').forEach(el => {
+    el.addEventListener('click', e => { if(el.dataset.wizard!==undefined) return; e.preventDefault(); setRoute(el.dataset.route); });
+  });
+  window.addEventListener('hashchange', () => { const h = location.hash.slice(1); if(ROUTES.includes(h)) setRoute(h); });
+
+  /* ---------- rail collapse ---------- */
+  document.getElementById('railToggle').addEventListener('click', () => {
+    app.dataset.collapsed = app.dataset.collapsed === 'true' ? 'false' : 'true';
+  });
+
+  /* ---------- wizard (P2C flow in iframe) ---------- */
+  const wzFrame = document.getElementById('wzFrame');
+  /* Crea capo → schermata QR inline (overlay), poi Etichettatura (P2C step 3) nell'iframe wizard */
+  const P2C_SRC = 'maat-p2c-flow.html';
+  const CAMERA_SRC = '../Design di Federico/acquisizione-foto-v2b.html';
+  let lastFocus = null;
+  function closeWizard(){ document.body.classList.remove('wizard-open'); setTimeout(() => { wzFrame.setAttribute('src', 'about:blank'); }, 240); if(lastFocus) lastFocus.focus(); }
+  function openEtichettatura(count){ wzFrame.setAttribute('src', P2C_SRC + '?step=3&from=camera&count=' + encodeURIComponent(count || 0)); document.body.classList.add('wizard-open'); }
+  document.addEventListener('keydown', e => { if(e.key === 'Escape' && document.body.classList.contains('wizard-open')) closeWizard(); });
+  window.addEventListener('message', e => {
+    const d = e.data; if(!d || d.source !== 'maat-p2c') return;
+    if(d.action === 'close') closeWizard();
+    else if(d.action === 'catalogo'){ closeWizard(); setRoute('catalogo'); selectCapiSeg('catalogo'); toast('Capo confermato · a Catalogo'); }
+    else if(d.action === 'bozze'){ closeWizard(); setRoute('catalogo'); selectCapiSeg('bozze'); toast('Bozza salvata'); }
+    else if(d.action === 'camera'){ wzFrame.setAttribute('src', CAMERA_SRC); }
+  });
+  window.addEventListener('message', e => {
+    const d = e.data; if(!d || d.source !== 'maat-camera') return;
+    if(d.action === 'cancel'){
+      wzFrame.setAttribute('src', P2C_SRC + '?step=2&from=camera-cancel');
+    } else if(d.action === 'complete'){
+      try{ sessionStorage.setItem('maat_camera_payload', JSON.stringify(d)); }catch(err){}
+      const count = Number(d.count || (d.photos && d.photos.length) || 0);
+      wzFrame.setAttribute('src', P2C_SRC + '?step=3&from=camera&count=' + encodeURIComponent(count));
+      toast(count ? count + ' foto acquisite · etichettatura' : 'Foto acquisite · etichettatura');
+    }
+  });
+
+  /* ---------- QR handoff (acquisizione da telefono · overlay inline) ---------- */
+  (function initQR(){
+    // QR mockup (SVG generato inline, self-contained) — costruito una sola volta
+    const mount = document.getElementById('qrCode');
+    if(mount && !mount.firstChild){
+      const N=25, q=2, cell=8, total=N+q*2, size=total*cell, DARK='#001F3F', svgns='http://www.w3.org/2000/svg';
+      const svg=document.createElementNS(svgns,'svg');
+      svg.setAttribute('viewBox','0 0 '+size+' '+size); svg.setAttribute('width','100%'); svg.setAttribute('height','100%'); svg.setAttribute('shape-rendering','crispEdges');
+      const bg=document.createElementNS(svgns,'rect'); bg.setAttribute('width',size); bg.setAttribute('height',size); bg.setAttribute('fill','#fff'); svg.appendChild(bg);
+      const mod=Array.from({length:N},()=>new Array(N).fill(false)), res=Array.from({length:N},()=>new Array(N).fill(false));
+      const put=(r,c,v)=>{ if(r>=0&&r<N&&c>=0&&c<N){ mod[r][c]=v; res[r][c]=true; } };
+      function finder(r0,c0){ for(let r=-1;r<=7;r++) for(let c=-1;c<=7;c++){ const rr=r0+r,cc=c0+c; if(rr<0||rr>=N||cc<0||cc>=N) continue; let v=false; if(r>=0&&r<=6&&c>=0&&c<=6){ v=(r===0||r===6||c===0||c===6)||(r>=2&&r<=4&&c>=2&&c<=4); } put(rr,cc,v); } }
+      finder(0,0); finder(0,N-7); finder(N-7,0);
+      for(let i=0;i<N;i++){ if(!res[6][i]) put(6,i,i%2===0); if(!res[i][6]) put(i,6,i%2===0); }
+      (function align(cr,cc){ for(let r=-2;r<=2;r++) for(let c=-2;c<=2;c++){ put(cr+r,cc+c,(Math.abs(r)===2||Math.abs(c)===2)||(r===0&&c===0)); } })(18,18);
+      let s=0x9e3779b9|0; const rnd=()=>{ s^=s<<13; s^=s>>>17; s^=s<<5; return ((s>>>0)/4294967296); };
+      for(let r=0;r<N;r++) for(let c=0;c<N;c++){ if(!res[r][c]) mod[r][c]=rnd()<0.5; }
+      let dd=''; for(let r=0;r<N;r++) for(let c=0;c<N;c++){ if(mod[r][c]){ const x=(c+q)*cell,y=(r+q)*cell; dd+='M'+x+' '+y+'h'+cell+'v'+cell+'h-'+cell+'z'; } }
+      const p=document.createElementNS(svgns,'path'); p.setAttribute('d',dd); p.setAttribute('fill',DARK); svg.appendChild(p); mount.appendChild(svg);
+    }
+
+    const MIN=5, LABELS=['Fronte','Retro','Etichetta brand','Taglia','Extra'];
+    let count=0;
+    const screen=document.getElementById('qrScreen');
+    const shutter=document.getElementById('qrShutter');
+    const sendBtn=document.getElementById('qrSend');
+    const thumbs=document.getElementById('qrThumbs');
+    const flash=document.getElementById('qrFlash');
+    const shotLabel=document.getElementById('qrShotLabel');
+    const coach=document.getElementById('qrCoach');
+    const statusEl=document.getElementById('qrStatus');
+    const statusText=document.getElementById('qrStatusText');
+    const statusProg=document.getElementById('qrStatusProg');
+    const THUMB='<svg viewBox="0 0 24 24" fill="none" stroke="#F6F7ED" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>';
+
+    function drawThumbs(){ thumbs.innerHTML=''; const shown=Math.min(count,2); for(let i=0;i<shown;i++){ const t=document.createElement('div'); t.className='th'; t.innerHTML=THUMB; thumbs.appendChild(t); } if(count>2){ const m=document.createElement('span'); m.className='more'; m.textContent='+'+(count-2); thumbs.appendChild(m); } }
+    function paintStatus(){ statusEl.classList.add('connected'); if(count>=MIN){ statusEl.classList.add('ready'); statusText.innerHTML='Foto pronte · <b>conferma dal telefono</b>'; } else { statusText.innerHTML='Telefono connesso · <b>'+count+' / '+MIN+' foto</b>'; } statusProg.style.width=Math.min(100,Math.round(count/MIN*100))+'%'; }
+    function paintPhone(){ if(count>=MIN){ shotLabel.textContent='Set completo · '+count+'/'+MIN; coach.innerHTML='Foto complete — <span class="kbd">Invia</span> al computer'; shutter.classList.remove('pulse'); sendBtn.classList.add('on'); } else { shotLabel.textContent='Scatto '+(count+1)+' · '+LABELS[count]; } drawThumbs(); }
+    function shoot(){ if(count>=15) return; count++; flash.classList.remove('go'); void flash.offsetWidth; flash.classList.add('go'); if(count===1) screen.classList.add('understood'); paintPhone(); paintStatus(); }
+    function resetQR(){ count=0; screen.classList.remove('understood'); statusEl.classList.remove('connected','ready'); statusText.textContent='In attesa del telefono…'; statusProg.style.width='0%'; shutter.classList.add('pulse'); sendBtn.classList.remove('on'); shotLabel.textContent='Scatto 1 · '+LABELS[0]; coach.innerHTML='Inquadra tutto il capo dentro le guide · <span class="kbd">tocca</span> per scattare'; drawThumbs(); }
+
+    /* ---- gestione viste: scelta → qr / upload ---- */
+    const overlay=document.getElementById('qrflow');
+    const views=overlay.querySelectorAll('.qr-view');
+    const backBtn=document.getElementById('qrBack');
+    const barStep=document.getElementById('qrBarStep');
+    const STEP_LBL={scelta:'Acquisizione foto', qr:'Scatta dal telefono', upload:'Carica dal computer'};
+    function qrShow(view){
+      views.forEach(v => v.classList.toggle('active', v.dataset.view===view));
+      backBtn.hidden = (view==='scelta');
+      barStep.textContent = STEP_LBL[view] || 'Acquisizione foto';
+      overlay.querySelector('.hf-stage').scrollTop=0;
+      if(view==='qr') resetQR();
+    }
+
+    function openQR(){ lastFocus=document.activeElement; resetQR(); resetUpload(); qrShow('scelta'); document.body.classList.add('qr-open'); }
+    function closeQR(){ document.body.classList.remove('qr-open'); if(lastFocus && typeof lastFocus.focus==='function') lastFocus.focus(); }
+
+    /* ---- vista QR (telefono) ---- */
+    shutter.addEventListener('click', shoot);
+    sendBtn.addEventListener('click', ()=>{ if(count>=MIN){ const c=count; document.body.classList.remove('qr-open'); openEtichettatura(c); toast(c+' foto dal telefono · etichettatura'); } });
+
+    /* ---- vista UPLOAD (drag & drop dal computer) ---- */
+    const UP_MIN=5, UP_MAX=15;
+    let files=[];
+    const dz=document.getElementById('qrDrop');
+    const dzInput=document.getElementById('qrFileInput');
+    const dzFiles=document.getElementById('qrFiles');
+    const dzCount=document.getElementById('qrDzCount');
+    const dzHint=document.getElementById('qrDzHint');
+    const dzBar=document.getElementById('qrDzBar');
+    const dzContinue=document.getElementById('qrContinue');
+    const FILE_ICO='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>';
+    const X_ICO='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+    function fmtName(n){ return n.length>22 ? n.slice(0,12)+'…'+n.slice(-8) : n; }
+    function paintUpload(){
+      dzFiles.innerHTML='';
+      files.forEach((name,idx)=>{
+        const el=document.createElement('span'); el.className='dz-file';
+        el.innerHTML='<span class="thumb">'+FILE_ICO+'</span><span class="fname"></span><button class="fx" type="button" aria-label="Rimuovi">'+X_ICO+'</button>';
+        el.querySelector('.fname').textContent=fmtName(name);
+        el.querySelector('.fx').addEventListener('click', ()=>{ files.splice(idx,1); paintUpload(); });
+        dzFiles.appendChild(el);
+      });
+      const n=files.length;
+      dzCount.innerHTML='<b>'+n+'</b> / '+UP_MAX+' foto';
+      dzBar.style.width=Math.min(100,Math.round(n/UP_MIN*100))+'%';
+      dzHint.classList.remove('warn','ok');
+      if(n===0){ dzHint.textContent='Trascina qui o seleziona · min '+UP_MIN; }
+      else if(n<UP_MIN){ dzHint.textContent='Ancora '+(UP_MIN-n)+' per il minimo'; dzHint.classList.add('warn'); }
+      else if(n>UP_MAX){ dzHint.textContent='Massimo '+UP_MAX+' · rimuovine '+(n-UP_MAX); dzHint.classList.add('warn'); }
+      else { dzHint.textContent='Pronto per l\'etichettatura'; dzHint.classList.add('ok'); }
+      dzContinue.disabled = !(n>=UP_MIN && n<=UP_MAX);
+    }
+    function addFiles(list){ [...list].forEach(f=>{ if(f && f.name) files.push(f.name); }); paintUpload(); }
+    function resetUpload(){ files=[]; dz.classList.remove('drag'); paintUpload(); }
+    dz.addEventListener('click', ()=> dzInput.click());
+    dz.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); dzInput.click(); } });
+    dzInput.addEventListener('change', e=>{ addFiles(e.target.files); dzInput.value=''; });
+    ['dragenter','dragover'].forEach(ev=> dz.addEventListener(ev, e=>{ e.preventDefault(); dz.classList.add('drag'); }));
+    dz.addEventListener('dragleave', e=>{ if(!dz.contains(e.relatedTarget)) dz.classList.remove('drag'); });
+    dz.addEventListener('drop', e=>{ e.preventDefault(); dz.classList.remove('drag'); if(e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) addFiles(e.dataTransfer.files); });
+    dzContinue.addEventListener('click', ()=>{ const n=files.length; if(n>=UP_MIN && n<=UP_MAX){ document.body.classList.remove('qr-open'); openEtichettatura(n); toast(n+' foto caricate · etichettatura'); } });
+
+    /* ---- navigazione scelta / back / annulla / chiudi ---- */
+    overlay.querySelector('[data-choice="scatta"]').addEventListener('click', ()=> qrShow('qr'));
+    overlay.querySelector('[data-choice="galleria"]').addEventListener('click', ()=> qrShow('upload'));
+    backBtn.addEventListener('click', ()=> qrShow('scelta'));
+    document.getElementById('qrCancel').addEventListener('click', closeQR);
+    document.getElementById('qrClose').addEventListener('click', closeQR);
+    document.addEventListener('keydown', e => { if(e.key==='Escape' && document.body.classList.contains('qr-open')) closeQR(); });
+    document.querySelectorAll('[data-wizard]').forEach(b => b.addEventListener('click', e => { e.preventDefault(); openQR(); }));
+  })();
+
+  /* ---------- onboarding (first-run overlay in iframe) ---------- */
+  const onbFrame = document.getElementById('onbFrame');
+  const ONB_SRC = '../Design di Federico/maat-onboarding-flow.html';
+  function openOnboarding(){ if(onbFrame.getAttribute('src') !== ONB_SRC) onbFrame.setAttribute('src', ONB_SRC); document.body.classList.add('onbov-open'); }
+  function closeOnboarding(){ document.body.classList.remove('onbov-open'); try{ localStorage.setItem('maat_onboarded','1'); }catch(e){} setTimeout(() => { onbFrame.setAttribute('src', 'about:blank'); }, 260); }
+  document.getElementById('appbarAcct').addEventListener('click', () => openSettings('account'));
+  window.addEventListener('message', e => {
+    const d = e.data; if(!d || d.source !== 'maat-onboarding') return;
+    if(d.action === 'finish') closeOnboarding();
+    else if(d.action === 'publish'){ closeOnboarding(); setRoute('catalogo'); toast('Capo pubblicato su Vinted'); }
+  });
+
+  /* ---------- role gate demo (Admin/Operator) ---------- */
+  const roleToggle = document.getElementById('roleToggle');
+  function setRole(admin){
+    roleToggle.setAttribute('aria-pressed', String(admin));
+    roleToggle.querySelector('.lsub').textContent = admin ? 'Admin' : 'Operator';
+    document.getElementById('roleTagSide').textContent = admin ? 'Admin' : 'Operator';
+    const selfRole = document.getElementById('empSelfRole'); if(selfRole) selfRole.textContent = admin ? 'Admin' : 'Operator';
+  }
+  roleToggle.addEventListener('click', () => setRole(roleToggle.getAttribute('aria-pressed') !== 'true'));
+  roleToggle.addEventListener('keydown', e => { if(e.key===' '||e.key==='Enter'){ e.preventDefault(); setRole(roleToggle.getAttribute('aria-pressed')!=='true'); }});
+
+  /* ---------- filters: other segs visual only, chips toggle ---------- */
+  document.querySelectorAll('.seg:not(#capiSeg)').forEach(seg => seg.addEventListener('click', e => {
+    const b = e.target.closest('button'); if(!b) return;
+    seg.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x===b)));
+  }));
+  document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => c.setAttribute('aria-pressed', c.getAttribute('aria-pressed')!=='true')));
+
+  /* ---------- Capi segmented (functional filter + live counts + empty state) ---------- */
+  const capiSeg = document.getElementById('capiSeg');
+  const capiGrid = document.querySelector('.panel[data-panel="catalogo"] .cgrid');
+  const capiEmpty = document.getElementById('capiEmpty');
+  const capiCards = [...capiGrid.querySelectorAll('.ccard')];
+  const SEG_MAP = { tutti:null, bozze:['bozza'], catalogo:['confermato','live','venduto'] };
+  const SEG_EMPTY = { tutti:'Nessun capo. Scatta il primo con Crea capo.', bozze:'Nessuna bozza da revisionare.', catalogo:'Nessun capo a catalogo.' };
+  function capiCounts(){
+    const n = { tutti:capiCards.length, bozze:0, catalogo:0 };
+    capiCards.forEach(c => { if(SEG_MAP.bozze.includes(c.dataset.status)) n.bozze++; if(SEG_MAP.catalogo.includes(c.dataset.status)) n.catalogo++; });
+    capiSeg.querySelectorAll('.seg-n').forEach(s => s.textContent = n[s.dataset.n]);
+  }
+  function filterCapi(seg){
+    const allow = SEG_MAP[seg]; let shown = 0;
+    capiCards.forEach(c => { const ok = !allow || allow.includes(c.dataset.status); c.hidden = !ok; if(ok) shown++; });
+    capiEmpty.textContent = SEG_EMPTY[seg]; capiEmpty.hidden = shown > 0;
+  }
+  function selectCapiSeg(seg){
+    capiSeg.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.seg === seg)));
+    filterCapi(seg);
+  }
+  capiSeg.addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; selectCapiSeg(b.dataset.seg); });
+  capiCounts(); filterCapi('tutti');
+
+  /* ---------- Catalog cards (detail, actions, keyboard + stable multi-select) ---------- */
+  const catalogPanel = document.querySelector('.panel[data-panel="catalogo"]');
+  const catalogSelect = document.getElementById('catalogSelect');
+  const catalogSelectLabel = document.getElementById('catalogSelectLabel');
+  const catalogSelectionCount = document.getElementById('catalogSelectionCount');
+  let catalogSelecting = false;
+
+  function cardName(card){ return card.querySelector('.cbrand').textContent.trim(); }
+  function setCardA11y(card, selected){
+    const badge = card.querySelector('.badge').textContent.trim();
+    const meta = card.querySelector('.cmeta').textContent.trim();
+    card.setAttribute('aria-label', `${cardName(card)}, ${meta}, ${badge}`);
+    const openButton = card.querySelector('.card-open');
+    if(catalogSelecting){
+      openButton.setAttribute('aria-label', `${selected ? 'Deseleziona' : 'Seleziona'} ${cardName(card)}`);
+      openButton.setAttribute('aria-pressed', String(selected));
+    }else{
+      openButton.setAttribute('aria-label', `Apri dettaglio ${cardName(card)}, ${meta}`);
+      openButton.removeAttribute('aria-pressed');
+    }
+  }
+  function selectedCatalogCards(){ return capiCards.filter(card => card.classList.contains('selected')); }
+  function refreshCatalogSelection(){
+    const count = selectedCatalogCards().length;
+    catalogSelectionCount.textContent = count;
+    catalogSelectionCount.hidden = !catalogSelecting;
+    catalogSelectLabel.textContent = catalogSelecting ? 'Fine' : 'Seleziona';
+    catalogSelect.setAttribute('aria-label', catalogSelecting ? `Termina selezione multipla, ${count} selezionati` : 'Attiva selezione multipla');
+  }
+  function setCatalogSelecting(on){
+    catalogSelecting = on;
+    catalogPanel.classList.toggle('catalog-selecting', on);
+    catalogSelect.setAttribute('aria-pressed', String(on));
+    capiCards.forEach(card => {
+      if(!on) card.classList.remove('selected');
+      const action = card.querySelector('.caction button');
+      action.disabled = on;
+      action.setAttribute('aria-hidden', String(on));
+      setCardA11y(card, card.classList.contains('selected'));
+    });
+    refreshCatalogSelection();
+  }
+  function toggleCatalogCard(card){
+    const selected = card.classList.toggle('selected');
+    setCardA11y(card, selected);
+    refreshCatalogSelection();
+  }
+  function openCatalogDetail(card){ toast(`Dettaglio capo · ${cardName(card)}`); }
+
+  catalogSelect.addEventListener('click', () => setCatalogSelecting(!catalogSelecting));
+  capiCards.forEach(card => {
+    const openButton = document.createElement('button');
+    openButton.className = 'card-open';
+    openButton.type = 'button';
+    card.prepend(openButton);
+    setCardA11y(card, false);
+    card.addEventListener('click', e => {
+      if(e.target.closest('.caction button')) return;
+      catalogSelecting ? toggleCatalogCard(card) : openCatalogDetail(card);
+    });
+    const action = card.querySelector('.caction button');
+    action.addEventListener('click', e => {
+      e.stopPropagation();
+      toast(`${action.dataset.cardAction} · ${cardName(card)}`);
+    });
+  });
+  document.addEventListener('keydown', e => {
+    if(e.key === 'Escape' && catalogSelecting){ setCatalogSelecting(false); catalogSelect.focus(); }
+  });
+
+  /* ---------- account bar → apre direttamente la modale impostazioni ---------- */
+  document.getElementById('acctBtn').addEventListener('click', () => openSettings('account'));
+
+  /* ---------- settings modal (account · dipendenti · piano) ---------- */
+  const settings = document.getElementById('settings');
+  const setItems = settings.querySelectorAll('.set-item');
+  const setPanes = settings.querySelectorAll('.set-pane');
+  let setLastFocus = null;
+  function setSection(sec){
+    setItems.forEach(i => i.setAttribute('aria-current', String(i.dataset.section === sec)));
+    setPanes.forEach(p => p.classList.toggle('active', p.dataset.pane === sec));
+    const main = document.getElementById('setMain'); if(main) main.scrollTop = 0;
+  }
+  function onSetKey(e){ if(e.key === 'Escape') closeSettings(); }
+  function openSettings(sec){
+    setLastFocus = document.activeElement;
+    setSection(sec || 'generale');
+    settings.classList.add('open');
+    document.addEventListener('keydown', onSetKey);
+  }
+  function closeSettings(){
+    settings.classList.remove('open');
+    document.removeEventListener('keydown', onSetKey);
+    if(setLastFocus && typeof setLastFocus.focus === 'function') setLastFocus.focus();
+  }
+  setItems.forEach(i => i.addEventListener('click', () => {
+    if(i.dataset.action === 'logout'){ toast('Disconnesso'); closeSettings(); return; }
+    if(i.dataset.action === 'onboarding'){ closeSettings(); openOnboarding(); return; }
+    setSection(i.dataset.section);
+  }));
+  document.getElementById('setClose').addEventListener('click', closeSettings);
+  settings.querySelector('.settings-backdrop').addEventListener('click', closeSettings);
+  settings.querySelectorAll('[data-goto]').forEach(b => b.addEventListener('click', () => setSection(b.dataset.goto)));
+  settings.querySelectorAll('[data-plan]').forEach(b => b.addEventListener('click', () => toast('Piano ' + b.dataset.plan + ' selezionato')));
+
+  /* ---------- spedizioni cliccabili (logistica · righe tabella) ---------- */
+  document.querySelectorAll('.panel[data-panel="logistica"] .ship-table tbody tr').forEach(row => {
+    const c = row.cells;
+    const name = c[0] ? c[0].textContent.trim() : 'Spedizione';
+    const tracking = c[3] ? c[3].textContent.trim() : '';
+    const status = c[5] ? c[5].textContent.trim() : '';
+    row.setAttribute('tabindex','0');
+    row.setAttribute('aria-label', `${name}, ${status}. Apri tracking ${tracking}`);
+    const open = () => toast(`Tracking ${tracking} · ${name}`);
+    row.addEventListener('click', open);
+    row.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); open(); } });
+  });
+
+  /* ---------- toast ---------- */
+  let tTimer; const toastEl = document.getElementById('toast');
+  function toast(msg){ toastEl.textContent = msg; toastEl.classList.add('show'); clearTimeout(tTimer); tTimer = setTimeout(()=>toastEl.classList.remove('show'), 2200); }
+
+  /* init */
+  const startHash = location.hash.slice(1);
+  const isMobile = window.matchMedia('(max-width:767px)').matches;
+  setRoute(ROUTES.includes(startHash) ? startHash : (isMobile ? 'catalogo' : 'home'));
+
+  /* first-run onboarding: auto su primo avvio (gate localStorage) · ?onboarding=1 forza · ?onboarding=0 salta */
+  const qs = new URLSearchParams(location.search);
+  let onboarded = '0'; try{ onboarded = localStorage.getItem('maat_onboarded'); }catch(e){}
+  if(qs.get('onboarding') === '1' || (qs.get('onboarding') !== '0' && !onboarded)) openOnboarding();
+})();
+</script>
+
+<!-- ===== CONTABILITÀ · interazioni (toggle misura, finestra categoria, periodo) ===== -->
+<script>
+(function(){
+  const panel = document.querySelector('.panel[data-panel="contabilita"]');
+  if(!panel) return;
+  const nf = new Intl.NumberFormat('it-IT');
+
+  /* --- istogramma settimanale: € / pezzi --- */
+  const chart = document.getElementById('coWeekly');
+  if(chart){
+    const wraps = [...chart.querySelectorAll('.colwrap')];
+    const yax = chart.querySelector('.col-yaxis');
+    const CFG = {
+      eur:{ max:2800, ticks:['2.800','2.100','1.400','700','0'],
+            cap:v => '€'+(v/1000).toFixed(1).replace('.',',')+'k',
+            tip:(w,v) => w.dataset.week+' · <b>€ '+nf.format(v)+'</b> · <span class="tip-mut">'+w.dataset.pcs+' pz</span>' },
+      pcs:{ max:24, ticks:['24','18','12','6','0'],
+            cap:v => ''+v,
+            tip:(w,v) => w.dataset.week+' · <b>'+v+' pezzi</b> · <span class="tip-mut">€ '+nf.format(w.dataset.eur)+'</span>' }
+    };
+    function render(m){
+      const c = CFG[m];
+      wraps.forEach(w => {
+        const v = +w.dataset[m];
+        w.querySelector('.col').style.height = (v / c.max * 100) + '%';
+        const cap = w.querySelector('.col-cap'); if(cap) cap.textContent = c.cap(v);
+        const tip = w.querySelector('.tip'); if(tip) tip.innerHTML = c.tip(w, v);
+      });
+      [...yax.children].forEach((s,i) => s.textContent = c.ticks[i]);
+    }
+    chart.querySelectorAll('[data-meas]').forEach(b => {
+      b.addEventListener('click', () => {
+        chart.querySelectorAll('[data-meas]').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+        render(b.dataset.meas);
+      });
+    });
+    render('eur');
+  }
+
+  /* --- categoria più venduta: finestra 15 / 30 giorni --- */
+  const feat = document.getElementById('coFeature');
+  if(feat){
+    const DATA = {
+      '30':{ cat:'Giacche & capispalla', eur:'3.980', pcs:'24', share:'35%', delta:'+12%',
+             rank:'Davanti a Felpe & maglieria (23%)' },
+      '15':{ cat:'Felpe & maglieria', eur:'1.520', pcs:'17', share:'31%', delta:'+22%',
+             rank:'Davanti a Giacche & capispalla (28%)' }
+    };
+    const eyebrow = feat.querySelector('.feat-eyebrow');
+    feat.querySelectorAll('[data-period]').forEach(b => {
+      b.addEventListener('click', () => {
+        feat.querySelectorAll('[data-period]').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+        const d = DATA[b.dataset.period];
+        feat.querySelectorAll('[data-f]').forEach(el => { if(d[el.dataset.f] != null) el.textContent = d[el.dataset.f]; });
+        if(eyebrow) eyebrow.textContent = 'In testa negli ultimi ' + b.dataset.period + ' giorni';
+      });
+    });
+  }
+
+  /* --- toolbar periodo (stato visivo) --- */
+  panel.querySelectorAll('.co-toolbar [data-range]').forEach(b => {
+    b.addEventListener('click', () => {
+      panel.querySelectorAll('.co-toolbar [data-range]').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+    });
+  });
+})();
+</script>
+
+<!-- ===== CARICO FORNITORE · registra carico + lista fornitori (contabilità) ===== -->
+<script>
+(function(){
+  const modal = document.getElementById('carico');
+  if(!modal) return;
+  const nf = new Intl.NumberFormat('it-IT');
+  const TODAY = '19 lug';
+
+  /* --- dati fornitori (privati, lato utente) --- */
+  const SUPPLIERS = [
+    {name:'Grossista Prato',      carichi:12, pz:0,    kg:640, updated:'15 lug'},
+    {name:'Stock Milano',         carichi:8,  pz:1240, kg:0,   updated:'9 lug'},
+    {name:'Riciclo Tessile Sud',  carichi:5,  pz:0,    kg:380, updated:'2 lug'},
+    {name:'Vintage Wholesale NL', carichi:3,  pz:210,  kg:120, updated:'28 giu'}
+  ];
+
+  function initials(name){
+    const p = name.trim().split(/\s+/).filter(Boolean);
+    const a = (p[0]||'')[0] || '';
+    const b = p.length > 1 ? ((p[p.length-1][0]) || '') : ((p[0]||'')[1] || '');
+    return (a + b).toUpperCase() || '·';
+  }
+  function figure(s){
+    const parts = [];
+    if(s.pz > 0) parts.push(nf.format(s.pz) + ' pz');
+    if(s.kg > 0) parts.push(nf.format(s.kg) + ' kg');
+    return parts.join(' · ') || '—';
+  }
+
+  /* --- lista fornitori (contabilità) --- */
+  const supList = document.getElementById('supList');
+  function renderSupList(highlight){
+    if(!supList) return;
+    supList.innerHTML = SUPPLIERS.map(s => `
+      <div class="sup-row${highlight === s.name ? ' just-added' : ''}">
+        <span class="sup-av mono">${initials(s.name)}</span>
+        <div class="sup-id"><div class="sup-name">${s.name}</div><div class="sup-meta">${s.carichi} carichi · ultimo ${s.updated}</div></div>
+        <div class="sup-fig">${figure(s)}</div>
+      </div>`).join('');
+  }
+
+  /* --- select fornitori (scegli dalla lista o aggiungi nuovo) --- */
+  const supSelect = document.getElementById('crcSup');
+  const newSup = document.getElementById('crcNewSup');
+  function renderSupOptions(){
+    supSelect.innerHTML =
+      SUPPLIERS.map(s => `<option value="${s.name.replace(/"/g,'&quot;')}">${s.name}</option>`).join('') +
+      '<option value="" disabled>──────────</option>' +
+      '<option value="__new__">+ Aggiungi nuovo fornitore…</option>';
+  }
+
+  /* --- tipo carico → unità della quantità --- */
+  const tipoSeg = document.getElementById('crcTipo');
+  const qtyLabel = document.getElementById('crcQtyLabel');
+  const qtyUnit = document.getElementById('crcUnit');
+  const qtyHint = document.getElementById('crcQtyHint');
+  const qtyInput = document.getElementById('crcQty');
+  let tipo = 'pezzo';
+  const TIPO_CFG = {
+    pezzo:    {label:'Numero di articoli', unit:'pezzi', hint:'Quanti capi contiene il carico.',              def:10, step:1},
+    ingrosso: {label:'Peso del carico',    unit:'kg',    hint:'Peso complessivo dei capi, in chilogrammi.',   def:25, step:5}
+  };
+  function setTipo(t, resetQty){
+    tipo = t;
+    const c = TIPO_CFG[t];
+    tipoSeg.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tipo === t)));
+    qtyLabel.textContent = c.label; qtyUnit.textContent = c.unit; qtyHint.textContent = c.hint;
+    if(resetQty) qtyInput.value = c.def;
+    validate();
+  }
+  tipoSeg.querySelectorAll('button').forEach(b => b.addEventListener('click', () => setTipo(b.dataset.tipo, true)));
+
+  /* --- stepper --- */
+  const stepper = modal.querySelector('[data-stepper]');
+  function clampQty(){
+    let v = parseInt(qtyInput.value, 10);
+    if(isNaN(v) || v < 1) v = 1;
+    if(v > 99999) v = 99999;
+    qtyInput.value = v;
+    return v;
+  }
+  stepper.querySelectorAll('[data-step]').forEach(b => b.addEventListener('click', () => {
+    const delta = (+b.dataset.step) * TIPO_CFG[tipo].step;
+    let v = clampQty() + delta;
+    if(v < 1) v = 1;
+    qtyInput.value = v;
+    validate();
+  }));
+  qtyInput.addEventListener('input', () => { qtyInput.value = qtyInput.value.replace(/[^0-9]/g, ''); validate(); });
+  qtyInput.addEventListener('blur', () => { clampQty(); validate(); });
+
+  /* --- fornitore: "aggiungi nuovo" rivela il campo di testo --- */
+  supSelect.addEventListener('change', () => {
+    const isNew = supSelect.value === '__new__';
+    newSup.hidden = !isNew;
+    if(isNew){ newSup.value = ''; newSup.focus(); }
+    validate();
+  });
+  newSup.addEventListener('input', validate);
+
+  /* --- validazione --- */
+  const submit = document.getElementById('crcSubmit');
+  function supplierValid(){
+    if(supSelect.value === '__new__') return newSup.value.trim().length >= 2;
+    return !!supSelect.value;
+  }
+  function validate(){
+    submit.disabled = !((parseInt(qtyInput.value, 10) >= 1) && supplierValid());
+  }
+
+  /* --- apertura / chiusura --- */
+  let lastFocus = null;
+  function openModal(){
+    lastFocus = document.activeElement;
+    renderSupOptions();
+    setTipo('pezzo', true);
+    document.getElementById('crcCat').value = 'Mista';
+    supSelect.selectedIndex = 0;
+    newSup.hidden = true; newSup.value = '';
+    validate();
+    modal.classList.add('open');
+    document.addEventListener('keydown', onKey);
+    setTimeout(() => { tipoSeg.querySelector('button').focus(); }, 40);
+  }
+  function closeModal(){
+    modal.classList.remove('open');
+    document.removeEventListener('keydown', onKey);
+    if(lastFocus && typeof lastFocus.focus === 'function') lastFocus.focus();
+  }
+  function onKey(e){ if(e.key === 'Escape') closeModal(); }
+
+  document.querySelectorAll('[data-carico]').forEach(b => b.addEventListener('click', e => { e.preventDefault(); openModal(); }));
+  modal.querySelectorAll('[data-crc-close]').forEach(b => b.addEventListener('click', closeModal));
+
+  /* --- submit: aggiorna la lista fornitori --- */
+  function addLoad(s, qty){
+    s.carichi += 1;
+    if(tipo === 'pezzo') s.pz += qty; else s.kg += qty;
+    s.updated = TODAY;
+  }
+  document.getElementById('crcForm').addEventListener('submit', e => {
+    e.preventDefault();
+    if(submit.disabled) return;
+    const qty = clampQty();
+    let name;
+    if(supSelect.value === '__new__'){
+      name = newSup.value.trim();
+      const existing = SUPPLIERS.find(s => s.name.toLowerCase() === name.toLowerCase());
+      if(existing){ name = existing.name; addLoad(existing, qty); }
+      else { const s = {name, carichi:0, pz:0, kg:0, updated:TODAY}; SUPPLIERS.unshift(s); addLoad(s, qty); }
+    } else {
+      name = supSelect.value;
+      const s = SUPPLIERS.find(x => x.name === name);
+      if(s) addLoad(s, qty);
+    }
+    renderSupList(name);
+    closeModal();
+    toast('Carico registrato · ' + nf.format(qty) + ' ' + TIPO_CFG[tipo].unit + ' · ' + name);
+  });
+
+  /* --- toast (riusa #toast) --- */
+  let tTimer; const toastEl = document.getElementById('toast');
+  function toast(msg){ if(!toastEl) return; toastEl.textContent = msg; toastEl.classList.add('show'); clearTimeout(tTimer); tTimer = setTimeout(() => toastEl.classList.remove('show'), 2400); }
+
+  /* init */
+  renderSupList();
+  renderSupOptions();
+})();
+</script>
+</body>
+</html>

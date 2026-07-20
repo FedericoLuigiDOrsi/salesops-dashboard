@@ -138,16 +138,21 @@ Per capire cosa è già "in Fase 2" e cosa è ancora "solo HTML":
 
 | Elemento / schermata | HTML (Fase 1) | React (Fase 2) | Stato |
 |---|---|---|---|
-| App shell / navigazione | `public/mobile/maat-shell.html` | `components/maat/AppShell.tsx` | ✅ entrambi |
+| App shell / navigazione | `public/mobile/maat-shell.html` (v1) → `maat-shell-account.html` (rebuild 20/07) | `components/maat/AppShell.tsx` | ✅ entrambi (rail collassabile + tabbar/FAB mobile) |
 | Catalog card | `public/mobile/maat-catalog-card.html` | `components/maat/CatalogCard.tsx` | ✅ entrambi |
 | Cattura foto | `public/mobile/acquisizione-foto-v2b.html` | `components/maat/PhotoCaptureFlow.tsx` | 🟡 React parziale |
 | Aggiungi articolo / Review | `public/mobile/maat-p2c-flow.html` | `components/maat/ReviewForm.tsx` | 🟡 bloccato (HANDOFF §6) |
 | Onboarding | `public/mobile/maat-onboarding-flow.html` | — | 🔵 solo HTML |
-| Inventario (Tabella/Card/Kanban) | — | `CatalogTable` · `CatalogCard` · `CatalogKanban` | ✅ solo React |
+| Inventario capi (Tabella/Card/Kanban) | — | `CatalogTable` · `CatalogCard` · `CatalogKanban` | ✅ solo React |
 | Scheda capo (dettaglio + overlay) | — | `CatalogEntryDetail` · `EntrySheet` | ✅ solo React |
 | Notifiche | — | `NotificationInbox` · `NotificationRow` | ✅ solo React |
 | Home dashboard | — | `HomeDashboard` · `StatTile` | ✅ solo React |
-| Impostazioni | — | `SettingsView` | ✅ solo React |
+| Impostazioni | `public/mobile/maat-shell-account.html` (pannello `#settings`) | `components/maat/SettingsModal.tsx` | ✅ entrambi (modal, non più route) |
+| Auth (login + registrazione) | `public/mobile/maat-auth.html` | `app/login` · `app/registrazione` (+ `AuthLayout`) | ✅ entrambi (UI mock, no OAuth) |
+| Onboarding interattivo | `public/mobile/maat-onboarding-interattivo.html` | `app/onboarding` (+ `OnboardingFlow`) | ✅ entrambi (UI mock; billing/plan fuori scope) |
+| Contabilità + Fornitori/Carico | `public/mobile/maat-shell-account.html` (pannello `#contabilita`) | `app/contabilita` (+ `AccountingView`, `RegistraCaricoDialog`) | ✅ entrambi (mock, grafici `recharts`) |
+| Logistica | `public/mobile/maat-shell-account.html` (pannello `#logistica`) | `app/logistica` (+ `LogisticsView`) | ✅ entrambi (mock) |
+| Inventario listing/fulfillment | `public/mobile/maat-shell-account.html` (pannello `#inventario`) | `app/inventario` (+ `InventoryView`) | ✅ entrambi (mock) |
 
 Libreria completa degli atomi/molecole/pattern (in HTML `@dsCard`): `dedalo-os/.../maat-ds/`.
 

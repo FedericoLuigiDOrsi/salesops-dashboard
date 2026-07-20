@@ -1,0 +1,148 @@
+import type { Shipment } from "@/types/maat";
+
+export const shipments: Shipment[] = [
+  {
+    id: "sh-1",
+    itemLabel: "Stone Island · Bomber",
+    sku: "B-091",
+    marketplace: "vinted",
+    carrier: "BRT",
+    trackingCode: "BRT-8842190",
+    recipient: "M. Rossi",
+    status: "in_transit",
+    shippedAt: "14 lug",
+    expectedDeliveryAt: "18 lug",
+    priceCents: 17200,
+  },
+  {
+    id: "sh-2",
+    itemLabel: "Burberry · Trench",
+    sku: "B-088",
+    marketplace: "vinted",
+    carrier: "InPost",
+    trackingCode: "INP-5521048",
+    recipient: "L. Bianchi",
+    status: "out_for_delivery",
+    shippedAt: "16 lug",
+    expectedDeliveryAt: "18 lug",
+    priceCents: 22800,
+  },
+  {
+    id: "sh-3",
+    itemLabel: "The North Face · Nuptse 700",
+    sku: "B-090",
+    marketplace: "vinted",
+    carrier: "Poste",
+    trackingCode: "RR118904471IT",
+    recipient: "G. Esposito",
+    status: "shipped",
+    shippedAt: "17 lug",
+    expectedDeliveryAt: "21 lug",
+    priceCents: 15000,
+  },
+  {
+    id: "sh-4",
+    itemLabel: "Nike · Hoodie vintage",
+    sku: "B-093",
+    marketplace: "vinted",
+    carrier: "GLS",
+    trackingCode: "GLS-70418826",
+    recipient: "F. Romano",
+    status: "in_transit",
+    shippedAt: "15 lug",
+    expectedDeliveryAt: "19 lug",
+    priceCents: 5200,
+  },
+  {
+    id: "sh-5",
+    itemLabel: "Acne Studios · Maglione lana",
+    sku: "B-097",
+    marketplace: "vinted",
+    carrier: "BRT",
+    trackingCode: "BRT-8850127",
+    recipient: "S. Conti",
+    status: "out_for_delivery",
+    shippedAt: "13 lug",
+    expectedDeliveryAt: "17 lug",
+    priceCents: 11500,
+  },
+  {
+    id: "sh-6",
+    itemLabel: "Levi's · Giacca denim",
+    sku: "B-102",
+    marketplace: "vinted",
+    carrier: "InPost",
+    trackingCode: "INP-5530993",
+    recipient: "A. Ricci",
+    status: "shipped",
+    shippedAt: "17 lug",
+    expectedDeliveryAt: "22 lug",
+    priceCents: 6800,
+  },
+  {
+    id: "sh-7",
+    itemLabel: "Dr. Martens · 1460 boots",
+    sku: "B-099",
+    marketplace: "depop",
+    carrier: "Evri",
+    trackingCode: "EVR-99215540",
+    recipient: "C. Marino",
+    status: "in_transit",
+    shippedAt: "15 lug",
+    expectedDeliveryAt: "20 lug",
+    priceCents: 8800,
+  },
+  {
+    id: "sh-8",
+    itemLabel: "Adidas · Track jacket",
+    sku: "B-095",
+    marketplace: "depop",
+    carrier: "Poste",
+    trackingCode: "RR118990553IT",
+    recipient: "E. Greco",
+    status: "in_transit",
+    shippedAt: "16 lug",
+    expectedDeliveryAt: "20 lug",
+    priceCents: 4500,
+  },
+  {
+    id: "sh-9",
+    itemLabel: "Prada · Nylon bag",
+    sku: "B-101",
+    marketplace: "depop",
+    carrier: "DHL",
+    trackingCode: "DHL-6641200788",
+    recipient: "D. Bruno",
+    status: "out_for_delivery",
+    shippedAt: "14 lug",
+    expectedDeliveryAt: "18 lug",
+    priceCents: 31000,
+  },
+  {
+    id: "sh-10",
+    itemLabel: "Ralph Lauren · Oxford",
+    sku: "B-074",
+    marketplace: "depop",
+    carrier: "Evri",
+    trackingCode: "EVR-99230071",
+    recipient: "V. Gallo",
+    status: "shipped",
+    shippedAt: "12 lug",
+    expectedDeliveryAt: "19 lug",
+    priceCents: 3800,
+  },
+];
+
+/** Spedizioni raggruppate per piattaforma, ordine di apparizione. */
+export function shipmentsByPlatform(list: Shipment[] = shipments) {
+  const order: Shipment["marketplace"][] = [];
+  const groups = new Map<Shipment["marketplace"], Shipment[]>();
+  for (const s of list) {
+    if (!groups.has(s.marketplace)) {
+      groups.set(s.marketplace, []);
+      order.push(s.marketplace);
+    }
+    groups.get(s.marketplace)!.push(s);
+  }
+  return order.map((marketplace) => ({ marketplace, shipments: groups.get(marketplace)! }));
+}

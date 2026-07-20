@@ -76,3 +76,101 @@ export interface Notification {
   letta: boolean;
   catalogEntryId: string;
 }
+
+// ---------------------------------------------------------------------------
+// Contabilità / Logistica / Fornitori — schema minimo informato dal target
+// Supabase (vedi Reference/research/maat/maat-airtable-database-fields.md,
+// cluster C11/C12). Importi in centesimi, coerente col target *_cents.
+// ---------------------------------------------------------------------------
+
+export type Marketplace = "vinted" | "depop" | "grailed" | "vestiaire" | "ebay";
+
+export const MARKETPLACE_LABELS: Record<Marketplace, string> = {
+  vinted: "Vinted",
+  depop: "Depop",
+  grailed: "Grailed",
+  vestiaire: "Vestiaire",
+  ebay: "eBay",
+};
+
+export type AccountingEntryType = "sale" | "return" | "expense" | "refund";
+export type AccountingEntryStatus = "confirmed" | "escrow" | "pending";
+
+export interface AccountingEntry {
+  id: string;
+  eventDate: string; // ISO date
+  itemLabel: string;
+  category: string;
+  marketplace: Marketplace;
+  entryType: AccountingEntryType;
+  status: AccountingEntryStatus;
+  grossAmountCents: number;
+  platformFeeCents: number;
+  shippingCostCents: number;
+  netAmountCents: number;
+}
+
+export interface WeeklyRevenuePoint {
+  weekLabel: string;
+  revenueCents: number;
+  unitsSold: number;
+  current?: boolean;
+}
+
+export interface PlatformShare {
+  marketplace: Marketplace;
+  revenueCents: number;
+  sales: number;
+}
+
+export interface CategoryShare {
+  category: string;
+  revenueCents: number;
+  units: number;
+}
+
+export type LotType = "pezzo" | "ingrosso";
+export type LotAllocationMethod = "uniform" | "weight_based" | "manual";
+
+export interface Supplier {
+  id: string;
+  name: string;
+  loadsCount: number;
+  pieces: number;
+  kg: number;
+  updatedAt: string;
+}
+
+export interface Lot {
+  id: string;
+  code: string;
+  supplierName: string;
+  acquiredAt: string; // ISO date
+  type: LotType;
+  quantity: number;
+  category: string;
+  allocationMethod: LotAllocationMethod;
+  totalCostCents: number | null; // non raccolto nel dialog "Registra carico", opzionale
+}
+
+export type ShipmentStatus = "shipped" | "in_transit" | "out_for_delivery";
+
+export const SHIPMENT_STATUS_LABELS: Record<ShipmentStatus, string> = {
+  shipped: "Spedita",
+  in_transit: "In transito",
+  out_for_delivery: "In consegna",
+};
+
+export interface Shipment {
+  id: string;
+  itemLabel: string;
+  sku: string;
+  marketplace: Marketplace;
+  carrier: string;
+  trackingCode: string;
+  recipient: string;
+  status: ShipmentStatus;
+  shippedAt: string; // "14 lug"
+  expectedDeliveryAt: string; // "18 lug"
+  priceCents: number;
+}

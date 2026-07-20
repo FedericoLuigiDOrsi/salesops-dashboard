@@ -5,6 +5,7 @@ import { GeistSans } from 'geist/font/sans'
 import { Analytics } from '@vercel/analytics/next'
 import { AppShell } from '@/components/maat/AppShell'
 import { NotificationsProvider } from '@/lib/notifications-store'
+import { SettingsProvider } from '@/lib/settings-store'
 import './globals.css'
 
 const _jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains-mono" });
@@ -41,7 +42,9 @@ export default function RootLayout({
     <html lang="en" className={`${GeistSans.variable} ${_jetbrainsMono.variable}`}>
       <body className={`font-sans antialiased`}>
         <NotificationsProvider>
-          <AppShell>{children}</AppShell>
+          <SettingsProvider>
+            <AppShell>{children}</AppShell>
+          </SettingsProvider>
         </NotificationsProvider>
         <Analytics />
       </body>

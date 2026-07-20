@@ -107,14 +107,16 @@ NotificationRow · HomeDashboard · SettingsModal · StatTile · StatusBadge · 
 Sequence · ConfirmGateButton · EmptyState · AuthLayout · SocialButtons · PasswordInput ·
 onboarding/OnboardingFlow · accounting/AccountingView · accounting/RegistraCaricoDialog ·
 logistics/LogisticsView · inventory/InventoryView (v2 unificato) · inventory/AutomazioniDrawer ·
-publishing/PublishingView
+publishing/PublishingView · widgets/* (registry + WidgetShell + 6 widget Home: Panoramica/Offerte/
+Vendite/Azioni/Notifiche/Entrate)
 
 ### Stato & dati (`lib/`)
 `maat-store.tsx` · `notifications-store.tsx` (context, badge live) · `settings-store.tsx` (context: modal
 Impostazioni + profilo/ruolo + brand, condiviso rail/app-bar/SettingsModal) · `catalog-presets.ts` (i 3
 preset-operazione, usati solo da /capi deprecata) · `catalog-stats.ts` · `maat-mock.ts` · `tenant-mock.ts` ·
 `accounting-mock.ts` · `logistics-mock.ts` · `suppliers-mock.ts` (+`loadHistory`) · `inventory-mock.ts`
-(v2: `InventoryItem` unificato capo+listing) · `measures.ts` (ArUco).
+(v2: `InventoryItem` unificato capo+listing) · `measures.ts` (ArUco) · `home-layout-store.tsx` (context:
+layout widget Home + metriche Panoramica, persistito `localStorage`) · `home-mock.ts` · `activity-mock.ts`.
 Tipi in `types/maat.ts` (`Lot` esteso: `name`/`executedAt`/`pricePaidCents`).
 
 ---
@@ -171,6 +173,19 @@ Tipi in `types/maat.ts` (`Lot` esteso: `name`/`executedAt`/`pricePaidCents`).
       **Settings Metodi di pagamento**: pannello Carta/Apple/Google/PayPal + form carta **mock puro** (nessun
       PSP, nessun invio dati). Tipi condivisi `Offer`/`Sale` in `types/maat.ts`, dati in `lib/activity-mock.ts`.
       Con questo lo shell v2 è **completo al 100%** rispetto al mockup `maat-shell-account.html` v2.
+- [x] **Fase 10** — Home **widget system** (bento grid personalizzabile, logica "home screen iPad"):
+      la Home è ora una griglia di **widget atomici** registrati in `components/maat/widgets/registry.tsx`
+      (Panoramica span-2 · Offerte · Vendite · Azioni richieste · Notifiche · Entrate con mini-chart `recharts`).
+      **Edit mode** ("Modifica layout" nell'header): jiggle-lite + ✕ rimuovi su ogni card, drag & drop di
+      riordino via `@dnd-kit` (PointerSensor + KeyboardSensor, `rectSortingStrategy`), tile tratteggiato
+      "Aggiungi widget" (erede dello "Spazio disponibile" del mockup) con catalogo dei widget non in pagina.
+      Layout + metriche Panoramica persistiti in `localStorage` (`maat.home.layout.v1`) via
+      `lib/home-layout-store.tsx` (stesso pattern context di `settings-store`); default = mockup
+      (panoramica/offerte/vendite). In edit mode il contenuto dei widget è inerte (pointer-events-none),
+      come le app iPad che "ballano". Griglia `grid-flow-dense` 1→2 colonne: mobile = colonna singola,
+      ordine preservato. **Nota bene**: resta un hydration warning dev sui Popover Radix
+      (`aria-controls`) — **pre-esistente**, verificato con test A/B su commit `730e254` senza dnd-kit;
+      non ha impatto funzionale, fix da fare a livello dipendenze (React 19 + radix).
 
 Piano originale completo: era in `~/.claude/plans/jaunty-stirring-raven.md` (locale — se serve
 storicizzarlo, va copiato qui in `docs/`).

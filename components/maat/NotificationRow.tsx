@@ -1,88 +1,131 @@
 "use client";
 
-import { Sparkles, CloudOff, Check, Trash2 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import type { CatalogEntry, Notification } from "@/types/maat";
+import type { ReactNode } from "react";
+import { Coins, Tag, Truck, Check, Package } from "lucide-react";
+import { cn, formatEUR } from "@/lib/utils";
+import { MARKETPLACE_LABELS } from "@/types/maat";
+import type { SaleNotification, OfferNotification, ShipmentNotification, NotificationV2Sub } from "@/lib/notifications-mock";
 
-function timeAgo(iso: string): string {
-  const diffMs = Date.now() - new Date(iso).getTime();
-  const minutes = Math.round(diffMs / 60000);
-  if (minutes < 60) return `${Math.max(minutes, 1)} min fa`;
-  const hours = Math.round(minutes / 60);
-  if (hours < 24) return `${hours} ${hours === 1 ? "ora" : "ore"} fa`;
-  const days = Math.round(hours / 24);
-  return `${days} ${days === 1 ? "giorno" : "giorni"} fa`;
+function Pill({ children }: { children: ReactNode }) {
+  return (
+    <span className="rounded bg-foreground/[.06] px-1.5 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+      {children}
+    </span>
+  );
 }
 
-interface NotificationRowProps {
-  notification: Notification;
-  entry?: CatalogEntry;
-  onNavigate: () => void;
-  onMarkRead: () => void;
-  onDelete: () => void;
+function RowIcon({ unread, children }: { unread: boolean; children: ReactNode }) {
+  return (
+    <span
+      className={cn(
+        "flex size-9 shrink-0 items-center justify-center rounded-md",
+        unread ? "bg-primary/25 text-[#7a7000]" : "bg-foreground/[.06] text-muted-foreground"
+      )}
+    >
+      {children}
+    </span>
+  );
 }
 
-export function NotificationRow({ notification, entry, onNavigate, onMarkRead, onDelete }: NotificationRowProps) {
-  const isDraft = notification.tipo === "draft_ready";
+export function SaleNotificationRow({ notification, onOpen }: { notification: SaleNotification; onOpen: () => void }) {
+  return (
+    <button type="button" onClick={onOpen} className="flex w-full items-center gap-3 p-3 text-left transition-colors hover:bg-foreground/[.03]">
+      <RowIcon unread={notification.unread}>
+        <Coins className="size-4" />
+      </RowIcon>
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-1.5 text-[13px] font-medium">
+          {notification.itemLabel}
+          {notification.marketplace && <Pill>{MARKETPLACE_LABELS[notification.marketplace]}</Pill>}
+        </div>
+        <div className="mt-0.5 text-xs text-muted-foreground">
+          {notification.sku && <span className="font-mono text-foreground/70">SKU {notification.sku}</span>} · Vendita eseguita
+        </div>
+      </div>
+      <div className="flex shrink-0 flex-col items-end gap-0.5">
+        <span className="font-mono text-[15px] font-semibold text-[var(--chart-2)]">{formatEUR(notification.priceCents)}</span>
+        <span className="font-mono text-[11px] text-muted-foreground/70">{notification.time}</span>
+      </div>
+    </button>
+  );
+}
+
+const OFFER_BADGE: Record<"accepted" | "rejected" | "counter", { label: string; className: string }> = {
+  accepted: { label: "Accettata", className: "bg-[color-mix(in_oklab,var(--chart-2)_16%,transparent)] text-[var(--chart-2)]" },
+  rejected: { label: "Rifiutata", className: "bg-muted text-muted-foreground" },
+  counter: { label: "Controfferta inviata", className: "bg-primary/25 text-[#7a7000]" },
+};
+
+export function OfferNotificationRow({ notification, onOpen }: { notification: OfferNotification; onOpen: () => void }) {
+  const resolved = notification.status !== "pending";
+  const badge = resolved ? OFFER_BADGE[notification.status as "accepted" | "rejected" | "counter"] : null;
+  return (
+    <button
+      type="button"
+      disabled={resolved}
+      onClick={onOpen}
+      className={cn(
+        "flex w-full items-center gap-3 p-3 text-left transition-colors",
+        resolved ? "cursor-default opacity-60" : "hover:bg-foreground/[.03]"
+      )}
+    >
+      <RowIcon unread={notification.unread && !resolved}>
+        <Tag className="size-4" />
+      </RowIcon>
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-center gap-1.5 text-[13px] font-medium">
+          {notification.itemLabel}
+          {notification.marketplace && <Pill>{MARKETPLACE_LABELS[notification.marketplace]}</Pill>}
+          {badge && (
+            <span className={cn("rounded-full px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wide", badge.className)}>
+              {badge.label}
+            </span>
+          )}
+        </div>
+        <div className="mt-0.5 text-xs text-muted-foreground">
+          {notification.sku && <span className="font-mono text-foreground/70">SKU {notification.sku}</span>} · Offerta ricevuta
+        </div>
+      </div>
+      <div className="flex shrink-0 flex-col items-end gap-0.5">
+        <div className="flex items-baseline gap-1.5">
+          <span className="font-mono text-[15px] font-semibold">{formatEUR(notification.offerCents)}</span>
+          <span className="font-mono text-xs text-muted-foreground line-through">{formatEUR(notification.listPriceCents)}</span>
+        </div>
+        <span className="font-mono text-[11px] text-muted-foreground/70">
+          {notification.time}
+          {!resolved && <span className="ml-1 font-semibold text-foreground">· Rispondi ›</span>}
+        </span>
+      </div>
+    </button>
+  );
+}
+
+const SHIPMENT_ICON: Record<NotificationV2Sub, typeof Truck> = {
+  partita: Truck,
+  arrivata: Check,
+  reso: Truck,
+  bozza: Check,
+  delisting: Package,
+};
+
+export function ShipmentNotificationRow({ notification }: { notification: ShipmentNotification }) {
+  const Icon = SHIPMENT_ICON[notification.sub];
+  const metaParts = [
+    notification.itemLabel,
+    notification.sku ? `SKU ${notification.sku}` : null,
+    notification.carrier ?? (notification.marketplace ? MARKETPLACE_LABELS[notification.marketplace] : null),
+  ].filter(Boolean);
 
   return (
-    <div
-      className={cn(
-        "group relative flex cursor-pointer items-center gap-4 rounded-lg bg-card p-4 transition-colors hover:bg-foreground/[.02]",
-        !notification.letta && "border-l-2 border-l-primary pl-[14px]"
-      )}
-      onClick={onNavigate}
-    >
-      <div
-        className={cn(
-          "flex size-9 shrink-0 items-center justify-center rounded-full",
-          isDraft ? "bg-primary/30" : "bg-foreground/[.08]"
-        )}
-      >
-        {isDraft ? <Sparkles className="size-4 text-[#7a7000]" /> : <CloudOff className="size-4 text-muted-foreground" />}
-      </div>
-
+    <div className="flex items-center gap-3 p-3">
+      <RowIcon unread={notification.unread}>
+        <Icon className="size-4" />
+      </RowIcon>
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium">{notification.messaggio}</p>
-        {entry && (
-          <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
-            <span className="size-3.5 shrink-0 rounded border border-border bg-background" />
-            {entry.attributes.brand} — {entry.attributes.tipoCapo}
-          </div>
-        )}
+        <div className="text-[13px] font-medium">{notification.detail}</div>
+        <div className="mt-0.5 text-xs text-muted-foreground">{metaParts.join(" · ")}</div>
       </div>
-
-      <div className="flex shrink-0 gap-1 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
-        {!notification.letta && (
-          <button
-            type="button"
-            title="Segna letta"
-            onClick={(e) => {
-              e.stopPropagation();
-              onMarkRead();
-            }}
-            className="flex size-7 items-center justify-center rounded-full bg-foreground/5 text-muted-foreground hover:bg-foreground/10 hover:text-foreground"
-          >
-            <Check className="size-3.5" />
-          </button>
-        )}
-        <button
-          type="button"
-          title="Elimina"
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete();
-          }}
-          className="flex size-7 items-center justify-center rounded-full bg-foreground/5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-        >
-          <Trash2 className="size-3.5" />
-        </button>
-      </div>
-
-      <div className="flex shrink-0 flex-col items-end gap-1.5">
-        <span className="font-mono text-xs text-muted-foreground">{timeAgo(notification.timestamp)}</span>
-        {!notification.letta && <span className="size-1.5 rounded-full bg-primary" />}
-      </div>
+      <span className="shrink-0 font-mono text-[11px] text-muted-foreground/70">{notification.time}</span>
     </div>
   );
 }

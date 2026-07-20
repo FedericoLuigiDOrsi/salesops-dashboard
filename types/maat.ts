@@ -177,3 +177,32 @@ export interface Shipment {
   expectedDeliveryAt: string; // "18 lug"
   priceCents: number;
 }
+
+// ---------------------------------------------------------------------------
+// Attività (offerte + vendite) — condivise tra Home (card offerte/vendite) e
+// Notifiche v2 (gruppi Vendite/Offerte + popup controfferta + anteprima).
+// Importi in centesimi. `time` è relativo ("12 min", "3 h", "ieri").
+// ---------------------------------------------------------------------------
+
+export type OfferStatus = "pending" | "accepted" | "rejected" | "counter";
+
+export interface Offer {
+  id: string;
+  itemLabel: string; // "Burberry · Trench"
+  sku: string;
+  marketplace: Marketplace;
+  offerCents: number; // prezzo offerto dall'acquirente
+  listPriceCents: number; // prezzo di listino
+  time: string; // "1 h"
+  status: OfferStatus;
+  counterCents?: number; // controfferta inviata dal venditore, se status === "counter"
+}
+
+export interface Sale {
+  id: string;
+  itemLabel: string;
+  sku: string;
+  marketplace: Marketplace;
+  priceCents: number;
+  time: string; // "12 min"
+}

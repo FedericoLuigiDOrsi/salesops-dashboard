@@ -9,10 +9,13 @@ export type SettingsSection =
   | "account"
   | "dipendenti"
   | "piano"
+  | "pagamento"
   | "notifiche"
   | "privacy"
   | "lingua"
   | "scopri";
+
+export type PaymentMethod = "card" | "apple" | "google" | "paypal";
 
 interface SettingsContextValue {
   isOpen: boolean;
@@ -24,6 +27,8 @@ interface SettingsContextValue {
   setProfile: (profile: UserProfile) => void;
   brand: TenantBrand;
   setBrand: (brand: TenantBrand) => void;
+  paymentMethod: PaymentMethod;
+  setPaymentMethod: (method: PaymentMethod) => void;
 }
 
 const SettingsContext = createContext<SettingsContextValue | null>(null);
@@ -33,6 +38,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [section, setSection] = useState<SettingsSection>("account");
   const [profile, setProfile] = useState<UserProfile>(mockUserProfile);
   const [brand, setBrand] = useState<TenantBrand>(mockTenantBrand);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("card");
 
   const value = useMemo<SettingsContextValue>(
     () => ({
@@ -48,8 +54,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       setProfile,
       brand,
       setBrand,
+      paymentMethod,
+      setPaymentMethod,
     }),
-    [isOpen, section, profile, brand]
+    [isOpen, section, profile, brand, paymentMethod]
   );
 
   return <SettingsContext.Provider value={value}>{children}</SettingsContext.Provider>;

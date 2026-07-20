@@ -2,11 +2,15 @@
 
 import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
 import { mockNotifications } from "@/lib/maat-mock";
+import { notificationsV2 } from "@/lib/notifications-mock";
 import type { Notification } from "@/types/maat";
 
 /**
- * Store notifiche condiviso: una sola fonte di verità così il badge in AppShell
- * e la inbox restano in sync (segna-letta / segna-tutte azzera il badge live).
+ * Store notifiche condiviso: fonte di verità per il badge in AppShell.
+ * `notifications` (draft_ready/local_save) resta per compatibilità con
+ * HomeDashboard ("Notifiche recenti"). Il conteggio non letti ora somma anche
+ * la nuova inbox v2 (vendite/offerte/spedizioni) — vedi NotificationInbox,
+ * che gestisce il proprio stato locale e non scrive su questo store.
  */
 interface NotificationsContextValue {
   notifications: Notification[];
@@ -18,9 +22,11 @@ interface NotificationsContextValue {
 
 const NotificationsContext = createContext<NotificationsContextValue | null>(null);
 
+const unreadV2Count = notificationsV2.filter((n) => n.unread).length;
+
 export function NotificationsProvider({ children }: { children: ReactNode }) {
   const [notifications, setNotifications] = useState<Notification[]>(mockNotifications);
-  const unreadCount = useMemo(() => notifications.filter((n) => !n.letta).length, [notifications]);
+  const unreadCount = useMemo(() => notifications.filter((n) => !n.letta).length + unreadV2Count, [notifications]);
 
   const value = useMemo<NotificationsContextValue>(
     () => ({

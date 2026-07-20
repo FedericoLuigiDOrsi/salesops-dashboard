@@ -20,9 +20,16 @@ interface AppShellProps {
   children: React.ReactNode;
 }
 
+const BARE_ROUTES = ["/login", "/registrazione", "/onboarding"];
+
 export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const { unreadCount } = useNotifications();
+
+  // Route pre-login: nessuna sidebar/nav, solo il contenuto full-screen.
+  if (BARE_ROUTES.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
+    return <>{children}</>;
+  }
 
   return (
     <div className="flex min-h-dvh">

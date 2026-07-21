@@ -6,12 +6,13 @@ import type { CatalogEntry, Photo, PhotoLabel } from "@/types/maat";
 interface MaatEntryContextValue {
   entry: CatalogEntry;
   updatePhoto: (label: PhotoLabel, photo: Photo) => void;
+  updatePrices: (purchasePriceCents: number | null, suggestedSalePriceCents: number | null) => void;
   confirmEntry: () => void;
 }
 
 const MaatEntryContext = createContext<MaatEntryContextValue | null>(null);
 
-function storageKey(id: string) {
+export function storageKey(id: string) {
   return `maat:catalog-entry:${id}`;
 }
 
@@ -38,8 +39,17 @@ export function MaatEntryProvider({ id, initialEntry, children }: MaatEntryProvi
       const stored = window.localStorage.getItem(storageKey(id));
       if (stored) {
         const parsed = JSON.parse(stored) as CatalogEntry;
-        entryRef.current = parsed;
-        setEntry(parsed);
+        // "nuovo" è uno slot singolo riusato da OGNI "Crea capo": se la bozza
+        // salvata sotto quella chiave è già stata confermata in una sessione
+        // precedente, è stale per quella corrente (altrimenti "Nuovo capo"
+        // mostrerebbe di nuovo il capo appena confermato) — non va ripresa.
+        // Una bozza non ancora confermata resta invece ripresa normalmente.
+        if (id === "nuovo" && parsed.status === "available") {
+          window.localStorage.removeItem(storageKey(id));
+        } else {
+          entryRef.current = parsed;
+          setEntry(parsed);
+        }
       }
     } catch {
       // ignore malformed storage
@@ -75,11 +85,18 @@ export function MaatEntryProvider({ id, initialEntry, children }: MaatEntryProvi
     }
   }
 
-  function confirmEntry() {
-    apply({ ...entryRef.current, status: "available" });
+  function updatePrices(purchasePriceCents: number | null, suggestedSalePriceCents: number | null) {
+    apply({ ...entryRef.current, purchasePriceCents, suggestedSalePriceCents });
   }
 
-  return <MaatEntryContext.Provider value={{ entry, updatePhoto, confirmEntry }}>{children}</MaatEntryContext.Provider>;
+  function confirmEntry() {
+    const current = entryRef.current;
+    apply({ ...current, status: "available", sku: current.sku ?? `MAAT-${Date.now().toString(36).toUpperCase()}` });
+  }
+
+  return (
+    <MaatEntryContext.Provider value={{ entry, updatePhoto, updatePrices, confirmEntry }}>{children}</MaatEntryContext.Provider>
+  );
 }
 
 export function useMaatEntry() {

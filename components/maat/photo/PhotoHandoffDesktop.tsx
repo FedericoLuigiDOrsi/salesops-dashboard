@@ -173,10 +173,13 @@ function SceltaView({
       <div className="mt-5 rounded-xl border border-border bg-card p-4">
         <div className="flex items-start gap-2.5">
           <Info className="mt-0.5 size-4 flex-none text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">
-            <b className="text-foreground">Misure automatiche (ArUco)</b> — aggiungi una foto col marker
-            tra gli scatti opzionali: l&apos;AI calcola le misure in automatico.
-          </p>
+          <div className="text-sm text-muted-foreground">
+            <p className="font-semibold text-foreground">Misure automatiche (ArUco)</p>
+            <p className="mt-0.5">
+              Appoggia il capo sul pannello con i marker agli angoli e aggiungi quella foto tra gli
+              scatti opzionali: la distanza nota tra i marker calcola le misure reali senza metro.
+            </p>
+          </div>
         </div>
         <div className="my-3.5 h-px bg-border" />
         <div className="flex items-center justify-between">

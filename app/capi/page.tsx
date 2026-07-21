@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Plus, Search, LayoutGrid, Table2, Columns3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +11,7 @@ import { CatalogCard } from "@/components/maat/CatalogCard";
 import { CatalogTable } from "@/components/maat/CatalogTable";
 import { CatalogKanban } from "@/components/maat/CatalogKanban";
 import { EmptyState } from "@/components/maat/EmptyState";
+import { ConfirmedFloatingCard } from "@/components/maat/ConfirmedFloatingCard";
 import { mockCatalogEntries } from "@/lib/maat-mock";
 import { catalogCounts } from "@/lib/catalog-stats";
 import {
@@ -27,6 +29,13 @@ const VIEW_OPTIONS: { value: ViewMode; label: string; icon: typeof Table2 }[] = 
   { value: "card", label: "Card", icon: LayoutGrid },
   { value: "kanban", label: "Kanban", icon: Columns3 },
 ];
+
+function ConfirmedFloatingCardSlot() {
+  const router = useRouter();
+  const confirmedId = useSearchParams().get("confirmed");
+  if (!confirmedId) return null;
+  return <ConfirmedFloatingCard id={confirmedId} onDismiss={() => router.replace("/capi")} />;
+}
 
 export default function CapiListPage() {
   const [presetValue, setPresetValue] = useState<PresetValue>(DEFAULT_PRESET);
@@ -142,6 +151,10 @@ export default function CapiListPage() {
           </div>
         )}
       </div>
+
+      <Suspense fallback={null}>
+        <ConfirmedFloatingCardSlot />
+      </Suspense>
     </div>
   );
 }

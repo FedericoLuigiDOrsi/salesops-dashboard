@@ -37,6 +37,7 @@ type SlotDef = {
   text: string;
   icon: LucideIcon;
   photoLabel: PhotoLabel;
+  hint?: string;
 };
 
 const SLOTS: SlotDef[] = [
@@ -47,7 +48,7 @@ const SLOTS: SlotDef[] = [
   { text: "Materiale", icon: Layers, photoLabel: "materiale" },
   { text: "Difetti", icon: Search, photoLabel: "difetti" },
   { text: "Extra", icon: Images, photoLabel: "extra" },
-  { text: "ArUco", icon: ScanLine, photoLabel: "aruco" },
+  { text: "ArUco", icon: ScanLine, photoLabel: "aruco", hint: "marker per le misure automatiche" },
 ];
 
 const N = SLOTS.length;
@@ -58,20 +59,27 @@ const RANGE = 4.2;
 const RGT = { CX: 412, CY: 214 };
 const DRAG_PX_PER_STEP = 52;
 
-export function PhotoCaptureMobile() {
+interface PhotoCaptureMobileProps {
+  initialLabel?: PhotoLabel;
+}
+
+export function PhotoCaptureMobile({ initialLabel }: PhotoCaptureMobileProps) {
   const router = useRouter();
   const { entry, updatePhoto } = useMaatEntry();
 
+  const initialIndex = Math.max(0, SLOTS.findIndex((s) => s.photoLabel === initialLabel));
+
   const [held, setHeld] = useState(false);
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [activeIndex, setActiveIndex] = useState(initialIndex);
   const [done, setDone] = useState<boolean[]>(() => Array(N).fill(false));
   const [labelShown, setLabelShown] = useState(false);
-  const [labelText, setLabelText] = useState(SLOTS[0].text);
+  const [labelText, setLabelText] = useState(SLOTS[initialIndex].text);
+  const [slotHint, setSlotHint] = useState<string | null>(SLOTS[initialIndex].hint ?? null);
   const [flash, setFlash] = useState(false);
   const [snap, setSnap] = useState(false);
   const [focus, setFocus] = useState<{ key: number; x: number; y: number } | null>(null);
 
-  const afRef = useRef(0);
+  const afRef = useRef(initialIndex);
   const iconRefs = useRef<Array<HTMLDivElement | null>>([]);
   const selectorRef = useRef<HTMLDivElement | null>(null);
   const previewRef = useRef<HTMLDivElement | null>(null);
@@ -81,7 +89,10 @@ export function PhotoCaptureMobile() {
   const ready = doneCount >= MIN_READY;
 
   function close() {
-    router.push(`/capi/${entry.id}`);
+    // Va alla lista, non al dettaglio capo: /capi/${id} è intercettata da
+    // app/capi/@modal/(.)[id] e aprirebbe il Sheet laterale su una bozza
+    // annullata (mai voluto, vedi taccuino-2026-07-21-maat-p2c-nav-bugfix).
+    router.push("/capi");
   }
 
   function complete() {
@@ -97,7 +108,7 @@ export function PhotoCaptureMobile() {
         createdAt: new Date().toISOString(),
       });
     });
-    router.push(`/capi/${entry.id}/review`);
+    router.push(`/capi/${entry.id}/elaborazione`);
   }
 
   const placeIcon = useCallback((i: number, af: number) => {
@@ -126,10 +137,13 @@ export function PhotoCaptureMobile() {
   );
 
   function showModeLabel(index: number) {
-    setLabelText(SLOTS[index].text);
+    const slot = SLOTS[index];
+    setLabelText(slot.text);
+    setSlotHint(slot.hint ?? null);
     setLabelShown(true);
     if (labelTimerRef.current) window.clearTimeout(labelTimerRef.current);
-    labelTimerRef.current = window.setTimeout(() => setLabelShown(false), 1600);
+    // Lo slot ArUco porta una spiegazione in più: resta a schermo più a lungo per dare il tempo di leggerla.
+    labelTimerRef.current = window.setTimeout(() => setLabelShown(false), slot.hint ? 2400 : 1600);
   }
 
   function hideModeLabel() {
@@ -138,7 +152,7 @@ export function PhotoCaptureMobile() {
   }
 
   useEffect(() => {
-    showModeLabel(0);
+    showModeLabel(initialIndex);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -292,6 +306,17 @@ export function PhotoCaptureMobile() {
           >
             {labelText}
           </span>
+          {/* spiegazione contestuale (solo per slot che ne hanno una, es. ArUco) */}
+          {slotHint && (
+            <span
+              className={cn(
+                "pointer-events-none absolute left-1/2 top-[38px] z-[6] -translate-x-1/2 whitespace-nowrap text-[10px] font-medium text-white/85 [text-shadow:0_1px_4px_rgba(0,0,0,.55)] transition-all duration-[280ms]",
+                labelShown ? "translate-y-0 opacity-100" : "-translate-y-1.5 opacity-0"
+              )}
+            >
+              {slotHint}
+            </span>
+          )}
 
           {/* reticolo tap-to-focus */}
           {focus && (

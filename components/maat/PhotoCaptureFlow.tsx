@@ -17,7 +17,7 @@ interface PhotoCaptureFlowProps {
  * La scelta avviene dopo il mount (matchMedia) per evitare hydration mismatch:
  * fino ad allora si mostra una superficie neutra a tutta pagina.
  */
-export function PhotoCaptureFlow({ initialLabel: _initialLabel }: PhotoCaptureFlowProps) {
+export function PhotoCaptureFlow({ initialLabel }: PhotoCaptureFlowProps) {
   const [isMobile, setIsMobile] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -32,5 +32,5 @@ export function PhotoCaptureFlow({ initialLabel: _initialLabel }: PhotoCaptureFl
     return <div className="fixed inset-0 z-50 bg-background" aria-hidden />;
   }
 
-  return isMobile ? <PhotoCaptureMobile /> : <PhotoHandoffDesktop />;
+  return isMobile ? <PhotoCaptureMobile initialLabel={initialLabel} /> : <PhotoHandoffDesktop />;
 }

@@ -44,6 +44,8 @@ export interface CatalogEntry {
   photos: Photo[];
   accountId: string;
   createdAt: string;
+  purchasePriceCents: number | null;
+  suggestedSalePriceCents: number | null;
 }
 
 export interface UserProfile {

@@ -34,6 +34,8 @@ function catalogEntryFromInventoryItem(id: string): CatalogEntry | null {
     },
     measures: {},
     photos: [],
+    purchasePriceCents: null,
+    suggestedSalePriceCents: null,
   };
 }
 
@@ -42,6 +44,8 @@ function entry(partial: Pick<CatalogEntry, "id" | "status" | "createdAt" | "attr
     sku: partial.status === "available" ? `MAAT-${partial.id.toUpperCase()}` : null,
     accountId: "acc-federico",
     measures: {},
+    purchasePriceCents: null,
+    suggestedSalePriceCents: null,
     photos: [
       {
         id: `${partial.id}-p1`,
@@ -197,6 +201,8 @@ function emptyEntry(id: string): CatalogEntry {
     },
     measures: {},
     photos: [],
+    purchasePriceCents: null,
+    suggestedSalePriceCents: null,
   };
 }
 

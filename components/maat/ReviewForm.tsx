@@ -5,6 +5,7 @@ import { Sparkles } from "lucide-react";
 import { AttributeField } from "@/components/maat/AttributeField";
 import { ConfirmGateButton } from "@/components/maat/ConfirmGateButton";
 import { PhotoGrid } from "@/components/maat/PhotoGrid";
+import { PriceMarginCard } from "@/components/maat/PriceMarginCard";
 import { useMaatEntry } from "@/lib/maat-store";
 import { getMeasureCategory, MEASURE_FIELDS, CATEGORY_LABELS } from "@/lib/measures";
 import type { CatalogEntry } from "@/types/maat";
@@ -32,7 +33,7 @@ const REQUIRED_LABELS: { key: "fronte" | "retro" | "brand"; text: string }[] = [
 
 export function ReviewForm() {
   const router = useRouter();
-  const { entry, confirmEntry } = useMaatEntry();
+  const { entry, confirmEntry, updatePrices } = useMaatEntry();
 
   const missing = ATTRIBUTE_ORDER.filter(({ key }) => entry.attributes[key] === "");
   const uncertain = ATTRIBUTE_ORDER.filter(({ key }) => UNCERTAIN_FIELDS.has(key) && entry.attributes[key] !== "");
@@ -49,7 +50,9 @@ export function ReviewForm() {
 
   function handleConfirm() {
     confirmEntry();
-    router.push(`/capi/${entry.id}`);
+    // Non /capi/${id}: quella rotta è intercettata come Sheet laterale da
+    // app/capi/@modal/(.)[id] — la schermata di conferma dedicata vive altrove.
+    router.push(`/capi/${entry.id}/confermato`);
   }
 
   const measureCategory = getMeasureCategory(entry.attributes.tipoCapo);
@@ -141,6 +144,15 @@ export function ReviewForm() {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Prezzo & margine */}
+      <div className="mx-4 mt-6 sm:mx-0">
+        <PriceMarginCard
+          purchasePriceCents={entry.purchasePriceCents}
+          suggestedSalePriceCents={entry.suggestedSalePriceCents}
+          onChange={updatePrices}
+        />
       </div>
 
       {/* Sticky confirm gate — nascosto a conferma avvenuta: non c'è più nulla da confermare. */}

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowRight, ChevronRight } from "lucide-react";
 import { StatusBadge } from "@/components/maat/StatusBadge";
 import { actionQueue } from "@/lib/catalog-stats";
+import { isActionQueueUrgent } from "@/lib/urgency";
 
 /** Coda di lavorazione: bozze da revisionare e capi salvati in locale. */
 export function AzioniWidget() {
@@ -18,6 +19,9 @@ export function AzioniWidget() {
             Azioni richieste
           </p>
           <span className="font-mono text-xs text-muted-foreground">{queue.length}</span>
+          {isActionQueueUrgent(queue, new Date().toISOString()) ? (
+            <span aria-label="Capi in coda da tempo" className="size-1.5 shrink-0 rounded-full bg-destructive" />
+          ) : null}
         </div>
         <Link
           href="/capi"

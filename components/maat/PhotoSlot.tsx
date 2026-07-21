@@ -10,7 +10,9 @@ const LABEL_TEXT: Record<PhotoLabel, string> = {
   brand: "Brand",
   taglia: "Taglia",
   materiale: "Materiale",
+  difetti: "Difetti",
   extra: "Extra",
+  aruco: "ArUco",
 };
 
 interface PhotoSlotProps {

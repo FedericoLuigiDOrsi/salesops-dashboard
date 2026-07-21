@@ -36,7 +36,7 @@ import { cn } from "@/lib/utils";
 type SlotDef = {
   text: string;
   icon: LucideIcon;
-  photoLabel: PhotoLabel | null; // null = non ancora mappato nel modello dati (difetti/aruco)
+  photoLabel: PhotoLabel;
 };
 
 const SLOTS: SlotDef[] = [
@@ -45,9 +45,9 @@ const SLOTS: SlotDef[] = [
   { text: "Brand", icon: Tag, photoLabel: "brand" },
   { text: "Taglia", icon: Ruler, photoLabel: "taglia" },
   { text: "Materiale", icon: Layers, photoLabel: "materiale" },
-  { text: "Difetti", icon: Search, photoLabel: null },
+  { text: "Difetti", icon: Search, photoLabel: "difetti" },
   { text: "Extra", icon: Images, photoLabel: "extra" },
-  { text: "ArUco", icon: ScanLine, photoLabel: null },
+  { text: "ArUco", icon: ScanLine, photoLabel: "aruco" },
 ];
 
 const N = SLOTS.length;
@@ -87,7 +87,7 @@ export function PhotoCaptureMobile() {
   function complete() {
     if (!ready) return;
     SLOTS.forEach((slot, i) => {
-      if (!done[i] || !slot.photoLabel) return;
+      if (!done[i]) return;
       updatePhoto(slot.photoLabel, {
         id: `cam-${String(i + 1).padStart(2, "0")}`,
         label: slot.photoLabel,

@@ -7,7 +7,9 @@ const SLOT_ORDER: { label: PhotoLabel; required: boolean }[] = [
   { label: "brand", required: true },
   { label: "taglia", required: false },
   { label: "materiale", required: false },
+  { label: "difetti", required: false },
   { label: "extra", required: false },
+  { label: "aruco", required: false },
 ];
 
 interface PhotoGridProps {
@@ -18,7 +20,7 @@ interface PhotoGridProps {
 
 export function PhotoGrid({ photos, onCapture, onRetake }: PhotoGridProps) {
   return (
-    <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
+    <div className="grid grid-cols-4 gap-3">
       {SLOT_ORDER.map(({ label, required }) => (
         <PhotoSlot
           key={label}

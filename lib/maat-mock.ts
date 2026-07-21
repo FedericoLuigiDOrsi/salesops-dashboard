@@ -130,64 +130,42 @@ export const mockCatalogEntries: CatalogEntry[] = [
   }),
 ];
 
-export const mockCatalogEntry: CatalogEntry = {
-  id: "b-09",
-  sku: null,
-  status: "to_be_reviewed",
-  accountId: "acc-federico",
-  createdAt: "2026-07-04T09:12:00.000Z",
-  attributes: {
-    brand: "Stone Island",
-    tipoCapo: "Giacca",
-    colore: "Verde oliva",
-    taglia: "L",
-    materiale: "Nylon Ripstop",
-    genere: "Uomo",
-    condizioni: "",
-    difetti: "Nessuno visibile",
-    stile: "Sportswear",
-    stagionalita: "Mezza stagione",
-  },
-  measures: {
-    spalle: 46,
-    lunghezzaTotale: 71,
-    lunghezzaManica: 64,
-    larghezzaManica: 18,
-    larghezzaTorace: 58,
-    larghezzaVita: 54,
-  },
-  photos: [
-    {
-      id: "p1",
-      label: "fronte",
-      url: "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=600",
-      photoType: "standard",
-      state: "validated",
-      createdAt: "2026-07-04T09:10:00.000Z",
+/**
+ * Entry vuota per un id senza corrispondenza nel catalogo mock — copre il
+ * flusso "Crea capo" (`/capi/nuovo/...`), dove l'id non esiste ancora.
+ * L'id passato viene preservato: prima si sostituiva silenziosamente con
+ * un mock esistente (b-09), disallineando la storage key della sessione di
+ * scatto (id reale dell'URL) dall'entry.id mostrato/navigato dopo, per cui
+ * le foto appena scattate finivano su una chiave diversa da quella letta
+ * dalla pagina di review.
+ */
+function emptyEntry(id: string): CatalogEntry {
+  return {
+    id,
+    sku: null,
+    status: "local_draft",
+    accountId: "acc-federico",
+    createdAt: new Date().toISOString(),
+    attributes: {
+      brand: "",
+      tipoCapo: "",
+      colore: "",
+      taglia: "",
+      materiale: "",
+      genere: "",
+      condizioni: "",
+      difetti: "",
+      stile: "",
+      stagionalita: "",
     },
-    {
-      id: "p2",
-      label: "retro",
-      url: "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600",
-      photoType: "standard",
-      state: "validated",
-      createdAt: "2026-07-04T09:10:30.000Z",
-    },
-    {
-      id: "p3",
-      label: "brand",
-      url: null,
-      photoType: "standard",
-      state: "rejected",
-      qualityFlags: ["Sfocata, riprova"],
-      createdAt: "2026-07-04T09:11:00.000Z",
-    },
-  ],
-};
+    measures: {},
+    photos: [],
+  };
+}
 
-/** Lookup per id con fallback al mock canonico. Usato dalla route piena `[id]` e dall'overlay intercettato. */
+/** Lookup per id con fallback a un'entry vuota (nuovo capo). Usato dalla route piena `[id]` e dall'overlay intercettato. */
 export function getCatalogEntry(id: string): CatalogEntry {
-  return mockCatalogEntries.find((e) => e.id === id) ?? mockCatalogEntry;
+  return mockCatalogEntries.find((e) => e.id === id) ?? emptyEntry(id);
 }
 
 export const mockNotifications: Notification[] = [

@@ -86,6 +86,12 @@ function matchesBase(
   return true;
 }
 
+function FieldLabel({ children }: { children: ReactNode }) {
+  return (
+    <div className="mb-0.5 font-mono text-[9px] uppercase tracking-wide text-muted-foreground/55">{children}</div>
+  );
+}
+
 export function InventoryView() {
   const router = useRouter();
   const [search, setSearch] = useState("");
@@ -363,29 +369,59 @@ export function InventoryView() {
           </Table>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
           {filtered.map((item) => (
             <Link
               key={item.id}
               href={`/capi/${item.id}`}
-              className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4 transition-colors hover:border-foreground/25"
+              className="flex overflow-hidden rounded-xl border border-border bg-card transition-colors hover:border-foreground/25"
             >
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <div className="truncate font-medium">{item.brand}</div>
-                  <div className="truncate text-xs text-muted-foreground">{item.tipoCapo}</div>
+              {/* foto laterale a piena altezza */}
+              <div className="flex w-[110px] shrink-0 items-center justify-center border-r border-border bg-background">
+                {item.photoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={item.photoUrl} alt="" className="size-full object-cover" />
+                ) : (
+                  <span className="text-center font-mono text-[9px] uppercase tracking-wide text-muted-foreground/50">
+                    Foto
+                    <br />
+                    fronte
+                  </span>
+                )}
+              </div>
+
+              {/* campi in griglia label/valore a due colonne */}
+              <div className="grid flex-1 grid-cols-2 gap-x-3 gap-y-2 p-4">
+                <div className="col-span-2">
+                  <FieldLabel>Capo</FieldLabel>
+                  <div className="truncate text-[15px] font-semibold">
+                    {item.brand} — {item.tipoCapo}
+                  </div>
                 </div>
-                <Badge className={cn("shrink-0 text-[11px]", STATUS_CLASS[item.status])}>{STATUS_LABEL[item.status]}</Badge>
-              </div>
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>
-                  {item.category} · {item.size}
-                </span>
-                <span className="font-mono text-sm font-semibold text-foreground">{formatEUR(item.priceCents)}</span>
-              </div>
-              <div className="mt-1 flex items-center justify-between gap-2 border-t border-border pt-2">
-                <span className="font-mono text-[11px] text-muted-foreground">{item.sku}</span>
-                <PlatformPills platforms={item.platforms} />
+                <div>
+                  <FieldLabel>SKU</FieldLabel>
+                  <div className="font-mono text-xs text-muted-foreground">{item.sku}</div>
+                </div>
+                <div>
+                  <FieldLabel>Stato</FieldLabel>
+                  <Badge className={cn("text-[11px]", STATUS_CLASS[item.status])}>{STATUS_LABEL[item.status]}</Badge>
+                </div>
+                <div>
+                  <FieldLabel>Categoria</FieldLabel>
+                  <div className="text-sm text-muted-foreground">{item.category}</div>
+                </div>
+                <div>
+                  <FieldLabel>Taglia</FieldLabel>
+                  <div className="text-sm text-muted-foreground">{item.size}</div>
+                </div>
+                <div>
+                  <FieldLabel>Prezzo</FieldLabel>
+                  <div className="font-mono text-sm font-semibold">{formatEUR(item.priceCents)}</div>
+                </div>
+                <div>
+                  <FieldLabel>Piattaforme</FieldLabel>
+                  <PlatformPills platforms={item.platforms} />
+                </div>
               </div>
             </Link>
           ))}

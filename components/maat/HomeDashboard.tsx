@@ -186,7 +186,7 @@ function HomeDashboardInner() {
       ) : (
         <DndContext id="home-widgets" sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={layout} strategy={rectSortingStrategy}>
-            <div className="mt-6 grid grid-flow-dense grid-cols-1 gap-6 lg:grid-cols-4 lg:auto-rows-[180px]">
+            <div className="mt-6 grid grid-flow-dense grid-cols-1 gap-6 lg:grid-cols-4 lg:[grid-auto-rows:minmax(180px,auto)]">
               {layout.map((key) => (
                 <SortableWidget key={key} widgetKey={key} editing={editing} />
               ))}

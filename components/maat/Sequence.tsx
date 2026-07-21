@@ -7,9 +7,11 @@ export interface SequenceStep {
 
 interface SequenceProps {
   steps: SequenceStep[];
+  /** Contesto sfondo scuro (es. pannelli PanelShell `dark`) — schiarisce dot todo/label. */
+  dark?: boolean;
 }
 
-export function Sequence({ steps }: SequenceProps) {
+export function Sequence({ steps, dark }: SequenceProps) {
   const currentIndex = steps.findIndex((s) => s.state === "current");
   const activeIndex = currentIndex >= 0 ? currentIndex : 0;
   const activeStep = steps[activeIndex];
@@ -24,12 +26,12 @@ export function Sequence({ steps }: SequenceProps) {
               "h-1.5 rounded-full transition-all",
               step.state === "done" && "w-1.5 bg-[#00804C]",
               step.state === "current" && "w-4 bg-primary",
-              step.state === "todo" && "w-1.5 bg-white/25"
+              step.state === "todo" && (dark ? "w-1.5 bg-white/25" : "w-1.5 bg-foreground/15")
             )}
           />
         ))}
       </div>
-      <span className="font-mono text-xs uppercase tracking-wide text-white/70">
+      <span className={cn("font-mono text-xs uppercase tracking-wide", dark ? "text-white/70" : "text-muted-foreground")}>
         {activeIndex + 1} / {steps.length} · {activeStep?.label}
       </span>
     </div>

@@ -51,6 +51,7 @@ export function NotificationInbox() {
 
   const visibleGroups = notificationGroups.filter((g) => filter === "tutte" || g.key === filter);
   const activeOffer = items.find((n): n is OfferNotification => n.type === "offerta" && n.id === activeOfferId) ?? null;
+  const offerItems = items.filter((n): n is OfferNotification => n.type === "offerta");
 
   function handleResolve(id: string, status: OfferStatus, counterCents?: number) {
     setOfferOverrides((prev) => ({ ...prev, [id]: { status, counterCents } }));
@@ -126,7 +127,7 @@ export function NotificationInbox() {
 
       <OfferPopup offer={activeOffer} open={activeOffer !== null} onOpenChange={(open) => !open && setActiveOfferId(null)} onResolve={handleResolve} />
       <ArticlePreview sku={previewSku} open={previewSku !== null} onOpenChange={(open) => !open && setPreviewSku(null)} />
-      <ActivityModal open={activityOpen} onOpenChange={setActivityOpen} />
+      <ActivityModal open={activityOpen} onOpenChange={setActivityOpen} offers={offerItems} />
     </div>
   );
 }

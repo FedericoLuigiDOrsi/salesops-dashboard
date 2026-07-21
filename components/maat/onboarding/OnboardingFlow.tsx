@@ -4,12 +4,28 @@ import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Camera, Check, ChevronLeft, Lock, Play, Shirt, Sparkles, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Sequence, type SequenceStep } from "@/components/maat/Sequence";
 import { cn } from "@/lib/utils";
 
 // Sequenza prodotto (welcome→bozza) porta a /registrazione reale, mai a pannelli auth finti.
 // "browser"/"channels"/"done" sono raggiunti solo dopo la registrazione vera, via ?step=browser.
 type Step = "welcome" | "platforms" | "scheda" | "camera" | "bozza" | "browser" | "channels" | "done";
 const STEPS: Step[] = ["welcome", "platforms", "scheda", "camera", "bozza", "browser", "channels", "done"];
+
+// Label per l'indicatore Sequence — mostrato solo negli step "modulo" del
+// wizard (platforms/scheda/bozza/browser/channels): welcome è hero senza
+// progresso ancora iniziato, camera è full-bleed (ha già "FRONTE" come cue),
+// done è lo stato di completamento, non un passo da tracciare.
+const STEP_LABELS: Record<Step, string> = {
+  welcome: "Benvenuto",
+  platforms: "Piattaforme",
+  scheda: "Primo articolo",
+  camera: "Scatto",
+  bozza: "Bozza",
+  browser: "Browser",
+  channels: "Canali",
+  done: "Fatto",
+};
 
 function PanelShell({
   dark,
@@ -92,6 +108,12 @@ export function OnboardingFlow() {
   };
   const canGoBack = stack.length > 0;
 
+  const currentIndex = STEPS.indexOf(current);
+  const sequenceSteps: SequenceStep[] = STEPS.map((step, i) => ({
+    label: STEP_LABELS[step],
+    state: i < currentIndex ? "done" : i === currentIndex ? "current" : "todo",
+  }));
+
   const togglePlatform = (id: string) =>
     setSelectedPlatforms((prev) => {
       const next = new Set(prev);
@@ -146,7 +168,8 @@ export function OnboardingFlow() {
       return (
         <PanelShell className="gap-3">
           <BackButton onClick={back} />
-          <h2 className="text-[25px] font-extrabold leading-tight tracking-tight">
+          <Sequence steps={sequenceSteps} />
+          <h2 className="mt-2 text-[25px] font-extrabold leading-tight tracking-tight">
             Dove vendi
             <br />
             adesso?
@@ -196,7 +219,8 @@ export function OnboardingFlow() {
       return (
         <PanelShell className="gap-3">
           <BackButton onClick={back} />
-          <h2 className="text-[25px] font-extrabold leading-tight tracking-tight">
+          <Sequence steps={sequenceSteps} />
+          <h2 className="mt-2 text-[25px] font-extrabold leading-tight tracking-tight">
             Il tuo primo
             <br />
             articolo
@@ -267,7 +291,8 @@ export function OnboardingFlow() {
       return (
         <PanelShell className="gap-3">
           <BackButton onClick={back} />
-          <p className="font-mono text-[10.5px] font-semibold uppercase tracking-wide text-muted-foreground">Articolo pronto</p>
+          <Sequence steps={sequenceSteps} />
+          <p className="mt-2 font-mono text-[10.5px] font-semibold uppercase tracking-wide text-muted-foreground">Articolo pronto</p>
           <h2 className="text-[25px] font-extrabold leading-tight tracking-tight">
             Il tuo capo
             <br />è pronto
@@ -318,7 +343,8 @@ export function OnboardingFlow() {
       return (
         <PanelShell dark className="gap-3">
           {canGoBack && <BackButton dark onClick={back} />}
-          <p className="font-mono text-[10.5px] font-semibold uppercase tracking-wide text-background/60">Collega il browser · 2 minuti</p>
+          <Sequence steps={sequenceSteps} dark />
+          <p className="mt-2 font-mono text-[10.5px] font-semibold uppercase tracking-wide text-background/60">Collega il browser · 2 minuti</p>
           <h2 className="text-[25px] font-extrabold leading-tight tracking-tight">
             Collega il
             <br />
@@ -352,7 +378,8 @@ export function OnboardingFlow() {
       return (
         <PanelShell dark className="gap-3">
           <BackButton dark onClick={back} />
-          <p className="font-mono text-[10.5px] font-semibold uppercase tracking-wide text-background/60">Collega i canali</p>
+          <Sequence steps={sequenceSteps} dark />
+          <p className="mt-2 font-mono text-[10.5px] font-semibold uppercase tracking-wide text-background/60">Collega i canali</p>
           <h2 className="text-[25px] font-extrabold leading-tight tracking-tight">
             Collega i
             <br />

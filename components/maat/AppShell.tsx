@@ -12,12 +12,20 @@ import {
   Truck,
   Plus,
   ChevronLeft,
+  Menu,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNotifications } from "@/lib/notifications-store";
 import { useSettings } from "@/lib/settings-store";
 import { mockUserProfile } from "@/lib/tenant-mock";
 import { SettingsModal } from "@/components/maat/SettingsModal";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerClose,
+} from "@/components/ui/drawer";
 
 const NAV_ITEMS = [
   { href: "/", label: "Home", icon: Home },
@@ -42,6 +50,11 @@ export function AppShell({ children }: AppShellProps) {
   const { unreadCount } = useNotifications();
   const { open: openSettings } = useSettings();
   const [collapsed, setCollapsed] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+
+  const PRIMARY_MOBILE = ["/", "/inventario", "/notifiche"];
+  const overflowItems = NAV_ITEMS.filter((item) => !PRIMARY_MOBILE.includes(item.href));
+  const isOverflowActive = overflowItems.some((item) => pathname.startsWith(item.href));
 
   useEffect(() => {
     setCollapsed(window.localStorage.getItem(RAIL_COLLAPSED_KEY) === "1");
@@ -169,10 +182,12 @@ export function AppShell({ children }: AppShellProps) {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-background px-4 md:hidden">
-          <span className="flex size-7 shrink-0 items-center justify-center rounded-[8px] bg-[#DBE64C] font-mono text-xs font-extrabold text-[#001F3F]">
-            M
-          </span>
-          <span className="font-mono text-sm font-semibold uppercase tracking-wide">MAAT</span>
+          <Link href="/" className="flex items-center gap-2" aria-label="Home">
+            <span className="flex size-7 shrink-0 items-center justify-center rounded-[8px] bg-[#DBE64C] font-mono text-xs font-extrabold text-[#001F3F]">
+              M
+            </span>
+            <span className="font-mono text-sm font-semibold uppercase tracking-wide">MAAT</span>
+          </Link>
           <span className="flex-1" />
           <Link
             href="/notifiche"
@@ -202,13 +217,20 @@ export function AppShell({ children }: AppShellProps) {
           aria-label="Navigazione principale"
         >
           <Link
+            href="/"
+            className="flex flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium text-muted-foreground data-[active=true]:text-primary"
+            data-active={pathname === "/"}
+          >
+            <Home className="size-5" /> Home
+          </Link>
+          <Link
             href="/inventario"
             className="flex flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium text-muted-foreground data-[active=true]:text-primary"
             data-active={pathname.startsWith("/inventario")}
           >
             <Package className="size-5" /> Inventario
           </Link>
-          <div className="flex w-[76px] flex-none items-start justify-center">
+          <div className="flex w-[64px] flex-none items-start justify-center">
             <Link
               href={CREA_CAPO_HREF}
               aria-label="Crea capo"
@@ -224,8 +246,52 @@ export function AppShell({ children }: AppShellProps) {
           >
             <Bell className="size-5" /> Notifiche
           </Link>
+          <button
+            type="button"
+            onClick={() => setMoreOpen(true)}
+            aria-label="Altre sezioni"
+            className="flex flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium text-muted-foreground data-[active=true]:text-primary"
+            data-active={isOverflowActive}
+          >
+            <Menu className="size-5" /> Altro
+          </button>
         </nav>
       </div>
+
+      <Drawer open={moreOpen} onOpenChange={setMoreOpen}>
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle>Altre sezioni</DrawerTitle>
+          </DrawerHeader>
+          <nav className="flex flex-col gap-1 px-4 pb-6">
+            {overflowItems.map((item) => {
+              const { href, label, icon: Icon } = item;
+              const badge =
+                "badgeFromNotifications" in item && item.badgeFromNotifications ? unreadCount : undefined;
+              const isActive = pathname.startsWith(href);
+              return (
+                <DrawerClose asChild key={label}>
+                  <Link
+                    href={href}
+                    className={cn(
+                      "flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-colors",
+                      isActive ? "bg-accent text-foreground" : "text-foreground/80 hover:bg-accent"
+                    )}
+                  >
+                    <Icon className="size-5 shrink-0" />
+                    {label}
+                    {badge ? (
+                      <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 font-mono text-[10px] font-semibold text-primary-foreground">
+                        {badge}
+                      </span>
+                    ) : null}
+                  </Link>
+                </DrawerClose>
+              );
+            })}
+          </nav>
+        </DrawerContent>
+      </Drawer>
 
       <SettingsModal />
     </div>

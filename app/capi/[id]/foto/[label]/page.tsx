@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { PhotoCaptureFlow } from "@/components/maat/PhotoCaptureFlow";
 import type { PhotoLabel } from "@/types/maat";
 
-const VALID_LABELS: readonly string[] = ["fronte", "retro", "brand", "taglia", "materiale", "extra"];
+const VALID_LABELS: readonly string[] = ["fronte", "retro", "brand", "taglia", "materiale", "difetti", "extra", "aruco"];
 
 export default async function PhotoCapturePage({
   params,

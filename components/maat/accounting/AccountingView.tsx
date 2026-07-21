@@ -217,7 +217,7 @@ export function AccountingView() {
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Wallet className="size-3.5" /> Ricavi settimana
             </div>
-            <div className="mt-1 text-2xl font-bold tabular-nums">{formatEUR(weeklyKpi.revenueCents)}</div>
+            <div className="mt-1 font-mono text-2xl font-bold tabular-nums">{formatEUR(weeklyKpi.revenueCents)}</div>
             <div className="mt-1 flex items-center gap-2 text-xs">
               <span className="flex items-center gap-1 font-semibold text-[var(--chart-2)]">
                 <TrendingUp className="size-3" /> +{weeklyKpi.revenueDeltaPct}%
@@ -515,7 +515,7 @@ function KpiTile({
       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
         <Icon className="size-3.5" /> {label}
       </div>
-      <div className="mt-1 text-2xl font-bold tabular-nums">{value}</div>
+      <div className="mt-1 font-mono text-2xl font-bold tabular-nums">{value}</div>
       <div className="mt-1 flex items-center gap-2 text-xs">
         {deltaPct !== undefined && (
           <span className="flex items-center gap-1 font-semibold text-[var(--chart-2)]">

@@ -47,7 +47,7 @@ interface CatalogEntryDetailProps {
 
 export function CatalogEntryDetail({ variant = "page" }: CatalogEntryDetailProps) {
   const router = useRouter();
-  const { entry } = useMaatEntry();
+  const { entry, confirmEntry } = useMaatEntry();
   const isPanel = variant === "panel";
   const pad = isPanel ? "px-5" : "px-4 sm:px-0";
   const missingLabels = REQUIRED_LABELS.filter(({ key }) => {
@@ -55,6 +55,15 @@ export function CatalogEntryDetail({ variant = "page" }: CatalogEntryDetailProps
     return !photo || photo.state !== "validated";
   }).map((l) => l.text);
   const gateEnabled = missingLabels.length === 0;
+
+  function handleConfirm() {
+    confirmEntry();
+    if (isPanel) {
+      router.back();
+    } else {
+      router.push("/capi");
+    }
+  }
 
   const heroPhoto = entry.photos.find((p) => p.label === "fronte");
   const measureCategory = getMeasureCategory(entry.attributes.tipoCapo);
@@ -142,18 +151,20 @@ export function CatalogEntryDetail({ variant = "page" }: CatalogEntryDetailProps
         <span className="font-mono">{entry.accountId}</span>
       </div>
 
-      {/* Confirm gate — fixed a fondo viewport nella pagina, sticky dentro il pannello */}
-      {isPanel ? (
-        <div className="sticky bottom-0 z-10 mt-auto">
-          <ConfirmGateButton enabled={gateEnabled} missingLabels={missingLabels} />
-        </div>
-      ) : (
-        <div className="fixed inset-x-0 bottom-0">
-          <div className="mx-auto max-w-3xl">
-            <ConfirmGateButton enabled={gateEnabled} missingLabels={missingLabels} />
+      {/* Confirm gate — fixed a fondo viewport nella pagina, sticky dentro il pannello.
+          Nascosto a conferma avvenuta: non c'è più nulla da confermare. */}
+      {entry.status !== "available" &&
+        (isPanel ? (
+          <div className="sticky bottom-0 z-10 mt-auto">
+            <ConfirmGateButton enabled={gateEnabled} missingLabels={missingLabels} onConfirm={handleConfirm} />
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="fixed inset-x-0 bottom-0">
+            <div className="mx-auto max-w-3xl">
+              <ConfirmGateButton enabled={gateEnabled} missingLabels={missingLabels} onConfirm={handleConfirm} />
+            </div>
+          </div>
+        ))}
     </div>
   );
 }

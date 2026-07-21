@@ -1,6 +1,6 @@
 export type CatalogEntryStatus = "local_draft" | "to_be_reviewed" | "available";
 
-export type PhotoLabel = "fronte" | "retro" | "brand" | "taglia" | "materiale" | "extra";
+export type PhotoLabel = "fronte" | "retro" | "brand" | "taglia" | "materiale" | "difetti" | "extra" | "aruco";
 export type PhotoState = "captured" | "processing" | "validated" | "rejected";
 export type PhotoType = "standard" | "aruco";
 

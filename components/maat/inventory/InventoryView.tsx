@@ -10,12 +10,11 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn, formatEUR } from "@/lib/utils";
-import { MARKETPLACE_LABELS, type Marketplace } from "@/types/maat";
-import { inventoryItems, type InventoryItem, type InventoryStatus, type PlatformListingState } from "@/lib/inventory-mock";
+import { MARKETPLACE_LABELS } from "@/types/maat";
+import { inventoryItems, type InventoryItem, type InventoryStatus } from "@/lib/inventory-mock";
 import { AutomazioniDrawer } from "@/components/maat/inventory/AutomazioniDrawer";
-
-type PlatformKey = Extract<Marketplace, "vinted" | "grailed" | "depop">;
-const PLATFORM_KEYS: PlatformKey[] = ["vinted", "grailed", "depop"];
+import { PLATFORM_KEYS, type PlatformKey } from "@/lib/inventory-columns";
+import { PlatformPills } from "@/components/maat/inventory/PlatformPills";
 
 type ViewMode = "table" | "grid";
 type StatusFilter = "all" | InventoryStatus;
@@ -52,13 +51,6 @@ const STATUS_CLASS: Record<InventoryStatus, string> = {
   venduto: "border-transparent bg-muted text-muted-foreground",
 };
 
-const PLATFORM_STATE_CLASS: Record<NonNullable<PlatformListingState>, string> = {
-  active: "bg-[color-mix(in_oklab,var(--chart-2)_16%,transparent)] text-[var(--chart-2)]",
-  pending: "bg-primary/20 text-[#7a7000]",
-  delisted: "bg-muted text-muted-foreground",
-  sold: "bg-foreground text-background",
-};
-
 function matchesPrice(cents: number, band: PriceBand) {
   const eur = cents / 100;
   switch (band) {
@@ -90,33 +82,6 @@ function matchesBase(
   if (!matchesPrice(item.priceCents, price)) return false;
   if (platform !== "all" && item.platforms[platform] === null) return false;
   return true;
-}
-
-function PlatformPills({ platforms }: { platforms: InventoryItem["platforms"] }) {
-  const listed = PLATFORM_KEYS.filter((key) => platforms[key] !== null);
-  if (listed.length === 0) {
-    return <span className="text-xs text-muted-foreground">—</span>;
-  }
-  return (
-    <div className="flex flex-wrap gap-1">
-      {listed.map((key) => {
-        const state = platforms[key];
-        if (!state) return null;
-        return (
-          <span
-            key={key}
-            title={`${MARKETPLACE_LABELS[key]} · ${state}`}
-            className={cn(
-              "inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 font-mono text-[10px] font-semibold",
-              PLATFORM_STATE_CLASS[state]
-            )}
-          >
-            {MARKETPLACE_LABELS[key][0]}
-          </span>
-        );
-      })}
-    </div>
-  );
 }
 
 export function InventoryView() {

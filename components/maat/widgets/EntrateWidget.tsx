@@ -6,15 +6,21 @@ import { Bar, BarChart, XAxis } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { formatEUR } from "@/lib/utils";
 import { weeklyKpi, weeklyRevenue } from "@/lib/accounting-mock";
+import { isRevenueDown } from "@/lib/urgency";
 
 /** Andamento ricavi delle ultime settimane, vista compatta della Contabilità. */
 export function EntrateWidget() {
   return (
     <div>
       <div className="mb-2 flex items-center justify-between">
-        <p className="font-mono text-[11px] font-semibold uppercase tracking-[.12em] text-muted-foreground/70">
-          Entrate
-        </p>
+        <div className="flex items-center gap-2">
+          <p className="font-mono text-[11px] font-semibold uppercase tracking-[.12em] text-muted-foreground/70">
+            Entrate
+          </p>
+          {isRevenueDown(weeklyKpi.revenueDeltaPct) ? (
+            <span aria-label="Ricavi in calo" className="size-1.5 shrink-0 rounded-full bg-destructive" />
+          ) : null}
+        </div>
         <Link
           href="/contabilita"
           className="flex items-center gap-1 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground"

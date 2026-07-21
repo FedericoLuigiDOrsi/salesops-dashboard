@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LayoutGrid, List, Plus, Search, Zap } from "lucide-react";
@@ -13,8 +13,10 @@ import { cn, formatEUR } from "@/lib/utils";
 import { MARKETPLACE_LABELS } from "@/types/maat";
 import { inventoryItems, type InventoryItem, type InventoryStatus } from "@/lib/inventory-mock";
 import { AutomazioniDrawer } from "@/components/maat/inventory/AutomazioniDrawer";
-import { PLATFORM_KEYS, type PlatformKey } from "@/lib/inventory-columns";
+import { COLUMN_DEFS, PLATFORM_KEYS, type ColumnKey, type PlatformKey } from "@/lib/inventory-columns";
 import { PlatformPills } from "@/components/maat/inventory/PlatformPills";
+import { ColumnManager } from "@/components/maat/inventory/ColumnManager";
+import { useInventoryColumns } from "@/lib/inventory-columns-store";
 
 type ViewMode = "table" | "grid";
 type StatusFilter = "all" | InventoryStatus;
@@ -94,6 +96,7 @@ export function InventoryView() {
   const [price, setPrice] = useState<PriceBand>("all");
   const [platform, setPlatform] = useState<PlatformFilter>("all");
   const [automazioniOpen, setAutomazioniOpen] = useState(false);
+  const { visibleColumns } = useInventoryColumns();
 
   const baseFilters = { search, category, size, price, platform };
 
@@ -123,6 +126,35 @@ export function InventoryView() {
   }
 
   const hasActiveFilters = search !== "" || category !== "all" || size !== "all" || price !== "all" || platform !== "all";
+
+  const renderCell: Record<ColumnKey, (item: InventoryItem) => ReactNode> = {
+    capo: (item) => (
+      <div className="flex items-center gap-3">
+        <div className="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-background">
+          {item.photoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={item.photoUrl} alt="" className="size-full object-cover" />
+          ) : (
+            <span className="font-mono text-[7px] uppercase text-muted-foreground/50">Foto</span>
+          )}
+        </div>
+        <div className="min-w-0">
+          <div className="truncate font-medium">{item.brand}</div>
+          <div className="truncate text-xs text-muted-foreground">{item.tipoCapo}</div>
+        </div>
+      </div>
+    ),
+    stato: (item) => (
+      <Badge className={cn("text-[11px]", STATUS_CLASS[item.status])}>{STATUS_LABEL[item.status]}</Badge>
+    ),
+    sku: (item) => <span className="font-mono text-xs text-muted-foreground">{item.sku}</span>,
+    categoria: (item) => <span className="text-sm text-muted-foreground">{item.category}</span>,
+    taglia: (item) => <span className="text-sm text-muted-foreground">{item.size}</span>,
+    prezzo: (item) => <span className="font-mono text-sm">{formatEUR(item.priceCents)}</span>,
+    piattaforme: (item) => <PlatformPills platforms={item.platforms} />,
+  };
+
+  const orderedColumns: ColumnKey[] = ["capo", ...visibleColumns];
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 sm:px-8">
@@ -284,7 +316,7 @@ export function InventoryView() {
             </Select>
           </label>
 
-          {/* SLOT COLONNE — il Task 5 inserisce qui <ColumnManager /> (solo in vista Tabella) */}
+          {view === "table" && <ColumnManager />}
 
           {hasActiveFilters && (
             <Button variant="ghost" size="sm" onClick={resetFilters}>
@@ -305,13 +337,9 @@ export function InventoryView() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Capo</TableHead>
-                <TableHead>SKU</TableHead>
-                <TableHead>Categoria</TableHead>
-                <TableHead>Taglia</TableHead>
-                <TableHead>Prezzo</TableHead>
-                <TableHead>Stato</TableHead>
-                <TableHead>Piattaforme</TableHead>
+                {orderedColumns.map((col) => (
+                  <TableHead key={col}>{COLUMN_DEFS[col].label}</TableHead>
+                ))}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -326,20 +354,9 @@ export function InventoryView() {
                   }}
                   className="cursor-pointer hover:bg-muted/40"
                 >
-                  <TableCell>
-                    <div className="font-medium">{item.brand}</div>
-                    <div className="text-xs text-muted-foreground">{item.tipoCapo}</div>
-                  </TableCell>
-                  <TableCell className="font-mono text-xs text-muted-foreground">{item.sku}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{item.category}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{item.size}</TableCell>
-                  <TableCell className="font-mono text-sm">{formatEUR(item.priceCents)}</TableCell>
-                  <TableCell>
-                    <Badge className={cn("text-[11px]", STATUS_CLASS[item.status])}>{STATUS_LABEL[item.status]}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <PlatformPills platforms={item.platforms} />
-                  </TableCell>
+                  {orderedColumns.map((col) => (
+                    <TableCell key={col}>{renderCell[col](item)}</TableCell>
+                  ))}
                 </TableRow>
               ))}
             </TableBody>

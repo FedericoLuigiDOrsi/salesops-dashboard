@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ArrowRight, CloudOff, Sparkles } from "lucide-react";
 import { useNotifications } from "@/lib/notifications-store";
+import { hasUnreadNotifications } from "@/lib/urgency";
 
 function timeAgo(iso: string): string {
   const minutes = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
@@ -18,14 +19,19 @@ export function NotificheWidget() {
   const { notifications } = useNotifications();
   const recent = [...notifications]
     .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
-    .slice(0, 3);
+    .slice(0, 2);
 
   return (
     <div>
       <div className="mb-2 flex items-center justify-between">
-        <p className="font-mono text-[11px] font-semibold uppercase tracking-[.12em] text-muted-foreground/70">
-          Notifiche
-        </p>
+        <div className="flex items-center gap-2">
+          <p className="font-mono text-[11px] font-semibold uppercase tracking-[.12em] text-muted-foreground/70">
+            Notifiche
+          </p>
+          {hasUnreadNotifications(notifications) ? (
+            <span aria-label="Notifiche non lette" className="size-1.5 shrink-0 rounded-full bg-destructive" />
+          ) : null}
+        </div>
         <Link
           href="/notifiche"
           className="flex items-center gap-1 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground"
@@ -58,7 +64,7 @@ export function NotificheWidget() {
                   )}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[13px] font-medium leading-snug">{n.messaggio}</p>
+                  <p className="truncate text-[13px] font-medium leading-snug">{n.messaggio}</p>
                   <span className="font-mono text-xs text-muted-foreground">{timeAgo(n.timestamp)}</span>
                 </div>
                 {!n.letta && <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" />}

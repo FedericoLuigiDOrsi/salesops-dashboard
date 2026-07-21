@@ -3,9 +3,9 @@ import { cn } from "@/lib/utils";
 import type { CatalogEntryStatus } from "@/types/maat";
 
 const STATUS_CONFIG: Record<CatalogEntryStatus, { label: string; className: string }> = {
-  local_draft: { label: "Locale", className: "bg-[rgba(91,102,112,.14)] text-[#5B6670]" },
+  local_draft: { label: "Locale", className: "bg-neutral-soft text-muted-foreground" },
   to_be_reviewed: { label: "Bozza", className: "bg-primary text-primary-foreground" },
-  available: { label: "Confermato", className: "bg-[rgba(0,128,76,.12)] text-[#00804C]" },
+  available: { label: "Confermato", className: "bg-success-soft text-success" },
 };
 
 interface StatusBadgeProps {

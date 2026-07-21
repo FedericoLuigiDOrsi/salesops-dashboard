@@ -20,7 +20,7 @@
   --destructive-foreground: #FFFFFF;
   --border: rgba(0,31,63,.10);
   --input: rgba(0,31,63,.10);
-  --ring: #DBE64C;
+  --ring: #001F3F;
   --chart-1: #1E488F;
   --chart-2: #00804C;
   --chart-3: #DBE64C;
@@ -33,12 +33,25 @@
   --sidebar-accent: rgba(246,247,237,.08);
   --sidebar-accent-foreground: #F6F7ED;
   --sidebar-border: rgba(246,247,237,.12);
-  --sidebar-ring: #DBE64C;
+  --sidebar-ring: #F6F7ED;
   --success: #00804C;
   --danger: #E5484D;
   --status-locale: #5B6670;
   --status-bozza: #DBE64C;
   --status-confermato: #00804C;
+  /* v2.1 — token mancanti da maat-design-system.md §2.2/2.3, aggiunti in seguito a bulk review 2026-07-20 */
+  --accent-ink: #6E6E00;
+  --accent-pressed: #C8D43B;
+  --on-accent: #001F3F;
+  --accent-soft: rgba(219,230,76,.14);
+  --success-soft: rgba(0,128,76,.12);
+  --danger-soft: rgba(229,72,77,.08);
+  --neutral-soft: rgba(91,102,112,.12);
+  --surface-dark: #001F3F;
+  --text-on-dark: #F6F7ED;
+  --text-3: #9AA0A6;
+  --border-strong: rgba(0,31,63,.18);
+  --info: #1E488F;
 }
 
 @theme inline {
@@ -81,6 +94,18 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-success: var(--success);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-pressed: var(--accent-pressed);
+  --color-on-accent: var(--on-accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-success-soft: var(--success-soft);
+  --color-danger-soft: var(--danger-soft);
+  --color-neutral-soft: var(--neutral-soft);
+  --color-surface-dark: var(--surface-dark);
+  --color-text-on-dark: var(--text-on-dark);
+  --color-text-3: var(--text-3);
+  --color-border-strong: var(--border-strong);
+  --color-info: var(--info);
 }
 
 @layer base {

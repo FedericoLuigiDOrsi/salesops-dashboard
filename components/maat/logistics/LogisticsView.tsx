@@ -6,8 +6,8 @@ import { shipmentsByPlatform } from "@/lib/logistics-mock";
 
 const STATUS_CLASS: Record<ShipmentStatus, string> = {
   shipped: "border-transparent bg-muted text-muted-foreground",
-  in_transit: "border-transparent bg-primary/20 text-[#7a7000]",
-  out_for_delivery: "border-transparent bg-[color-mix(in_oklab,var(--chart-2)_16%,transparent)] text-[var(--chart-2)]",
+  in_transit: "border-transparent bg-neutral-soft text-muted-foreground",
+  out_for_delivery: "border-transparent bg-success-soft text-success",
 };
 
 export function LogisticsView() {

@@ -151,18 +151,20 @@ export function CatalogEntryDetail({ variant = "page" }: CatalogEntryDetailProps
         <span className="font-mono">{entry.accountId}</span>
       </div>
 
-      {/* Confirm gate — fixed a fondo viewport nella pagina, sticky dentro il pannello */}
-      {isPanel ? (
-        <div className="sticky bottom-0 z-10 mt-auto">
-          <ConfirmGateButton enabled={gateEnabled} missingLabels={missingLabels} onConfirm={handleConfirm} />
-        </div>
-      ) : (
-        <div className="fixed inset-x-0 bottom-0">
-          <div className="mx-auto max-w-3xl">
+      {/* Confirm gate — fixed a fondo viewport nella pagina, sticky dentro il pannello.
+          Nascosto a conferma avvenuta: non c'è più nulla da confermare. */}
+      {entry.status !== "available" &&
+        (isPanel ? (
+          <div className="sticky bottom-0 z-10 mt-auto">
             <ConfirmGateButton enabled={gateEnabled} missingLabels={missingLabels} onConfirm={handleConfirm} />
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="fixed inset-x-0 bottom-0">
+            <div className="mx-auto max-w-3xl">
+              <ConfirmGateButton enabled={gateEnabled} missingLabels={missingLabels} onConfirm={handleConfirm} />
+            </div>
+          </div>
+        ))}
     </div>
   );
 }

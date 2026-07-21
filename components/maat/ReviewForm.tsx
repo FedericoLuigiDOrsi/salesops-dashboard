@@ -143,12 +143,14 @@ export function ReviewForm() {
         </div>
       </div>
 
-      {/* Sticky confirm gate */}
-      <div className="fixed inset-x-0 bottom-0">
-        <div className="mx-auto max-w-3xl">
-          <ConfirmGateButton enabled={gateEnabled} missingLabels={missingLabels} onConfirm={handleConfirm} />
+      {/* Sticky confirm gate — nascosto a conferma avvenuta: non c'è più nulla da confermare. */}
+      {entry.status !== "available" && (
+        <div className="fixed inset-x-0 bottom-0">
+          <div className="mx-auto max-w-3xl">
+            <ConfirmGateButton enabled={gateEnabled} missingLabels={missingLabels} onConfirm={handleConfirm} />
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

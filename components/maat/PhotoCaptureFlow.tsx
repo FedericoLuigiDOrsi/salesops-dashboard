@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { PhotoHandoffDesktop } from "@/components/maat/photo/PhotoHandoffDesktop";
-import { PhotoRulloMobile } from "@/components/maat/photo/PhotoRulloMobile";
+import { PhotoCaptureMobile } from "@/components/maat/photo/PhotoCaptureMobile";
 import type { PhotoLabel } from "@/types/maat";
 
 interface PhotoCaptureFlowProps {
@@ -12,12 +12,12 @@ interface PhotoCaptureFlowProps {
 /**
  * Acquisizione foto responsive:
  * - desktop (≥768px) → handoff QR: scatta dal telefono / carica dal computer;
- * - mobile (<768px) → flusso a rullo con etichettatura per foto (input dell'AI).
+ * - mobile (<768px) → scatto diretto v2b (spina di dot, menu ad arco, tap-to-focus).
  *
  * La scelta avviene dopo il mount (matchMedia) per evitare hydration mismatch:
  * fino ad allora si mostra una superficie neutra a tutta pagina.
  */
-export function PhotoCaptureFlow({ initialLabel }: PhotoCaptureFlowProps) {
+export function PhotoCaptureFlow({ initialLabel: _initialLabel }: PhotoCaptureFlowProps) {
   const [isMobile, setIsMobile] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -32,5 +32,5 @@ export function PhotoCaptureFlow({ initialLabel }: PhotoCaptureFlowProps) {
     return <div className="fixed inset-0 z-50 bg-background" aria-hidden />;
   }
 
-  return isMobile ? <PhotoRulloMobile initialLabel={initialLabel} /> : <PhotoHandoffDesktop />;
+  return isMobile ? <PhotoCaptureMobile /> : <PhotoHandoffDesktop />;
 }

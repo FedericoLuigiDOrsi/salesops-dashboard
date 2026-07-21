@@ -32,7 +32,7 @@ const REQUIRED_LABELS: { key: "fronte" | "retro" | "brand"; text: string }[] = [
 
 export function ReviewForm() {
   const router = useRouter();
-  const { entry } = useMaatEntry();
+  const { entry, confirmEntry } = useMaatEntry();
 
   const missing = ATTRIBUTE_ORDER.filter(({ key }) => entry.attributes[key] === "");
   const uncertain = ATTRIBUTE_ORDER.filter(({ key }) => UNCERTAIN_FIELDS.has(key) && entry.attributes[key] !== "");
@@ -46,6 +46,11 @@ export function ReviewForm() {
     return !photo || photo.state !== "validated";
   }).map((l) => l.text);
   const gateEnabled = missingLabels.length === 0;
+
+  function handleConfirm() {
+    confirmEntry();
+    router.push(`/capi/${entry.id}`);
+  }
 
   const measureCategory = getMeasureCategory(entry.attributes.tipoCapo);
   const measureFields = MEASURE_FIELDS[measureCategory];
@@ -141,7 +146,7 @@ export function ReviewForm() {
       {/* Sticky confirm gate */}
       <div className="fixed inset-x-0 bottom-0">
         <div className="mx-auto max-w-3xl">
-          <ConfirmGateButton enabled={gateEnabled} missingLabels={missingLabels} />
+          <ConfirmGateButton enabled={gateEnabled} missingLabels={missingLabels} onConfirm={handleConfirm} />
         </div>
       </div>
     </div>

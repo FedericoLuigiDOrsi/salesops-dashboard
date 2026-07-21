@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowRight, Check, X } from "lucide-react";
 import { cn, formatEUR } from "@/lib/utils";
 import { offers as initialOffers } from "@/lib/activity-mock";
+import { hasUrgentOffer } from "@/lib/urgency";
 import type { Offer } from "@/types/maat";
 
 /** Toast minimale e autonomo: niente provider esterni da montare in layout. */
@@ -40,6 +41,9 @@ export function OfferteWidget() {
             Offerte
           </p>
           <span className="font-mono text-xs text-muted-foreground">{offers.length}</span>
+          {hasUrgentOffer(offers) ? (
+            <span aria-label="Offerte in attesa da tempo" className="size-1.5 shrink-0 rounded-full bg-destructive" />
+          ) : null}
         </div>
         <Link
           href="/notifiche"

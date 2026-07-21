@@ -2,17 +2,21 @@
 
 import { Coins, Tag } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { sales, offers } from "@/lib/activity-mock";
+import { sales } from "@/lib/activity-mock";
+import type { OfferNotification } from "@/lib/notifications-mock";
 import { MARKETPLACE_LABELS } from "@/types/maat";
 import { cn, formatEUR } from "@/lib/utils";
 
 // Modale "Attività recente" — mirror di public/mobile/maat-shell-account.html
-// righe 2812-2822 (markup) + 3784-3811 (renderActm). Vendite + offerte lette
-// direttamente da lib/activity-mock, indipendenti dallo stato locale della inbox.
+// righe 2812-2822 (markup) + 3784-3811 (renderActm). Le offerte arrivano da
+// NotificationInbox già sovrapposte a offerOverrides (accetta/rifiuta), non
+// più lette raw da lib/activity-mock — altrimenti risultavano sempre "pending"
+// qui anche dopo averle risolte nella inbox (bug Inbox↔modal, review 20/07).
 
 interface ActivityModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  offers: OfferNotification[];
 }
 
 const STATUS_BADGE: Record<"accepted" | "rejected" | "counter", { label: string; className: string }> = {
@@ -21,7 +25,7 @@ const STATUS_BADGE: Record<"accepted" | "rejected" | "counter", { label: string;
   counter: { label: "Controfferta inviata", className: "bg-primary/25 text-[#7a7000]" },
 };
 
-export function ActivityModal({ open, onOpenChange }: ActivityModalProps) {
+export function ActivityModal({ open, onOpenChange, offers }: ActivityModalProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[82vh] max-w-md overflow-y-auto">
@@ -77,9 +81,11 @@ export function ActivityModal({ open, onOpenChange }: ActivityModalProps) {
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-1.5 text-[13px] font-medium">
                       {o.itemLabel}
-                      <span className="rounded bg-foreground/[.06] px-1.5 py-0.5 font-mono text-[10px] font-semibold uppercase text-muted-foreground">
-                        {MARKETPLACE_LABELS[o.marketplace]}
-                      </span>
+                      {o.marketplace && (
+                        <span className="rounded bg-foreground/[.06] px-1.5 py-0.5 font-mono text-[10px] font-semibold uppercase text-muted-foreground">
+                          {MARKETPLACE_LABELS[o.marketplace]}
+                        </span>
+                      )}
                       {badge && (
                         <span className={cn("rounded-full px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wide", badge.className)}>
                           {badge.label}

@@ -61,7 +61,11 @@ Nota implementativa: Panoramica dentro il suo blocco 2×2 contiene a sua volta l
 
 Scartate due alternative più semplici (righe per fascia; altezza-sola con larghezza sempre metà/intera) perché "troppo poco bento" — Federico ha confermato la mosaic a span misti nonostante il costo implementativo più alto.
 
-**Vincolo esplicito**: nessun widget scende sotto mezza larghezza su desktop — un widget-lista (Offerte, Vendite, Azioni, Notifiche) a 1/4 di colonna è troppo stretto per contenuto reale (SKU + prezzo, badge stato). Il layout mosaic deve rispettare questo minimo.
+**Correzione post-approvazione (emersa scrivendo il piano di implementazione)**: la regola iniziale "mai sotto mezza larghezza" era incompatibile con la tabella dei footprint qui sopra (Piccolo a `col-span-1` su una griglia a 4 colonne È un quarto di larghezza). Federico ha confermato: **si accetta il quarto di larghezza per Piccolo** (Vendite, Notifiche), a patto di ridisegnare la loro resa compatta per starci — vedi sotto. Il vincolo di mezza larghezza minima è quindi rimosso, non si applica più.
+
+**Resa compatta per Piccolo (Vendite, Notifiche) a 1/4 di colonna**:
+- Vendite: riga compatta senza SKU (dot + nome capo troncato + prezzo), anteprima limitata alle 2 vendite più recenti (oggi ne mostra 4 senza limite) — invariato l'accesso a tutte tramite link "Tutte".
+- Notifiche: anteprima limitata alle 2 notifiche più recenti (oggi 3), riga compatta con icona più piccola, messaggio troncato più aggressivamente.
 
 Mobile: colonna singola come oggi, invariato.
 

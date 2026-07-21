@@ -1,8 +1,24 @@
+"use client";
+
+import { useState } from "react";
 import { Layers, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/maat/EmptyState";
+import { cn } from "@/lib/utils";
 
 export function PublishingView() {
+  const [refreshing, setRefreshing] = useState(false);
+  const [checkedAt, setCheckedAt] = useState<string | null>(null);
+
+  function refresh() {
+    if (refreshing) return;
+    setRefreshing(true);
+    window.setTimeout(() => {
+      setRefreshing(false);
+      setCheckedAt(new Date().toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" }));
+    }, 700);
+  }
+
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-8 px-4 py-8 sm:px-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -15,9 +31,14 @@ export function PublishingView() {
             Da qui gestirai e avvierai la pubblicazione dei capi in inventario su più piattaforme in contemporanea.
           </p>
         </div>
-        <Button type="button" variant="outline" size="sm" className="gap-1.5">
-          <RefreshCw className="size-3.5" /> Aggiorna
-        </Button>
+        <div className="flex flex-col items-end gap-1">
+          <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={refresh} disabled={refreshing}>
+            <RefreshCw className={cn("size-3.5", refreshing && "animate-spin")} /> Aggiorna
+          </Button>
+          {checkedAt && (
+            <span className="font-mono text-[10px] text-muted-foreground">Ultimo controllo · {checkedAt}</span>
+          )}
+        </div>
       </div>
 
       <div className="rounded-lg border border-border bg-card">

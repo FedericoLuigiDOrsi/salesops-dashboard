@@ -1,4 +1,41 @@
-import type { CatalogEntry, Notification } from "@/types/maat";
+import type { CatalogEntry, CatalogEntryStatus, Notification } from "@/types/maat";
+import { inventoryItems, type InventoryStatus } from "@/lib/inventory-mock";
+
+const INVENTORY_STATUS_MAP: Record<InventoryStatus, CatalogEntryStatus> = {
+  bozza: "local_draft",
+  catalogo: "available",
+  venduto: "available",
+};
+
+/** Adatta un InventoryItem (vista Inventario, id inv-XX) alla forma CatalogEntry
+ * per poter aprire il dettaglio capo (`/capi/[id]`) dalla lista Inventario —
+ * i due mock hanno namespace id separati (inv-XX vs b-XX), non c'è un dataset
+ * unico condiviso. Gli attributi non presenti in InventoryItem restano vuoti. */
+function catalogEntryFromInventoryItem(id: string): CatalogEntry | null {
+  const item = inventoryItems.find((i) => i.id === id);
+  if (!item) return null;
+  return {
+    id: item.id,
+    sku: item.sku,
+    status: INVENTORY_STATUS_MAP[item.status],
+    accountId: "acc-federico",
+    createdAt: new Date().toISOString(),
+    attributes: {
+      brand: item.brand,
+      tipoCapo: item.tipoCapo,
+      colore: "",
+      taglia: item.size,
+      materiale: "",
+      genere: "",
+      condizioni: "",
+      difetti: "",
+      stile: "",
+      stagionalita: "",
+    },
+    measures: {},
+    photos: [],
+  };
+}
 
 function entry(partial: Pick<CatalogEntry, "id" | "status" | "createdAt" | "attributes"> & { measures?: CatalogEntry["measures"] }): CatalogEntry {
   return {
@@ -165,7 +202,7 @@ function emptyEntry(id: string): CatalogEntry {
 
 /** Lookup per id con fallback a un'entry vuota (nuovo capo). Usato dalla route piena `[id]` e dall'overlay intercettato. */
 export function getCatalogEntry(id: string): CatalogEntry {
-  return mockCatalogEntries.find((e) => e.id === id) ?? emptyEntry(id);
+  return mockCatalogEntries.find((e) => e.id === id) ?? catalogEntryFromInventoryItem(id) ?? emptyEntry(id);
 }
 
 export const mockNotifications: Notification[] = [

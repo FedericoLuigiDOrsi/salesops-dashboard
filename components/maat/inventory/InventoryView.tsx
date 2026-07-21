@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { LayoutGrid, List, Plus, Search, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -119,6 +120,7 @@ function PlatformPills({ platforms }: { platforms: InventoryItem["platforms"] })
 }
 
 export function InventoryView() {
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [view, setView] = useState<ViewMode>("table");
@@ -346,7 +348,16 @@ export function InventoryView() {
             </TableHeader>
             <TableBody>
               {filtered.map((item) => (
-                <TableRow key={item.id}>
+                <TableRow
+                  key={item.id}
+                  role="link"
+                  tabIndex={0}
+                  onClick={() => router.push(`/capi/${item.id}`)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") router.push(`/capi/${item.id}`);
+                  }}
+                  className="cursor-pointer hover:bg-muted/40"
+                >
                   <TableCell>
                     <div className="font-medium">{item.brand}</div>
                     <div className="text-xs text-muted-foreground">{item.tipoCapo}</div>
@@ -369,7 +380,11 @@ export function InventoryView() {
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((item) => (
-            <div key={item.id} className="flex flex-col gap-2 rounded-xl border border-border bg-card p-4">
+            <Link
+              key={item.id}
+              href={`/capi/${item.id}`}
+              className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4 transition-colors hover:border-foreground/25"
+            >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <div className="truncate font-medium">{item.brand}</div>
@@ -387,7 +402,7 @@ export function InventoryView() {
                 <span className="font-mono text-[11px] text-muted-foreground">{item.sku}</span>
                 <PlatformPills platforms={item.platforms} />
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}

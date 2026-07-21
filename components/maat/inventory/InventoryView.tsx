@@ -149,9 +149,10 @@ export function InventoryView() {
         </div>
       </div>
 
-      {/* toolbar: ricerca + segmented stato/vista */}
-      <div className="flex flex-col gap-3 border-b border-border pb-4">
-        <div className="flex flex-wrap items-center gap-3">
+      {/* toolbar a due fasce: primaria (ricerca/stato/vista) + secondaria (filtri/colonne) */}
+      <div className="overflow-hidden rounded-xl border border-border">
+        {/* fascia primaria */}
+        <div className="flex flex-wrap items-center gap-3 p-3">
           <div className="relative w-full max-w-xs">
             <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -214,8 +215,8 @@ export function InventoryView() {
           </div>
         </div>
 
-        {/* riga filtri */}
-        <div className="flex flex-wrap items-center gap-2">
+        {/* fascia secondaria: filtri di servizio, sfondo distinto */}
+        <div className="flex flex-wrap items-center gap-2 border-t border-border bg-muted/40 px-3 py-2">
           <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
             Categoria
             <Select value={category} onValueChange={setCategory}>
@@ -282,6 +283,8 @@ export function InventoryView() {
               </SelectContent>
             </Select>
           </label>
+
+          {/* SLOT COLONNE — il Task 5 inserisce qui <ColumnManager /> (solo in vista Tabella) */}
 
           {hasActiveFilters && (
             <Button variant="ghost" size="sm" onClick={resetFilters}>

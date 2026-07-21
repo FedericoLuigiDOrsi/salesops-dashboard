@@ -15,6 +15,8 @@ export interface InventoryItem {
   size: string;
   priceCents: number;
   status: InventoryStatus;
+  /** Foto fronte. null = non ancora scattata (es. bozze). */
+  photoUrl: string | null;
   platforms: {
     vinted: PlatformListingState;
     grailed: PlatformListingState;
@@ -32,6 +34,7 @@ export const inventoryItems: InventoryItem[] = [
     size: "L",
     priceCents: 14500,
     status: "catalogo",
+    photoUrl: null,
     platforms: { vinted: "active", grailed: "active", depop: "pending" },
   },
   {
@@ -43,6 +46,7 @@ export const inventoryItems: InventoryItem[] = [
     size: "M",
     priceCents: 32000,
     status: "catalogo",
+    photoUrl: null,
     platforms: { vinted: "active", grailed: "pending", depop: null },
   },
   {
@@ -54,6 +58,7 @@ export const inventoryItems: InventoryItem[] = [
     size: "XL",
     priceCents: 18000,
     status: "bozza",
+    photoUrl: null,
     platforms: { vinted: null, grailed: null, depop: null },
   },
   {
@@ -65,6 +70,7 @@ export const inventoryItems: InventoryItem[] = [
     size: "L",
     priceCents: 6500,
     status: "catalogo",
+    photoUrl: null,
     platforms: { vinted: "active", grailed: null, depop: "active" },
   },
   {
@@ -76,6 +82,7 @@ export const inventoryItems: InventoryItem[] = [
     size: "S",
     priceCents: 9500,
     status: "bozza",
+    photoUrl: null,
     platforms: { vinted: null, grailed: null, depop: null },
   },
   {
@@ -87,6 +94,7 @@ export const inventoryItems: InventoryItem[] = [
     size: "W32",
     priceCents: 4500,
     status: "venduto",
+    photoUrl: null,
     platforms: { vinted: "sold", grailed: "delisted", depop: "delisted" },
   },
   {
@@ -98,6 +106,7 @@ export const inventoryItems: InventoryItem[] = [
     size: "42",
     priceCents: 11000,
     status: "catalogo",
+    photoUrl: null,
     platforms: { vinted: "active", grailed: "active", depop: "active" },
   },
   {
@@ -109,6 +118,7 @@ export const inventoryItems: InventoryItem[] = [
     size: "M",
     priceCents: 3800,
     status: "catalogo",
+    photoUrl: null,
     platforms: { vinted: "pending", grailed: null, depop: "active" },
   },
   {
@@ -120,6 +130,7 @@ export const inventoryItems: InventoryItem[] = [
     size: "S",
     priceCents: 21000,
     status: "bozza",
+    photoUrl: null,
     platforms: { vinted: null, grailed: null, depop: null },
   },
   {
@@ -131,6 +142,7 @@ export const inventoryItems: InventoryItem[] = [
     size: "L",
     priceCents: 4200,
     status: "venduto",
+    photoUrl: null,
     platforms: { vinted: "delisted", grailed: "sold", depop: "delisted" },
   },
   {
@@ -142,6 +154,7 @@ export const inventoryItems: InventoryItem[] = [
     size: "XL",
     priceCents: 8800,
     status: "catalogo",
+    photoUrl: null,
     platforms: { vinted: "active", grailed: "pending", depop: null },
   },
   {
@@ -153,6 +166,7 @@ export const inventoryItems: InventoryItem[] = [
     size: "M",
     priceCents: 13000,
     status: "catalogo",
+    photoUrl: null,
     platforms: { vinted: "active", grailed: "active", depop: "delisted" },
   },
   {
@@ -164,6 +178,7 @@ export const inventoryItems: InventoryItem[] = [
     size: "Unica",
     priceCents: 7500,
     status: "venduto",
+    photoUrl: null,
     platforms: { vinted: "delisted", grailed: "delisted", depop: "sold" },
   },
   {
@@ -175,6 +190,7 @@ export const inventoryItems: InventoryItem[] = [
     size: "42",
     priceCents: 5500,
     status: "bozza",
+    photoUrl: null,
     platforms: { vinted: null, grailed: null, depop: null },
   },
   {
@@ -186,6 +202,7 @@ export const inventoryItems: InventoryItem[] = [
     size: "42",
     priceCents: 16500,
     status: "catalogo",
+    photoUrl: null,
     platforms: { vinted: "active", grailed: null, depop: null },
   },
 ];

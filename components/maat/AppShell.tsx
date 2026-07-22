@@ -17,6 +17,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useNotifications } from "@/lib/notifications-store";
 import { useSettings } from "@/lib/settings-store";
+import { useOverlays } from "@/lib/overlays-store";
 import { mockUserProfile } from "@/lib/tenant-mock";
 import { SettingsModal } from "@/components/maat/SettingsModal";
 import { OverlayHost } from "@/components/maat/OverlayHost";
@@ -50,6 +51,7 @@ export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const { unreadCount } = useNotifications();
   const { open: openSettings } = useSettings();
+  const { openNotifications } = useOverlays();
   const [collapsed, setCollapsed] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
 
@@ -126,19 +128,15 @@ export function AppShell({ children }: AppShellProps) {
             const badge =
               "badgeFromNotifications" in item && item.badgeFromNotifications ? unreadCount : undefined;
             const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href);
-            return (
-              <Link
-                key={label}
-                href={href}
-                title={collapsed ? label : undefined}
-                className={cn(
-                  "relative flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
-                  collapsed && "justify-center px-0",
-                  isActive
-                    ? "bg-sidebar-accent text-sidebar-foreground"
-                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
-                )}
-              >
+            const itemClass = cn(
+              "relative flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
+              collapsed && "justify-center px-0",
+              isActive
+                ? "bg-sidebar-accent text-sidebar-foreground"
+                : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+            );
+            const inner = (
+              <>
                 {!collapsed && (
                   <span
                     className={cn(
@@ -154,6 +152,25 @@ export function AppShell({ children }: AppShellProps) {
                     {badge}
                   </span>
                 ) : null}
+              </>
+            );
+            // Notifiche apre il float sopra la sezione corrente, non naviga.
+            if (href === "/notifiche") {
+              return (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={openNotifications}
+                  title={collapsed ? label : undefined}
+                  className={cn(itemClass, "w-full text-left")}
+                >
+                  {inner}
+                </button>
+              );
+            }
+            return (
+              <Link key={label} href={href} title={collapsed ? label : undefined} className={itemClass}>
+                {inner}
               </Link>
             );
           })}
@@ -190,14 +207,15 @@ export function AppShell({ children }: AppShellProps) {
             <span className="font-mono text-sm font-semibold uppercase tracking-wide">MAAT</span>
           </Link>
           <span className="flex-1" />
-          <Link
-            href="/notifiche"
+          <button
+            type="button"
+            onClick={openNotifications}
             aria-label="Notifiche"
             className="relative flex size-9 items-center justify-center rounded-full hover:bg-accent"
           >
             <Bell className="size-4.5" />
             {unreadCount > 0 && <span className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-primary" />}
-          </Link>
+          </button>
           <button
             type="button"
             onClick={() => openSettings("account")}
@@ -240,13 +258,14 @@ export function AppShell({ children }: AppShellProps) {
               <Plus className="size-7" strokeWidth={2.25} />
             </Link>
           </div>
-          <Link
-            href="/notifiche"
+          <button
+            type="button"
+            onClick={openNotifications}
             className="flex flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium text-muted-foreground data-[active=true]:text-primary"
             data-active={pathname.startsWith("/notifiche")}
           >
             <Bell className="size-5" /> Notifiche
-          </Link>
+          </button>
           <button
             type="button"
             onClick={() => setMoreOpen(true)}

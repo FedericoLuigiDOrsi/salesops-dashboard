@@ -5,6 +5,7 @@ import { offers } from "@/lib/activity-mock";
 import { offerToNotification } from "@/lib/notifications-mock";
 import { OfferPopup } from "@/components/maat/notifications/OfferPopup";
 import { ArticlePreview } from "@/components/maat/notifications/ArticlePreview";
+import { NotificationsPanel } from "@/components/maat/notifications/NotificationsPanel";
 
 /**
  * Unico punto di montaggio dei float dell'app. Legge il telecomando
@@ -29,6 +30,7 @@ export function OverlayHost() {
         onResolve={(id, status, counterCents) => resolveOffer(id, status, counterCents)}
       />
       <ArticlePreview sku={saleSku} open={active?.kind === "sale"} onOpenChange={(open) => !open && close()} />
+      <NotificationsPanel open={active?.kind === "notifications"} onOpenChange={(open) => !open && close()} />
     </>
   );
 }

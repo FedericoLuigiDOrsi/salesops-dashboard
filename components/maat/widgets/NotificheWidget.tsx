@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { ArrowRight, CloudOff, Sparkles } from "lucide-react";
 import { useNotifications } from "@/lib/notifications-store";
 import { hasUnreadNotifications } from "@/lib/urgency";
+import { useOverlays } from "@/lib/overlays-store";
 
 function timeAgo(iso: string): string {
   const minutes = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
@@ -14,9 +14,10 @@ function timeAgo(iso: string): string {
   return `${days} ${days === 1 ? "giorno" : "giorni"} fa`;
 }
 
-/** Le ultime notifiche dell'account (bozze pronte, salvataggi locali). */
+/** Le ultime notifiche dell'account: apre il float notifiche, non naviga. */
 export function NotificheWidget() {
   const { notifications } = useNotifications();
+  const { openNotifications } = useOverlays();
   const recent = [...notifications]
     .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
     .slice(0, 2);
@@ -32,12 +33,13 @@ export function NotificheWidget() {
             <span aria-label="Notifiche non lette" className="size-1.5 shrink-0 rounded-full bg-destructive" />
           ) : null}
         </div>
-        <Link
-          href="/notifiche"
+        <button
+          type="button"
+          onClick={openNotifications}
           className="flex items-center gap-1 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground"
         >
           Vedi tutte <ArrowRight className="size-3.5" />
-        </Link>
+        </button>
       </div>
 
       {recent.length === 0 ? (
@@ -47,10 +49,11 @@ export function NotificheWidget() {
           {recent.map((n) => {
             const isDraft = n.tipo === "draft_ready";
             return (
-              <Link
+              <button
                 key={n.id}
-                href="/notifiche"
-                className="flex items-start gap-3 rounded-lg border border-transparent p-2.5 transition-colors hover:bg-foreground/[.03]"
+                type="button"
+                onClick={openNotifications}
+                className="flex w-full items-start gap-3 rounded-lg border border-transparent p-2.5 text-left transition-colors hover:bg-foreground/[.03]"
               >
                 <span
                   className={`flex size-8 shrink-0 items-center justify-center rounded-full ${
@@ -68,7 +71,7 @@ export function NotificheWidget() {
                   <span className="font-mono text-xs text-muted-foreground">{timeAgo(n.timestamp)}</span>
                 </div>
                 {!n.letta && <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" />}
-              </Link>
+              </button>
             );
           })}
         </div>

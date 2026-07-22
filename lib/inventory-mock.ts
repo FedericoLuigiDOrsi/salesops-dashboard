@@ -1,6 +1,8 @@
 // Inventario unificato — catalogo capi + stato di pubblicazione per piattaforma
 // in un'unica vista. Sostituisce il precedente inventory-mock (solo listing).
 
+import { placeholderPhoto } from "@/lib/placeholder-photo";
+
 export type InventoryStatus = "bozza" | "catalogo" | "venduto";
 
 /** Stato di un annuncio su una singola piattaforma. null = mai pubblicato lì. */
@@ -34,7 +36,7 @@ export const inventoryItems: InventoryItem[] = [
     size: "L",
     priceCents: 14500,
     status: "catalogo",
-    photoUrl: null,
+    photoUrl: placeholderPhoto("inv-01", "Stone Island"),
     platforms: { vinted: "active", grailed: "active", depop: "pending" },
   },
   {
@@ -46,7 +48,7 @@ export const inventoryItems: InventoryItem[] = [
     size: "M",
     priceCents: 32000,
     status: "catalogo",
-    photoUrl: null,
+    photoUrl: placeholderPhoto("inv-02", "Burberry"),
     platforms: { vinted: "active", grailed: "pending", depop: null },
   },
   {
@@ -70,7 +72,7 @@ export const inventoryItems: InventoryItem[] = [
     size: "L",
     priceCents: 6500,
     status: "catalogo",
-    photoUrl: null,
+    photoUrl: placeholderPhoto("inv-04", "Nike"),
     platforms: { vinted: "active", grailed: null, depop: "active" },
   },
   {
@@ -94,7 +96,7 @@ export const inventoryItems: InventoryItem[] = [
     size: "W32",
     priceCents: 4500,
     status: "venduto",
-    photoUrl: null,
+    photoUrl: placeholderPhoto("inv-06", "Levi's"),
     platforms: { vinted: "sold", grailed: "delisted", depop: "delisted" },
   },
   {
@@ -106,7 +108,7 @@ export const inventoryItems: InventoryItem[] = [
     size: "42",
     priceCents: 11000,
     status: "catalogo",
-    photoUrl: null,
+    photoUrl: placeholderPhoto("inv-07", "Dr. Martens"),
     platforms: { vinted: "active", grailed: "active", depop: "active" },
   },
   {
@@ -118,7 +120,7 @@ export const inventoryItems: InventoryItem[] = [
     size: "M",
     priceCents: 3800,
     status: "catalogo",
-    photoUrl: null,
+    photoUrl: placeholderPhoto("inv-08", "Adidas"),
     platforms: { vinted: "pending", grailed: null, depop: "active" },
   },
   {
@@ -142,7 +144,7 @@ export const inventoryItems: InventoryItem[] = [
     size: "L",
     priceCents: 4200,
     status: "venduto",
-    photoUrl: null,
+    photoUrl: placeholderPhoto("inv-10", "Ralph Lauren"),
     platforms: { vinted: "delisted", grailed: "sold", depop: "delisted" },
   },
   {
@@ -154,7 +156,7 @@ export const inventoryItems: InventoryItem[] = [
     size: "XL",
     priceCents: 8800,
     status: "catalogo",
-    photoUrl: null,
+    photoUrl: placeholderPhoto("inv-11", "Carhartt WIP"),
     platforms: { vinted: "active", grailed: "pending", depop: null },
   },
   {
@@ -166,7 +168,7 @@ export const inventoryItems: InventoryItem[] = [
     size: "M",
     priceCents: 13000,
     status: "catalogo",
-    photoUrl: null,
+    photoUrl: placeholderPhoto("inv-12", "Patagonia"),
     platforms: { vinted: "active", grailed: "active", depop: "delisted" },
   },
   {
@@ -178,7 +180,7 @@ export const inventoryItems: InventoryItem[] = [
     size: "Unica",
     priceCents: 7500,
     status: "venduto",
-    photoUrl: null,
+    photoUrl: placeholderPhoto("inv-13", "Burberry"),
     platforms: { vinted: "delisted", grailed: "delisted", depop: "sold" },
   },
   {
@@ -202,7 +204,7 @@ export const inventoryItems: InventoryItem[] = [
     size: "42",
     priceCents: 16500,
     status: "catalogo",
-    photoUrl: null,
+    photoUrl: placeholderPhoto("inv-15", "Stone Island"),
     platforms: { vinted: "active", grailed: null, depop: null },
   },
 ];

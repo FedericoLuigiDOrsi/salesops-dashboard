@@ -25,7 +25,7 @@ export function NotificheWidget() {
     <div>
       <div className="mb-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <p className="font-mono text-[11px] font-semibold uppercase tracking-[.12em] text-muted-foreground/70">
+          <p className="font-mono text-[11px] font-semibold uppercase tracking-[.12em] text-muted-foreground">
             Notifiche
           </p>
           {hasUnreadNotifications(notifications) ? (
@@ -54,11 +54,11 @@ export function NotificheWidget() {
               >
                 <span
                   className={`flex size-8 shrink-0 items-center justify-center rounded-full ${
-                    isDraft ? "bg-primary/30" : "bg-foreground/[.08]"
+                    isDraft ? "bg-accent-soft" : "bg-foreground/[.08]"
                   }`}
                 >
                   {isDraft ? (
-                    <Sparkles className="size-4 text-[#7a7000]" />
+                    <Sparkles className="size-4 text-accent-ink" />
                   ) : (
                     <CloudOff className="size-4 text-muted-foreground" />
                   )}

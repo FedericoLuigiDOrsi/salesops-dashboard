@@ -19,7 +19,7 @@ function RowIcon({ unread, children }: { unread: boolean; children: ReactNode })
     <span
       className={cn(
         "flex size-9 shrink-0 items-center justify-center rounded-md",
-        unread ? "bg-primary/25 text-[#7a7000]" : "bg-foreground/[.06] text-muted-foreground"
+        unread ? "bg-accent-soft text-accent-ink" : "bg-foreground/[.06] text-muted-foreground"
       )}
     >
       {children}
@@ -44,16 +44,16 @@ export function SaleNotificationRow({ notification, onOpen }: { notification: Sa
       </div>
       <div className="flex shrink-0 flex-col items-end gap-0.5">
         <span className="font-mono text-[15px] font-semibold text-[var(--chart-2)]">{formatEUR(notification.priceCents)}</span>
-        <span className="font-mono text-[11px] text-muted-foreground/70">{notification.time}</span>
+        <span className="font-mono text-[11px] text-muted-foreground">{notification.time}</span>
       </div>
     </button>
   );
 }
 
 const OFFER_BADGE: Record<"accepted" | "rejected" | "counter", { label: string; className: string }> = {
-  accepted: { label: "Accettata", className: "bg-[color-mix(in_oklab,var(--chart-2)_16%,transparent)] text-[var(--chart-2)]" },
+  accepted: { label: "Accettata", className: "bg-success-soft text-success" },
   rejected: { label: "Rifiutata", className: "bg-muted text-muted-foreground" },
-  counter: { label: "Controfferta inviata", className: "bg-primary/25 text-[#7a7000]" },
+  counter: { label: "Controfferta inviata", className: "bg-accent-soft text-accent-ink" },
 };
 
 export function OfferNotificationRow({ notification, onOpen }: { notification: OfferNotification; onOpen: () => void }) {
@@ -91,7 +91,7 @@ export function OfferNotificationRow({ notification, onOpen }: { notification: O
           <span className="font-mono text-[15px] font-semibold">{formatEUR(notification.offerCents)}</span>
           <span className="font-mono text-xs text-muted-foreground line-through">{formatEUR(notification.listPriceCents)}</span>
         </div>
-        <span className="font-mono text-[11px] text-muted-foreground/70">
+        <span className="font-mono text-[11px] text-muted-foreground">
           {notification.time}
           {!resolved && <span className="ml-1 font-semibold text-foreground">· Rispondi ›</span>}
         </span>
@@ -125,7 +125,7 @@ export function ShipmentNotificationRow({ notification }: { notification: Shipme
         <div className="text-[13px] font-medium">{notification.detail}</div>
         <div className="mt-0.5 text-xs text-muted-foreground">{metaParts.join(" · ")}</div>
       </div>
-      <span className="shrink-0 font-mono text-[11px] text-muted-foreground/70">{notification.time}</span>
+      <span className="shrink-0 font-mono text-[11px] text-muted-foreground">{notification.time}</span>
     </div>
   );
 }

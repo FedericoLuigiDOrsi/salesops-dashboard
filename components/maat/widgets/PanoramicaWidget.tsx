@@ -21,7 +21,7 @@ export function PanoramicaWidget() {
   return (
     <div>
       <div className="mb-4 flex items-center justify-between">
-        <p className="font-mono text-[11px] font-semibold uppercase tracking-[.12em] text-muted-foreground/70">
+        <p className="font-mono text-[11px] font-semibold uppercase tracking-[.12em] text-muted-foreground">
           Panoramica
         </p>
         <Popover open={editOpen} onOpenChange={setEditOpen}>

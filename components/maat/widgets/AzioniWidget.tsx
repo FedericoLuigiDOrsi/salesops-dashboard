@@ -15,7 +15,7 @@ export function AzioniWidget() {
     <div>
       <div className="mb-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <p className="font-mono text-[11px] font-semibold uppercase tracking-[.12em] text-muted-foreground/70">
+          <p className="font-mono text-[11px] font-semibold uppercase tracking-[.12em] text-muted-foreground">
             Azioni richieste
           </p>
           <span className="font-mono text-xs text-muted-foreground">{queue.length}</span>
@@ -41,7 +41,7 @@ export function AzioniWidget() {
               href={`/capi/${entry.id}`}
               className="flex items-center gap-3 rounded-lg border border-transparent p-2.5 transition-colors hover:bg-foreground/[.03]"
             >
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-md border border-border bg-background font-mono text-[9px] uppercase text-muted-foreground/60">
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-md border border-border bg-background font-mono text-[9px] uppercase text-muted-foreground">
                 Foto
               </span>
               <div className="flex min-w-0 flex-1 flex-col gap-0.5">

@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MARKETPLACE_LABELS, type OfferStatus } from "@/types/maat";
-import { formatEUR } from "@/lib/utils";
+import { cn, formatEUR } from "@/lib/utils";
 import type { OfferNotification } from "@/lib/notifications-mock";
 
 // Popup risposta offerta — mirror di public/mobile/maat-shell-account.html
@@ -54,11 +54,11 @@ export function OfferPopup({ offer, open, onOpenChange, onResolve }: OfferPopupP
       <DialogContent className="max-w-sm gap-5">
         <DialogHeader>
           <div className="flex items-start gap-3">
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary/25 text-[#7a7000]">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-accent-soft text-accent-ink">
               <Tag className="size-4" />
             </span>
             <div className="min-w-0 flex-1 text-left">
-              <p className="font-mono text-[10px] font-semibold uppercase tracking-[.1em] text-muted-foreground/70">Offerta ricevuta</p>
+              <p className="font-mono text-[10px] font-semibold uppercase tracking-[.1em] text-muted-foreground">Offerta ricevuta</p>
               <DialogTitle className="mt-0.5 text-[16px] leading-tight">{offer.itemLabel}</DialogTitle>
             </div>
           </div>
@@ -83,7 +83,7 @@ export function OfferPopup({ offer, open, onOpenChange, onResolve }: OfferPopupP
           </div>
           <div className="rounded-lg bg-muted/60 px-2 py-2.5 text-center">
             <p className="text-[11px] text-muted-foreground">Diff.</p>
-            <p className="mt-0.5 font-mono text-[16px] font-semibold text-destructive">
+            <p className={cn("mt-0.5 font-mono text-[16px] font-semibold", diffPct >= 0 ? "text-success" : "text-destructive")}>
               {diffPct > 0 ? "+" : ""}
               {diffPct}%
             </p>

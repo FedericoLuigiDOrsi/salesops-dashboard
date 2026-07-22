@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LayoutGrid, List, Plus, Search, Zap } from "lucide-react";
@@ -10,12 +10,13 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn, formatEUR } from "@/lib/utils";
-import { MARKETPLACE_LABELS, type Marketplace } from "@/types/maat";
-import { inventoryItems, type InventoryItem, type InventoryStatus, type PlatformListingState } from "@/lib/inventory-mock";
+import { MARKETPLACE_LABELS } from "@/types/maat";
+import { inventoryItems, type InventoryItem, type InventoryStatus } from "@/lib/inventory-mock";
 import { AutomazioniDrawer } from "@/components/maat/inventory/AutomazioniDrawer";
-
-type PlatformKey = Extract<Marketplace, "vinted" | "grailed" | "depop">;
-const PLATFORM_KEYS: PlatformKey[] = ["vinted", "grailed", "depop"];
+import { COLUMN_DEFS, PLATFORM_KEYS, type ColumnKey, type PlatformKey } from "@/lib/inventory-columns";
+import { PlatformPills } from "@/components/maat/inventory/PlatformPills";
+import { ColumnManager } from "@/components/maat/inventory/ColumnManager";
+import { useInventoryColumns } from "@/lib/inventory-columns-store";
 
 type ViewMode = "table" | "grid";
 type StatusFilter = "all" | InventoryStatus;
@@ -52,13 +53,6 @@ const STATUS_CLASS: Record<InventoryStatus, string> = {
   venduto: "border-transparent bg-muted text-muted-foreground",
 };
 
-const PLATFORM_STATE_CLASS: Record<NonNullable<PlatformListingState>, string> = {
-  active: "bg-[color-mix(in_oklab,var(--chart-2)_16%,transparent)] text-[var(--chart-2)]",
-  pending: "bg-primary/20 text-[#7a7000]",
-  delisted: "bg-muted text-muted-foreground",
-  sold: "bg-foreground text-background",
-};
-
 function matchesPrice(cents: number, band: PriceBand) {
   const eur = cents / 100;
   switch (band) {
@@ -92,30 +86,9 @@ function matchesBase(
   return true;
 }
 
-function PlatformPills({ platforms }: { platforms: InventoryItem["platforms"] }) {
-  const listed = PLATFORM_KEYS.filter((key) => platforms[key] !== null);
-  if (listed.length === 0) {
-    return <span className="text-xs text-muted-foreground">—</span>;
-  }
+function FieldLabel({ children }: { children: ReactNode }) {
   return (
-    <div className="flex flex-wrap gap-1">
-      {listed.map((key) => {
-        const state = platforms[key];
-        if (!state) return null;
-        return (
-          <span
-            key={key}
-            title={`${MARKETPLACE_LABELS[key]} · ${state}`}
-            className={cn(
-              "inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 font-mono text-[10px] font-semibold",
-              PLATFORM_STATE_CLASS[state]
-            )}
-          >
-            {MARKETPLACE_LABELS[key][0]}
-          </span>
-        );
-      })}
-    </div>
+    <div className="mb-0.5 font-mono text-[9px] uppercase tracking-wide text-muted-foreground/55">{children}</div>
   );
 }
 
@@ -129,6 +102,7 @@ export function InventoryView() {
   const [price, setPrice] = useState<PriceBand>("all");
   const [platform, setPlatform] = useState<PlatformFilter>("all");
   const [automazioniOpen, setAutomazioniOpen] = useState(false);
+  const { visibleColumns } = useInventoryColumns();
 
   const baseFilters = { search, category, size, price, platform };
 
@@ -159,6 +133,35 @@ export function InventoryView() {
 
   const hasActiveFilters = search !== "" || category !== "all" || size !== "all" || price !== "all" || platform !== "all";
 
+  const renderCell: Record<ColumnKey, (item: InventoryItem) => ReactNode> = {
+    capo: (item) => (
+      <div className="flex items-center gap-3">
+        <div className="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-background">
+          {item.photoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={item.photoUrl} alt="" className="size-full object-cover" />
+          ) : (
+            <span className="font-mono text-[7px] uppercase text-muted-foreground/50">Foto</span>
+          )}
+        </div>
+        <div className="min-w-0">
+          <div className="truncate font-medium">{item.brand}</div>
+          <div className="truncate text-xs text-muted-foreground">{item.tipoCapo}</div>
+        </div>
+      </div>
+    ),
+    stato: (item) => (
+      <Badge className={cn("text-[11px]", STATUS_CLASS[item.status])}>{STATUS_LABEL[item.status]}</Badge>
+    ),
+    sku: (item) => <span className="font-mono text-xs text-muted-foreground">{item.sku}</span>,
+    categoria: (item) => <span className="text-sm text-muted-foreground">{item.category}</span>,
+    taglia: (item) => <span className="text-sm text-muted-foreground">{item.size}</span>,
+    prezzo: (item) => <span className="font-mono text-sm">{formatEUR(item.priceCents)}</span>,
+    piattaforme: (item) => <PlatformPills platforms={item.platforms} />,
+  };
+
+  const orderedColumns: ColumnKey[] = ["capo", ...visibleColumns];
+
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 sm:px-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -184,9 +187,10 @@ export function InventoryView() {
         </div>
       </div>
 
-      {/* toolbar: ricerca + segmented stato/vista */}
-      <div className="flex flex-col gap-3 border-b border-border pb-4">
-        <div className="flex flex-wrap items-center gap-3">
+      {/* toolbar a due fasce: primaria (ricerca/stato/vista) + secondaria (filtri/colonne) */}
+      <div className="overflow-hidden rounded-xl border border-border">
+        {/* fascia primaria */}
+        <div className="flex flex-wrap items-center gap-3 p-3">
           <div className="relative w-full max-w-xs">
             <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -249,8 +253,8 @@ export function InventoryView() {
           </div>
         </div>
 
-        {/* riga filtri */}
-        <div className="flex flex-wrap items-center gap-2">
+        {/* fascia secondaria: filtri di servizio, sfondo distinto */}
+        <div className="flex flex-wrap items-center gap-2 border-t border-border bg-muted/40 px-3 py-2">
           <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
             Categoria
             <Select value={category} onValueChange={setCategory}>
@@ -318,6 +322,8 @@ export function InventoryView() {
             </Select>
           </label>
 
+          {view === "table" && <ColumnManager />}
+
           {hasActiveFilters && (
             <Button variant="ghost" size="sm" onClick={resetFilters}>
               Azzera
@@ -337,13 +343,9 @@ export function InventoryView() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Capo</TableHead>
-                <TableHead>SKU</TableHead>
-                <TableHead>Categoria</TableHead>
-                <TableHead>Taglia</TableHead>
-                <TableHead>Prezzo</TableHead>
-                <TableHead>Stato</TableHead>
-                <TableHead>Piattaforme</TableHead>
+                {orderedColumns.map((col) => (
+                  <TableHead key={col}>{COLUMN_DEFS[col].label}</TableHead>
+                ))}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -358,49 +360,68 @@ export function InventoryView() {
                   }}
                   className="cursor-pointer hover:bg-muted/40"
                 >
-                  <TableCell>
-                    <div className="font-medium">{item.brand}</div>
-                    <div className="text-xs text-muted-foreground">{item.tipoCapo}</div>
-                  </TableCell>
-                  <TableCell className="font-mono text-xs text-muted-foreground">{item.sku}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{item.category}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{item.size}</TableCell>
-                  <TableCell className="font-mono text-sm">{formatEUR(item.priceCents)}</TableCell>
-                  <TableCell>
-                    <Badge className={cn("text-[11px]", STATUS_CLASS[item.status])}>{STATUS_LABEL[item.status]}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <PlatformPills platforms={item.platforms} />
-                  </TableCell>
+                  {orderedColumns.map((col) => (
+                    <TableCell key={col}>{renderCell[col](item)}</TableCell>
+                  ))}
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
           {filtered.map((item) => (
             <Link
               key={item.id}
               href={`/capi/${item.id}`}
-              className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4 transition-colors hover:border-foreground/25"
+              className="flex overflow-hidden rounded-xl border border-border bg-card transition-colors hover:border-foreground/25"
             >
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <div className="truncate font-medium">{item.brand}</div>
-                  <div className="truncate text-xs text-muted-foreground">{item.tipoCapo}</div>
+              {/* foto laterale a piena altezza */}
+              <div className="flex w-[110px] shrink-0 items-center justify-center border-r border-border bg-background">
+                {item.photoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={item.photoUrl} alt="" className="size-full object-cover" />
+                ) : (
+                  <span className="text-center font-mono text-[9px] uppercase tracking-wide text-muted-foreground/50">
+                    Foto
+                    <br />
+                    fronte
+                  </span>
+                )}
+              </div>
+
+              {/* campi in griglia label/valore a due colonne */}
+              <div className="grid flex-1 grid-cols-2 gap-x-3 gap-y-2 p-4">
+                <div className="col-span-2">
+                  <FieldLabel>Capo</FieldLabel>
+                  <div className="truncate text-[15px] font-semibold">
+                    {item.brand} — {item.tipoCapo}
+                  </div>
                 </div>
-                <Badge className={cn("shrink-0 text-[11px]", STATUS_CLASS[item.status])}>{STATUS_LABEL[item.status]}</Badge>
-              </div>
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>
-                  {item.category} · {item.size}
-                </span>
-                <span className="font-mono text-sm font-semibold text-foreground">{formatEUR(item.priceCents)}</span>
-              </div>
-              <div className="mt-1 flex items-center justify-between gap-2 border-t border-border pt-2">
-                <span className="font-mono text-[11px] text-muted-foreground">{item.sku}</span>
-                <PlatformPills platforms={item.platforms} />
+                <div>
+                  <FieldLabel>SKU</FieldLabel>
+                  <div className="font-mono text-xs text-muted-foreground">{item.sku}</div>
+                </div>
+                <div>
+                  <FieldLabel>Stato</FieldLabel>
+                  <Badge className={cn("text-[11px]", STATUS_CLASS[item.status])}>{STATUS_LABEL[item.status]}</Badge>
+                </div>
+                <div>
+                  <FieldLabel>Categoria</FieldLabel>
+                  <div className="text-sm text-muted-foreground">{item.category}</div>
+                </div>
+                <div>
+                  <FieldLabel>Taglia</FieldLabel>
+                  <div className="text-sm text-muted-foreground">{item.size}</div>
+                </div>
+                <div>
+                  <FieldLabel>Prezzo</FieldLabel>
+                  <div className="font-mono text-sm font-semibold">{formatEUR(item.priceCents)}</div>
+                </div>
+                <div>
+                  <FieldLabel>Piattaforme</FieldLabel>
+                  <PlatformPills platforms={item.platforms} />
+                </div>
               </div>
             </Link>
           ))}

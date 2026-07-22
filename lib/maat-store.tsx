@@ -1,13 +1,16 @@
 "use client";
 
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import type { CatalogEntry, Photo, PhotoLabel } from "@/types/maat";
+import type { CatalogEntry, CatalogEntryAttributes, Photo, PhotoLabel } from "@/types/maat";
 
 interface MaatEntryContextValue {
   entry: CatalogEntry;
   updatePhoto: (label: PhotoLabel, photo: Photo) => void;
   updatePrices: (purchasePriceCents: number | null, suggestedSalePriceCents: number | null) => void;
+  updateAttribute: (key: keyof CatalogEntryAttributes, value: string) => void;
+  updateMeasure: (key: string, value: number) => void;
   confirmEntry: () => void;
+  revertToDraft: () => void;
 }
 
 const MaatEntryContext = createContext<MaatEntryContextValue | null>(null);
@@ -89,13 +92,33 @@ export function MaatEntryProvider({ id, initialEntry, children }: MaatEntryProvi
     apply({ ...entryRef.current, purchasePriceCents, suggestedSalePriceCents });
   }
 
+  function updateAttribute(key: keyof CatalogEntryAttributes, value: string) {
+    const current = entryRef.current;
+    apply({ ...current, attributes: { ...current.attributes, [key]: value } });
+  }
+
+  function updateMeasure(key: string, value: number) {
+    const current = entryRef.current;
+    apply({ ...current, measures: { ...current.measures, [key]: value } });
+  }
+
   function confirmEntry() {
     const current = entryRef.current;
     apply({ ...current, status: "available", sku: current.sku ?? `MAAT-${Date.now().toString(36).toUpperCase()}` });
   }
 
+  // Toggle manuale dall'header (segmented Bozza/Confermato): riporta un capo
+  // già confermato in revisione. Non tocca lo sku, già assegnato da confirmEntry.
+  function revertToDraft() {
+    apply({ ...entryRef.current, status: "to_be_reviewed" });
+  }
+
   return (
-    <MaatEntryContext.Provider value={{ entry, updatePhoto, updatePrices, confirmEntry }}>{children}</MaatEntryContext.Provider>
+    <MaatEntryContext.Provider
+      value={{ entry, updatePhoto, updatePrices, updateAttribute, updateMeasure, confirmEntry, revertToDraft }}
+    >
+      {children}
+    </MaatEntryContext.Provider>
   );
 }
 

@@ -131,6 +131,11 @@
   .animate-chip-in {
     animation: maat-chip-in 0.22s cubic-bezier(0.22, 1, 0.36, 1);
   }
+  .animate-shimmer {
+    background-image: linear-gradient(100deg, transparent 30%, rgba(0, 31, 63, 0.06) 50%, transparent 70%);
+    background-size: 200% 100%;
+    animation: maat-shimmer 1.6s ease-in-out infinite;
+  }
 }
 
 @keyframes maat-tick {
@@ -158,9 +163,19 @@
   }
 }
 
+@keyframes maat-shimmer {
+  from {
+    background-position: 150% 0;
+  }
+  to {
+    background-position: -50% 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-tick,
-  .animate-chip-in {
+  .animate-chip-in,
+  .animate-shimmer {
     animation: none;
   }
 }

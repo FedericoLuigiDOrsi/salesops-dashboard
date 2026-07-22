@@ -13,6 +13,7 @@ export const shipments: Shipment[] = [
     shippedAt: "14 lug",
     expectedDeliveryAt: "18 lug",
     priceCents: 17200,
+    destinationCity: { name: "Milano", lat: 45.4642, lng: 9.19 },
   },
   {
     id: "sh-2",
@@ -26,6 +27,7 @@ export const shipments: Shipment[] = [
     shippedAt: "16 lug",
     expectedDeliveryAt: "18 lug",
     priceCents: 22800,
+    destinationCity: { name: "Torino", lat: 45.0703, lng: 7.6869 },
   },
   {
     id: "sh-3",
@@ -39,6 +41,7 @@ export const shipments: Shipment[] = [
     shippedAt: "17 lug",
     expectedDeliveryAt: "21 lug",
     priceCents: 15000,
+    destinationCity: { name: "Roma", lat: 41.9028, lng: 12.4964 },
   },
   {
     id: "sh-4",
@@ -52,6 +55,7 @@ export const shipments: Shipment[] = [
     shippedAt: "15 lug",
     expectedDeliveryAt: "19 lug",
     priceCents: 5200,
+    destinationCity: { name: "Bologna", lat: 44.4949, lng: 11.3426 },
   },
   {
     id: "sh-5",
@@ -65,6 +69,7 @@ export const shipments: Shipment[] = [
     shippedAt: "13 lug",
     expectedDeliveryAt: "17 lug",
     priceCents: 11500,
+    destinationCity: { name: "Firenze", lat: 43.7696, lng: 11.2558 },
   },
   {
     id: "sh-6",
@@ -78,6 +83,7 @@ export const shipments: Shipment[] = [
     shippedAt: "17 lug",
     expectedDeliveryAt: "22 lug",
     priceCents: 6800,
+    destinationCity: { name: "Bari", lat: 41.1171, lng: 16.8719 },
   },
   {
     id: "sh-7",
@@ -91,6 +97,7 @@ export const shipments: Shipment[] = [
     shippedAt: "15 lug",
     expectedDeliveryAt: "20 lug",
     priceCents: 8800,
+    destinationCity: { name: "Londra", lat: 51.5074, lng: -0.1278 },
   },
   {
     id: "sh-8",
@@ -104,6 +111,7 @@ export const shipments: Shipment[] = [
     shippedAt: "16 lug",
     expectedDeliveryAt: "20 lug",
     priceCents: 4500,
+    destinationCity: { name: "Palermo", lat: 38.1157, lng: 13.3615 },
   },
   {
     id: "sh-9",
@@ -117,6 +125,7 @@ export const shipments: Shipment[] = [
     shippedAt: "14 lug",
     expectedDeliveryAt: "18 lug",
     priceCents: 31000,
+    destinationCity: { name: "Berlino", lat: 52.52, lng: 13.405 },
   },
   {
     id: "sh-10",
@@ -130,6 +139,7 @@ export const shipments: Shipment[] = [
     shippedAt: "12 lug",
     expectedDeliveryAt: "19 lug",
     priceCents: 3800,
+    destinationCity: { name: "Manchester", lat: 53.4808, lng: -2.2426 },
   },
 ];
 

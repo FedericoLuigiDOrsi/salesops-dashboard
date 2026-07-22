@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Check, X } from "lucide-react";
 import { cn, formatEUR } from "@/lib/utils";
-import { offers as initialOffers } from "@/lib/activity-mock";
+import { offers } from "@/lib/activity-mock";
 import { hasUrgentOffer } from "@/lib/urgency";
-import type { Offer } from "@/types/maat";
+import { useOverlays } from "@/lib/overlays-store";
 
 /** Toast minimale e autonomo: niente provider esterni da montare in layout. */
 function useLocalToast() {
@@ -19,13 +19,19 @@ function useLocalToast() {
   return { message, notify: setMessage };
 }
 
-/** Offerte in sospeso con accetta/rifiuta inline. */
+const RESOLVED_BADGE: Record<"accepted" | "rejected" | "counter", { label: string; className: string }> = {
+  accepted: { label: "Accettata", className: "bg-[color-mix(in_oklab,var(--chart-2)_16%,transparent)] text-[var(--chart-2)]" },
+  rejected: { label: "Rifiutata", className: "bg-destructive/10 text-destructive" },
+  counter: { label: "Controfferta", className: "bg-primary/25 text-[#7a7000]" },
+};
+
+/** Offerte in sospeso: click sulla riga apre il float, ✓/✗ restano scorciatoie. */
 export function OfferteWidget() {
-  const [offers, setOffers] = useState<Offer[]>(initialOffers);
+  const { openOffer, offerStatus, resolveOffer } = useOverlays();
   const { message, notify } = useLocalToast();
 
-  function resolveOffer(offer: Offer, status: "accepted" | "rejected") {
-    setOffers((prev) => prev.map((o) => (o.id === offer.id ? { ...o, status } : o)));
+  function handleResolve(offer: { id: string; itemLabel: string; offerCents: number }, status: "accepted" | "rejected") {
+    resolveOffer(offer.id, status);
     notify(
       status === "accepted"
         ? `Offerta accettata · ${formatEUR(offer.offerCents)} · ${offer.itemLabel}`
@@ -58,11 +64,22 @@ export function OfferteWidget() {
       ) : (
         <div className="flex flex-col gap-1">
           {offers.map((o) => {
-            const resolved = o.status !== "pending";
+            const status = offerStatus[o.id]?.status ?? o.status;
+            const resolved = status !== "pending";
+            const badge = resolved ? RESOLVED_BADGE[status as "accepted" | "rejected" | "counter"] : null;
             return (
               <div
                 key={o.id}
-                className="flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-foreground/[.03]"
+                role="button"
+                tabIndex={0}
+                onClick={() => openOffer(o.id)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    openOffer(o.id);
+                  }
+                }}
+                className="flex cursor-pointer items-center gap-3 rounded-lg p-2 text-left transition-colors hover:bg-foreground/[.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <span className="size-1.5 shrink-0 rounded-full bg-[var(--chart-1)]" />
                 <div className="min-w-0 flex-1">
@@ -70,23 +87,24 @@ export function OfferteWidget() {
                   <p className="font-mono text-xs text-muted-foreground">{o.sku}</p>
                 </div>
                 <span className="font-mono text-[13px] font-semibold">{formatEUR(o.offerCents)}</span>
-                {resolved ? (
+                {badge ? (
                   <span
                     className={cn(
                       "shrink-0 rounded-full px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide",
-                      o.status === "accepted"
-                        ? "bg-[color-mix(in_oklab,var(--chart-2)_16%,transparent)] text-[var(--chart-2)]"
-                        : "bg-destructive/10 text-destructive"
+                      badge.className
                     )}
                   >
-                    {o.status === "accepted" ? "Accettata" : "Rifiutata"}
+                    {badge.label}
                   </span>
                 ) : (
                   <div className="flex shrink-0 items-center gap-1">
                     <button
                       type="button"
                       aria-label={`Accetta offerta ${o.itemLabel}`}
-                      onClick={() => resolveOffer(o, "accepted")}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleResolve(o, "accepted");
+                      }}
                       className="flex size-7 items-center justify-center rounded-md border border-border text-[var(--chart-2)] transition-colors hover:bg-[var(--chart-2)]/10"
                     >
                       <Check className="size-3.5" />
@@ -94,7 +112,10 @@ export function OfferteWidget() {
                     <button
                       type="button"
                       aria-label={`Rifiuta offerta ${o.itemLabel}`}
-                      onClick={() => resolveOffer(o, "rejected")}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleResolve(o, "rejected");
+                      }}
                       className="flex size-7 items-center justify-center rounded-md border border-border text-destructive transition-colors hover:bg-destructive/10"
                     >
                       <X className="size-3.5" />

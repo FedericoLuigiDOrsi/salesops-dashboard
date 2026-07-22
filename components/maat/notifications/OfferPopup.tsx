@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Tag } from "lucide-react";
+import { Shirt, ExternalLink } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,8 +54,13 @@ export function OfferPopup({ offer, open, onOpenChange, onResolve }: OfferPopupP
       <DialogContent className="max-w-sm gap-5">
         <DialogHeader>
           <div className="flex items-start gap-3">
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary/25 text-[#7a7000]">
-              <Tag className="size-4" />
+            <span className="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-md bg-foreground/[.06] text-muted-foreground">
+              {offer.photoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={offer.photoUrl} alt={offer.itemLabel} className="size-full object-cover" />
+              ) : (
+                <Shirt className="size-5" />
+              )}
             </span>
             <div className="min-w-0 flex-1 text-left">
               <p className="font-mono text-[10px] font-semibold uppercase tracking-[.1em] text-muted-foreground/70">Offerta ricevuta</p>
@@ -89,6 +94,12 @@ export function OfferPopup({ offer, open, onOpenChange, onResolve }: OfferPopupP
             </p>
           </div>
         </div>
+
+        <Button variant="outline" className="w-full justify-center gap-1.5" asChild>
+          <a href={offer.listingUrl ?? "#"} target="_blank" rel="noopener noreferrer">
+            <ExternalLink className="size-3.5" /> Vai all&apos;annuncio
+          </a>
+        </Button>
 
         {counterMode && (
           <div className="flex flex-col gap-1.5">

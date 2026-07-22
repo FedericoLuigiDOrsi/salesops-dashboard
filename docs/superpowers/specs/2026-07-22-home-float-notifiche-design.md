@@ -166,6 +166,10 @@ Interazioni UI (click widget → float, campanella → panel, link logistica, fo
 - Foto e URL annuncio reali (restano placeholder; campi predisposti).
 - Fusione delle sorgenti dati mock (`activity-mock` + `notifications-mock`).
 
+## Idea futura — non implementata ora
+
+Federico, in review: il pattern riga-compatta + tap→float costruito qui potrebbe *sostituire* le tile bento su mobile (oggi il bento collassa a colonna singola mantenendo le tile piene) invece di limitarsi ad impilarle. Coerente col redesign profondo già rimandato. Non cambia nulla dello scope di questa build — bento resta invariato: si appunta per quando si riprende il redesign mobile.
+
 ## File
 
 **Nuovi**

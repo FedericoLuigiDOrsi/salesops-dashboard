@@ -20,7 +20,7 @@ export function WidgetShell({ editing, onRemove, removeLabel, children }: Widget
   return (
     <section
       className={cn(
-        "relative h-full rounded-lg border border-border bg-card p-5 transition-transform",
+        "relative h-full rounded-xl border border-border bg-card p-5 transition-transform",
         editing && "scale-[.98] border-dashed"
       )}
     >

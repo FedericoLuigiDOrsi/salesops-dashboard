@@ -61,7 +61,7 @@ export function NotificationInbox() {
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-8">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="font-mono text-[11px] font-semibold uppercase tracking-[.12em] text-muted-foreground">Inbox</p>
+          <p className="font-mono text-[11px] font-semibold uppercase tracking-[.12em] text-muted-foreground/70">Inbox</p>
           <h1 className="text-[28px] font-bold tracking-tight">Notifiche</h1>
         </div>
         <button
@@ -86,7 +86,7 @@ export function NotificationInbox() {
             )}
           >
             {opt.label}
-            {opt.value !== "tutte" && <span className="font-mono text-[11px] text-muted-foreground">{counts[opt.value] ?? 0}</span>}
+            {opt.value !== "tutte" && <span className="font-mono text-[11px] text-muted-foreground/70">{counts[opt.value] ?? 0}</span>}
           </button>
         ))}
       </div>
@@ -101,7 +101,7 @@ export function NotificationInbox() {
             return (
               <section key={group.key}>
                 <div className="mb-2 flex items-center justify-between px-1">
-                  <p className="font-mono text-[11px] font-semibold uppercase tracking-[.12em] text-muted-foreground">{group.label}</p>
+                  <p className="font-mono text-[11px] font-semibold uppercase tracking-[.12em] text-muted-foreground/70">{group.label}</p>
                   <span className="font-mono text-xs text-muted-foreground">{groupItems.length}</span>
                 </div>
                 <div className="divide-y divide-border rounded-xl border border-border bg-card">

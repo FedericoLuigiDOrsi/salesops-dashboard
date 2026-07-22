@@ -188,7 +188,7 @@ export function InventoryView() {
       </div>
 
       {/* toolbar a due fasce: primaria (ricerca/stato/vista) + secondaria (filtri/colonne) */}
-      <div className="overflow-hidden rounded-xl border border-border">
+      <div className="overflow-hidden rounded-xl border border-border bg-card">
         {/* fascia primaria */}
         <div className="flex flex-wrap items-center gap-3 p-3">
           <div className="relative w-full max-w-xs">

@@ -134,7 +134,7 @@ function HomeDashboardInner() {
     <div className="relative mx-auto max-w-[1400px] px-6 py-8 sm:px-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="font-mono text-[11px] font-semibold uppercase tracking-[.12em] text-muted-foreground">
+          <p className="font-mono text-[11px] font-semibold uppercase tracking-[.12em] text-muted-foreground/70">
             Dashboard
           </p>
           <h1 className="text-[28px] font-bold tracking-tight">Ciao, Federico</h1>

@@ -130,7 +130,7 @@ Aperto da `active.kind === "notifications"`. Su mobile valutare `side="bottom"` 
 `NotificationInbox` diventa un wrapper sottile: header pagina + `<NotificationInboxContent />`. Migliorie moderate (senza stravolgere):
 - Rimozione dei popup locali duplicati (`OfferPopup`/`ArticlePreview` ora sono globali via OverlayHost).
 - Gerarchia header/segmented più pulita; segmented eventualmente sticky.
-- `ActivityModal` ("Visualizza tutte"): ridondante con la pagina stessa → rimosso, salvo Federico lo voglia tenere.
+- `ActivityModal` ("Visualizza tutte"): **tenuto invariato** (decisione Federico 22/07) — si rivaluta guardando il risultato finale sul prototipo.
 
 Il redesign profondo (nuova IA/gerarchia) resta fuori scope, coerente col NB.
 

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Globe, { type GlobeMethods } from "react-globe.gl";
 import { shipments } from "@/lib/logistics-mock";
-import { buildArcs, buildRings, DIRTYTAG_ORIGIN } from "@/lib/logistics-globe-data";
+import { buildArcs, buildRings } from "@/lib/logistics-globe-data";
 
 const GLOBE_HEIGHT = 360;
 
@@ -21,6 +21,7 @@ export function LogisticsGlobe() {
   const globeRef = useRef<GlobeMethods | undefined>(undefined);
   const [width, setWidth] = useState(0);
   const [webglSupported] = useState(hasWebGL);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -31,15 +32,15 @@ export function LogisticsGlobe() {
   }, []);
 
   useEffect(() => {
-    if (!globeRef.current || width === 0) return;
+    if (!ready || !globeRef.current) return;
     globeRef.current.pointOfView({ lat: 46, lng: 8, altitude: 2.1 }, 0);
     const controls = globeRef.current.controls();
     controls.autoRotate = true;
     controls.autoRotateSpeed = 0.4;
     controls.enableZoom = false;
-  }, [width]);
+  }, [ready]);
 
-  const arcs = useMemo(() => buildArcs(shipments, DIRTYTAG_ORIGIN), []);
+  const arcs = useMemo(() => buildArcs(shipments), []);
   const rings = useMemo(() => buildRings(shipments), []);
 
   if (!webglSupported) {
@@ -65,7 +66,8 @@ export function LogisticsGlobe() {
           width={width}
           height={GLOBE_HEIGHT}
           backgroundColor="rgba(0,0,0,0)"
-          globeImageUrl="//unpkg.com/three-globe/example/img/earth-dark.jpg"
+          globeImageUrl="/earth-dark.jpg"
+          onGlobeReady={() => setReady(true)}
           atmosphereColor="#1E488F"
           atmosphereAltitude={0.2}
           arcsData={arcs}

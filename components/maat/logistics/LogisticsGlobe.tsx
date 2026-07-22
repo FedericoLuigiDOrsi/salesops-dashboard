@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Globe, { type GlobeMethods } from "react-globe.gl";
 import { shipments } from "@/lib/logistics-mock";
-import { buildArcs, buildRings } from "@/lib/logistics-globe-data";
+import { buildArcs, buildRings, DIRTYTAG_ORIGIN } from "@/lib/logistics-globe-data";
 
 const GLOBE_HEIGHT = 360;
 
@@ -33,11 +33,12 @@ export function LogisticsGlobe() {
 
   useEffect(() => {
     if (!ready || !globeRef.current) return;
-    globeRef.current.pointOfView({ lat: 46, lng: 8, altitude: 2.1 }, 0);
+    globeRef.current.pointOfView({ lat: DIRTYTAG_ORIGIN.lat, lng: DIRTYTAG_ORIGIN.lng, altitude: 0.9 }, 0);
     const controls = globeRef.current.controls();
     controls.autoRotate = true;
-    controls.autoRotateSpeed = 0.4;
+    controls.autoRotateSpeed = 0.1;
     controls.enableZoom = false;
+    controls.enableRotate = true;
   }, [ready]);
 
   const arcs = useMemo(() => buildArcs(shipments), []);

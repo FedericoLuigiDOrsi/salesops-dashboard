@@ -8,6 +8,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { HOME_METRICS } from "@/lib/home-mock";
 import { useHomeLayout } from "@/lib/home-layout-store";
+import { METRIC_TIER_GRID_CLASS } from "@/lib/tiers";
+import { MetricTile } from "./MetricTile";
 
 /** Metriche chiave configurabili: il box "Panoramica" del mockup, come widget. */
 export function PanoramicaWidget() {
@@ -19,7 +21,7 @@ export function PanoramicaWidget() {
   return (
     <div>
       <div className="mb-4 flex items-center justify-between">
-        <p className="font-mono text-[11px] font-semibold uppercase tracking-[.12em] text-muted-foreground/70">
+        <p className="font-mono text-[11px] font-semibold uppercase tracking-[.12em] text-muted-foreground">
           Panoramica
         </p>
         <Popover open={editOpen} onOpenChange={setEditOpen}>
@@ -52,14 +54,10 @@ export function PanoramicaWidget() {
           Nessuna informazione selezionata. Usa &ldquo;Modifica&rdquo;.
         </p>
       ) : (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 lg:grid-flow-dense">
           {visibleMetrics.map((m) => (
-            <div key={m.key} className="flex flex-col gap-1.5 rounded-lg border border-border bg-background/40 px-4 py-3">
-              <span className="font-mono text-2xl font-semibold tabular-nums">{m.value}</span>
-              <span className="flex items-center gap-1.5 text-[13px] text-muted-foreground">
-                <span className={cn("size-1.5 shrink-0 rounded-full", m.dotColor)} />
-                {m.label}
-              </span>
+            <div key={m.key} className={METRIC_TIER_GRID_CLASS[m.tier]}>
+              <MetricTile metric={m} />
             </div>
           ))}
         </div>

@@ -54,7 +54,7 @@ export function ArticlePreview({ sku, open, onOpenChange }: ArticlePreviewProps)
               <Shirt className="size-4.5" />
             </span>
             <div className="min-w-0 flex-1 text-left">
-              <p className="font-mono text-[10px] font-semibold uppercase tracking-[.1em] text-muted-foreground/70">SKU {sale.sku}</p>
+              <p className="font-mono text-[10px] font-semibold uppercase tracking-[.1em] text-muted-foreground">SKU {sale.sku}</p>
               <DialogTitle className="mt-0.5 text-[16px] leading-tight">{sale.itemLabel}</DialogTitle>
             </div>
           </div>
@@ -67,7 +67,7 @@ export function ArticlePreview({ sku, open, onOpenChange }: ArticlePreviewProps)
         </div>
 
         <div>
-          <p className="mb-2 font-mono text-[11px] font-semibold uppercase tracking-[.1em] text-muted-foreground/70">Piattaforme</p>
+          <p className="mb-2 font-mono text-[11px] font-semibold uppercase tracking-[.1em] text-muted-foreground">Piattaforme</p>
           <div className="flex items-center justify-between gap-2 rounded-lg border border-[var(--chart-2)] bg-[color-mix(in_oklab,var(--chart-2)_10%,transparent)] px-2.5 py-2">
             <span className="font-mono text-[10px] font-semibold uppercase tracking-wide text-[var(--chart-2)]">
               {MARKETPLACE_LABELS[sale.marketplace]} · venduto qui
@@ -83,7 +83,7 @@ export function ArticlePreview({ sku, open, onOpenChange }: ArticlePreviewProps)
         </Button>
 
         <div className="flex flex-col gap-2 border-t border-border pt-4">
-          <p className="font-mono text-[11px] font-semibold uppercase tracking-[.1em] text-muted-foreground/70">Spedizione</p>
+          <p className="font-mono text-[11px] font-semibold uppercase tracking-[.1em] text-muted-foreground">Spedizione</p>
           {shipment ? (
             <div className="flex flex-col gap-1 text-[13px] text-muted-foreground">
               <div>
@@ -91,7 +91,7 @@ export function ArticlePreview({ sku, open, onOpenChange }: ArticlePreviewProps)
               </div>
               <div>
                 Corriere · <b className="font-semibold text-foreground">{shipment.carrier}</b>{" "}
-                <span className="font-mono text-xs text-muted-foreground/70">{shipment.trackingCode}</span>
+                <span className="font-mono text-xs text-muted-foreground">{shipment.trackingCode}</span>
               </div>
               <div>
                 {SHIPMENT_STATUS_LABELS[shipment.status]} · entro <b className="font-semibold text-foreground">{shipment.expectedDeliveryAt}</b>

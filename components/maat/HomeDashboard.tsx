@@ -27,6 +27,7 @@ import { EmptyState } from "@/components/maat/EmptyState";
 import { WidgetShell } from "@/components/maat/widgets/WidgetShell";
 import { HOME_WIDGETS, getWidget } from "@/components/maat/widgets/registry";
 import { HomeLayoutProvider, useHomeLayout, type WidgetKey } from "@/lib/home-layout-store";
+import { WIDGET_TIER_GRID_CLASS } from "@/lib/tiers";
 
 /** Widget trascinabile della bento grid: shell + componente dalla registry. */
 function SortableWidget({ widgetKey, editing }: { widgetKey: WidgetKey; editing: boolean }) {
@@ -42,7 +43,7 @@ function SortableWidget({ widgetKey, editing }: { widgetKey: WidgetKey; editing:
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn(
-        def.span === 2 && "lg:col-span-2",
+        WIDGET_TIER_GRID_CLASS[def.tier],
         editing && "cursor-grab touch-none active:cursor-grabbing",
         isDragging && "z-10 opacity-80"
       )}
@@ -133,7 +134,7 @@ function HomeDashboardInner() {
     <div className="relative mx-auto max-w-[1400px] px-6 py-8 sm:px-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="font-mono text-[11px] font-semibold uppercase tracking-[.12em] text-muted-foreground/70">
+          <p className="font-mono text-[11px] font-semibold uppercase tracking-[.12em] text-muted-foreground">
             Dashboard
           </p>
           <h1 className="text-[28px] font-bold tracking-tight">Ciao, Federico</h1>
@@ -185,7 +186,7 @@ function HomeDashboardInner() {
       ) : (
         <DndContext id="home-widgets" sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={layout} strategy={rectSortingStrategy}>
-            <div className="mt-6 grid grid-flow-dense grid-cols-1 gap-6 lg:grid-cols-2">
+            <div className="mt-6 grid grid-flow-dense grid-cols-1 gap-6 lg:grid-cols-4 lg:[grid-auto-rows:minmax(180px,auto)]">
               {layout.map((key) => (
                 <SortableWidget key={key} widgetKey={key} editing={editing} />
               ))}

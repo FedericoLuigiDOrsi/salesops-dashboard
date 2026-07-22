@@ -11,7 +11,7 @@ export function VenditeWidget() {
     <div>
       <div className="mb-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <p className="font-mono text-[11px] font-semibold uppercase tracking-[.12em] text-muted-foreground/70">
+          <p className="font-mono text-[11px] font-semibold uppercase tracking-[.12em] text-muted-foreground">
             Vendite
           </p>
           <span className="font-mono text-xs text-muted-foreground">{sales.length}</span>
@@ -28,13 +28,10 @@ export function VenditeWidget() {
         <p className="py-4 text-[13px] text-muted-foreground">Nessuna vendita recente.</p>
       ) : (
         <div className="flex flex-col gap-1">
-          {sales.map((s) => (
+          {sales.slice(0, 2).map((s) => (
             <div key={s.id} className="flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-foreground/[.03]">
               <span className="size-1.5 shrink-0 rounded-full bg-[var(--chart-2)]" />
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-[13px] font-medium">{s.itemLabel}</p>
-                <p className="font-mono text-xs text-muted-foreground">{s.sku}</p>
-              </div>
+              <p className="min-w-0 flex-1 truncate text-[13px] font-medium">{s.itemLabel}</p>
               <span className="font-mono text-[13px] font-semibold text-[var(--chart-2)]">
                 {formatEUR(s.priceCents)}
               </span>

@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 import { BadgeEuro, Bell, ChartColumn, Gauge, HandCoins, ListChecks, type LucideIcon } from "lucide-react";
 import type { WidgetKey } from "@/lib/home-layout-store";
+import type { Tier } from "@/lib/tiers";
 import { AzioniWidget } from "./AzioniWidget";
 import { EntrateWidget } from "./EntrateWidget";
 import { NotificheWidget } from "./NotificheWidget";
@@ -15,8 +16,8 @@ export interface WidgetDef {
   /** Una riga di spiegazione nel catalogo. */
   description: string;
   icon: LucideIcon;
-  /** Colonne occupate nella bento grid desktop (mobile è sempre 1 colonna). */
-  span: 1 | 2;
+  /** Fascia fissa: determina il footprint nella bento grid desktop (mobile è sempre 1 colonna). */
+  tier: Tier;
   component: ComponentType;
 }
 
@@ -26,7 +27,7 @@ export const HOME_WIDGETS: WidgetDef[] = [
     title: "Panoramica",
     description: "Le metriche chiave del negozio, configurabili",
     icon: Gauge,
-    span: 2,
+    tier: "grande",
     component: PanoramicaWidget,
   },
   {
@@ -34,7 +35,7 @@ export const HOME_WIDGETS: WidgetDef[] = [
     title: "Offerte",
     description: "Offerte in sospeso, accetta o rifiuta al volo",
     icon: HandCoins,
-    span: 1,
+    tier: "grande",
     component: OfferteWidget,
   },
   {
@@ -42,7 +43,7 @@ export const HOME_WIDGETS: WidgetDef[] = [
     title: "Vendite",
     description: "Le vendite più recenti sui marketplace",
     icon: BadgeEuro,
-    span: 1,
+    tier: "piccolo",
     component: VenditeWidget,
   },
   {
@@ -50,7 +51,7 @@ export const HOME_WIDGETS: WidgetDef[] = [
     title: "Azioni richieste",
     description: "Bozze e capi in attesa di revisione",
     icon: ListChecks,
-    span: 1,
+    tier: "medio",
     component: AzioniWidget,
   },
   {
@@ -58,7 +59,7 @@ export const HOME_WIDGETS: WidgetDef[] = [
     title: "Notifiche",
     description: "Le ultime novità dal tuo account",
     icon: Bell,
-    span: 1,
+    tier: "piccolo",
     component: NotificheWidget,
   },
   {
@@ -66,7 +67,7 @@ export const HOME_WIDGETS: WidgetDef[] = [
     title: "Entrate",
     description: "Andamento ricavi delle ultime settimane",
     icon: ChartColumn,
-    span: 1,
+    tier: "medio",
     component: EntrateWidget,
   },
 ];

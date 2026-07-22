@@ -19,6 +19,7 @@ import { useNotifications } from "@/lib/notifications-store";
 import { useSettings } from "@/lib/settings-store";
 import { mockUserProfile } from "@/lib/tenant-mock";
 import { SettingsModal } from "@/components/maat/SettingsModal";
+import { OverlayHost } from "@/components/maat/OverlayHost";
 import {
   Drawer,
   DrawerContent,
@@ -294,6 +295,7 @@ export function AppShell({ children }: AppShellProps) {
       </Drawer>
 
       <SettingsModal />
+      <OverlayHost />
     </div>
   );
 }

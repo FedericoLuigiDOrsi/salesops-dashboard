@@ -6,6 +6,7 @@ import { Analytics } from '@vercel/analytics/next'
 import { AppShell } from '@/components/maat/AppShell'
 import { NotificationsProvider } from '@/lib/notifications-store'
 import { SettingsProvider } from '@/lib/settings-store'
+import { OverlaysProvider } from '@/lib/overlays-store'
 import './globals.css'
 
 const _jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains-mono" });
@@ -43,7 +44,9 @@ export default function RootLayout({
       <body className={`font-sans antialiased`}>
         <NotificationsProvider>
           <SettingsProvider>
-            <AppShell>{children}</AppShell>
+            <OverlaysProvider>
+              <AppShell>{children}</AppShell>
+            </OverlaysProvider>
           </SettingsProvider>
         </NotificationsProvider>
         <Analytics />

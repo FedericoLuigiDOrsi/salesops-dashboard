@@ -178,6 +178,7 @@ export interface Shipment {
   shippedAt: string; // "14 lug"
   expectedDeliveryAt: string; // "18 lug"
   priceCents: number;
+  destinationCity: { name: string; lat: number; lng: number };
 }
 
 // ---------------------------------------------------------------------------

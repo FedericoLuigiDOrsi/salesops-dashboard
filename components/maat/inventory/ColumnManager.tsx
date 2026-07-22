@@ -18,7 +18,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Check, GripVertical, Lock, Pencil, Plus, Settings2, Trash2, X } from "lucide-react";
+import { Check, ChevronDown, Columns3, GripVertical, Lock, Pencil, Plus, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -97,9 +97,16 @@ export function ColumnManager() {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-1.5">
-          <Settings2 className="size-3.5" /> Colonne · {activePreset.name}
-        </Button>
+        <button
+          type="button"
+          className="inline-flex items-center gap-2.5 rounded-xl border border-border bg-card px-3.5 py-2.5 text-[13px] font-semibold text-foreground transition-[box-shadow,border-color] duration-200 hover:border-border-strong hover:shadow-e1 data-[state=open]:border-primary data-[state=open]:ring-[3px] data-[state=open]:ring-primary/45 [&>svg:last-child]:text-muted-foreground [&>svg:last-child]:transition-transform [&>svg:last-child]:duration-200 data-[state=open]:[&>svg:last-child]:rotate-180"
+        >
+          <Columns3 className="size-4" />
+          <span>
+            Colonne · <span className="font-mono">{activePreset.name}</span>
+          </span>
+          <ChevronDown className="size-[15px]" />
+        </button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-[420px] p-3">
         <div className="grid grid-cols-2 gap-3">

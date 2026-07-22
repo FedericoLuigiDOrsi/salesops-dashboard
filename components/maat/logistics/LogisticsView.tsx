@@ -1,8 +1,16 @@
+"use client";
+
+import dynamic from "next/dynamic";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { cn, formatEUR } from "@/lib/utils";
 import { MARKETPLACE_LABELS, SHIPMENT_STATUS_LABELS, type ShipmentStatus } from "@/types/maat";
 import { shipmentsByPlatform } from "@/lib/logistics-mock";
+
+const LogisticsGlobe = dynamic(() => import("./LogisticsGlobe").then((m) => m.LogisticsGlobe), {
+  ssr: false,
+  loading: () => <div className="h-[360px] animate-pulse rounded-lg border border-border bg-card" />,
+});
 
 const STATUS_CLASS: Record<ShipmentStatus, string> = {
   shipped: "border-transparent bg-muted text-muted-foreground",
@@ -20,6 +28,8 @@ export function LogisticsView() {
         <h1 className="text-[28px] font-bold tracking-tight">Logistica</h1>
         <p className="text-sm text-muted-foreground">Spedizioni in corso, organizzate per piattaforma.</p>
       </div>
+
+      <LogisticsGlobe />
 
       {groups.map(({ marketplace, shipments }) => (
         <section key={marketplace}>

@@ -3,88 +3,26 @@
 import { useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LayoutGrid, List, Plus, Search, Zap } from "lucide-react";
+import { Plus, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn, formatEUR } from "@/lib/utils";
-import { MARKETPLACE_LABELS } from "@/types/maat";
-import { inventoryItems, type InventoryItem, type InventoryStatus } from "@/lib/inventory-mock";
+import { inventoryItems, type InventoryItem } from "@/lib/inventory-mock";
 import { AutomazioniDrawer } from "@/components/maat/inventory/AutomazioniDrawer";
-import { COLUMN_DEFS, PLATFORM_KEYS, type ColumnKey, type PlatformKey } from "@/lib/inventory-columns";
+import { COLUMN_DEFS, type ColumnKey } from "@/lib/inventory-columns";
 import { PlatformPills } from "@/components/maat/inventory/PlatformPills";
-import { ColumnManager } from "@/components/maat/inventory/ColumnManager";
 import { useInventoryColumns } from "@/lib/inventory-columns-store";
-
-type ViewMode = "table" | "grid";
-type StatusFilter = "all" | InventoryStatus;
-type PriceBand = "all" | "lt50" | "50-100" | "100-200" | "gt200";
-type PlatformFilter = "all" | PlatformKey;
-
-const CATEGORY_OPTIONS = ["Capospalla", "Giacche", "Pantaloni", "Camicie", "Maglieria", "Scarpe", "Accessori"] as const;
-const SIZE_OPTIONS = ["S", "M", "L", "XL", "W32", "42", "Unica"] as const;
-
-const PRICE_OPTIONS: { value: PriceBand; label: string }[] = [
-  { value: "all", label: "Tutti" },
-  { value: "lt50", label: "< 50 €" },
-  { value: "50-100", label: "50–100 €" },
-  { value: "100-200", label: "100–200 €" },
-  { value: "gt200", label: "> 200 €" },
-];
-
-const STATUS_SEGMENTS: { value: StatusFilter; label: string }[] = [
-  { value: "all", label: "Tutti" },
-  { value: "bozza", label: "Bozze" },
-  { value: "catalogo", label: "A catalogo" },
-  { value: "venduto", label: "Venduti" },
-];
-
-const STATUS_LABEL: Record<InventoryStatus, string> = {
-  bozza: "Bozza",
-  catalogo: "A catalogo",
-  venduto: "Venduto",
-};
-
-const STATUS_CLASS: Record<InventoryStatus, string> = {
-  bozza: "border-transparent bg-primary/20 text-[#7a7000]",
-  catalogo: "border-transparent bg-[color-mix(in_oklab,var(--chart-2)_16%,transparent)] text-[var(--chart-2)]",
-  venduto: "border-transparent bg-muted text-muted-foreground",
-};
-
-function matchesPrice(cents: number, band: PriceBand) {
-  const eur = cents / 100;
-  switch (band) {
-    case "lt50":
-      return eur < 50;
-    case "50-100":
-      return eur >= 50 && eur <= 100;
-    case "100-200":
-      return eur > 100 && eur <= 200;
-    case "gt200":
-      return eur > 200;
-    default:
-      return true;
-  }
-}
-
-function matchesBase(
-  item: InventoryItem,
-  filters: { search: string; category: string; size: string; price: PriceBand; platform: PlatformFilter }
-) {
-  const { search, category, size, price, platform } = filters;
-  if (search) {
-    const needle = search.trim().toLowerCase();
-    const haystack = `${item.brand} ${item.tipoCapo} ${item.sku}`.toLowerCase();
-    if (!haystack.includes(needle)) return false;
-  }
-  if (category !== "all" && item.category !== category) return false;
-  if (size !== "all" && item.size !== size) return false;
-  if (!matchesPrice(item.priceCents, price)) return false;
-  if (platform !== "all" && item.platforms[platform] === null) return false;
-  return true;
-}
+import { InventoryToolbar } from "@/components/maat/inventory/InventoryToolbar";
+import {
+  matchesBase,
+  STATUS_CLASS,
+  STATUS_LABEL,
+  type PlatformFilter,
+  type PriceBand,
+  type StatusFilter,
+  type ViewMode,
+} from "@/lib/inventory-filters";
 
 function FieldLabel({ children }: { children: ReactNode }) {
   return (
@@ -187,152 +125,26 @@ export function InventoryView() {
         </div>
       </div>
 
-      {/* toolbar a due fasce: primaria (ricerca/stato/vista) + secondaria (filtri/colonne) */}
-      <div className="overflow-hidden rounded-xl border border-border bg-card">
-        {/* fascia primaria */}
-        <div className="flex flex-wrap items-center gap-3 p-3">
-          <div className="relative w-full max-w-xs">
-            <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Cerca per brand, tipo o SKU…"
-              aria-label="Cerca"
-              className="pl-8"
-            />
-          </div>
-
-          <div className="ml-auto inline-flex flex-wrap rounded-md border border-border p-0.5">
-            {STATUS_SEGMENTS.map((s) => (
-              <button
-                key={s.value}
-                type="button"
-                aria-pressed={statusFilter === s.value}
-                onClick={() => setStatusFilter(s.value)}
-                className={cn(
-                  "inline-flex items-center gap-1.5 rounded-[5px] px-3 py-1.5 text-[13px] font-medium transition-colors",
-                  statusFilter === s.value ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {s.label}
-                <span
-                  className={cn(
-                    "rounded-full px-1.5 py-0 text-[11px] font-mono",
-                    statusFilter === s.value ? "bg-primary-foreground/20" : "bg-muted"
-                  )}
-                >
-                  {statusCounts[s.value]}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          <div className="inline-flex rounded-md border border-border p-0.5">
-            <button
-              type="button"
-              aria-pressed={view === "table"}
-              onClick={() => setView("table")}
-              className={cn(
-                "inline-flex items-center gap-1.5 rounded-[5px] px-3 py-1.5 text-[13px] font-medium transition-colors",
-                view === "table" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <List className="size-3.5" /> Tabella
-            </button>
-            <button
-              type="button"
-              aria-pressed={view === "grid"}
-              onClick={() => setView("grid")}
-              className={cn(
-                "inline-flex items-center gap-1.5 rounded-[5px] px-3 py-1.5 text-[13px] font-medium transition-colors",
-                view === "grid" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <LayoutGrid className="size-3.5" /> Griglia
-            </button>
-          </div>
-        </div>
-
-        {/* fascia secondaria: filtri di servizio, sfondo distinto */}
-        <div className="flex flex-wrap items-center gap-2 border-t border-border bg-muted/40 px-3 py-2">
-          <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            Categoria
-            <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger size="sm" className="w-36" aria-label="Categoria">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tutte</SelectItem>
-                {CATEGORY_OPTIONS.map((c) => (
-                  <SelectItem key={c} value={c}>
-                    {c}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </label>
-
-          <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            Taglia
-            <Select value={size} onValueChange={setSize}>
-              <SelectTrigger size="sm" className="w-24" aria-label="Taglia">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tutte</SelectItem>
-                {SIZE_OPTIONS.map((s) => (
-                  <SelectItem key={s} value={s}>
-                    {s}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </label>
-
-          <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            Prezzo
-            <Select value={price} onValueChange={(v) => setPrice(v as PriceBand)}>
-              <SelectTrigger size="sm" className="w-28" aria-label="Prezzo">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {PRICE_OPTIONS.map((p) => (
-                  <SelectItem key={p.value} value={p.value}>
-                    {p.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </label>
-
-          <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            Piattaforma
-            <Select value={platform} onValueChange={(v) => setPlatform(v as PlatformFilter)}>
-              <SelectTrigger size="sm" className="w-28" aria-label="Piattaforma">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tutte</SelectItem>
-                {PLATFORM_KEYS.map((k) => (
-                  <SelectItem key={k} value={k}>
-                    {MARKETPLACE_LABELS[k]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </label>
-
-          {view === "table" && <ColumnManager />}
-
-          {hasActiveFilters && (
-            <Button variant="ghost" size="sm" onClick={resetFilters}>
-              Azzera
-            </Button>
-          )}
-
-          <span className="ml-auto text-xs text-muted-foreground">{filtered.length} capi</span>
-        </div>
-      </div>
+      <InventoryToolbar
+        search={search}
+        onSearchChange={setSearch}
+        statusFilter={statusFilter}
+        onStatusChange={setStatusFilter}
+        statusCounts={statusCounts}
+        view={view}
+        onViewChange={setView}
+        category={category}
+        onCategoryChange={setCategory}
+        size={size}
+        onSizeChange={setSize}
+        price={price}
+        onPriceChange={setPrice}
+        platform={platform}
+        onPlatformChange={setPlatform}
+        resultCount={filtered.length}
+        hasActiveFilters={hasActiveFilters}
+        onReset={resetFilters}
+      />
 
       {filtered.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">

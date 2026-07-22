@@ -4,26 +4,19 @@ import { useRouter } from "next/navigation";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { CatalogEntryDetail } from "@/components/maat/CatalogEntryDetail";
 
-interface EntryDialogProps {
-  /** onOpenChange(false): "back" torna in history (overlay da lista), "close" naviga a /capi (hard nav diretta sulla route). */
-  onDismiss?: "back" | "close";
-}
-
 /**
- * Overlay scheda prodotto: dialog centrato e scurito sullo sfondo, non una
- * pagina interna. Renderizzato sia dalla route intercettata
- * `app/capi/@modal/(.)[id]` (overlay sopra la lista, URL condivisibile) sia
- * dalla route piena `app/capi/[id]` (hard nav / refresh diretto sull'URL).
+ * Overlay scheda prodotto per `app/capi/[id]`: dialog centrato e scurito
+ * sullo sfondo, non una pagina interna. /inventario apre questa route via
+ * router.push; alla chiusura si torna lì (non più intercettata da un
+ * @modal — la vecchia lista /capi è stata rimossa a favore di /inventario).
  */
-export function EntryDialog({ onDismiss = "back" }: EntryDialogProps) {
+export function EntryDialog() {
   const router = useRouter();
   return (
     <Dialog
       open
       onOpenChange={(open) => {
-        if (open) return;
-        if (onDismiss === "back") router.back();
-        else router.push("/capi");
+        if (!open) router.push("/inventario");
       }}
     >
       <DialogContent

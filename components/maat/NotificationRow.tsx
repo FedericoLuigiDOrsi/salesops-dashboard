@@ -18,11 +18,14 @@ function RowIcon({ unread, children }: { unread: boolean; children: ReactNode })
   return (
     <span
       className={cn(
-        "flex size-9 shrink-0 items-center justify-center rounded-md",
+        "relative flex size-9 shrink-0 items-center justify-center rounded-md",
         unread ? "bg-primary/25 text-[#7a7000]" : "bg-foreground/[.06] text-muted-foreground"
       )}
     >
       {children}
+      {unread && (
+        <span className="absolute -right-0.5 -top-0.5 size-2 animate-pulse rounded-full bg-primary ring-2 ring-card" />
+      )}
     </span>
   );
 }

@@ -18,7 +18,12 @@ export function ConfirmGateButton({ enabled, missingLabels, onConfirm }: Confirm
           <span>Mancano: {missingLabels.join(", ")}</span>
         </div>
       )}
-      <Button size="lg" disabled={!enabled} onClick={onConfirm} className="w-full rounded-full font-semibold">
+      <Button
+        size="lg"
+        disabled={!enabled}
+        onClick={onConfirm}
+        className="w-full rounded-full font-semibold active:scale-[0.98]"
+      >
         Conferma capo
       </Button>
     </div>

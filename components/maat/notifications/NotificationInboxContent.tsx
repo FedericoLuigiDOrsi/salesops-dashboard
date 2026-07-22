@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { motion, type Variants } from "framer-motion";
 import { Bell } from "lucide-react";
 import { EmptyState } from "@/components/maat/EmptyState";
 import { SaleNotificationRow, OfferNotificationRow, ShipmentNotificationRow } from "@/components/maat/NotificationRow";
@@ -25,6 +26,15 @@ const FILTER_OPTIONS: { value: FilterKey; label: string }[] = [
 function baseOfferId(notificationId: string): string {
   return notificationId.replace(/^n-/, "");
 }
+
+const listVariants: Variants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.04 } },
+};
+const rowVariants: Variants = {
+  hidden: { opacity: 0, y: 8 },
+  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 28 } },
+};
 
 export function NotificationInboxContent({ variant = "page" }: { variant?: "page" | "panel" }) {
   const { openOffer, openSale, offerStatus } = useOverlays();
@@ -85,17 +95,35 @@ export function NotificationInboxContent({ variant = "page" }: { variant?: "page
                   <p className="font-mono text-[11px] font-semibold uppercase tracking-[.12em] text-muted-foreground/70">{group.label}</p>
                   <span className="font-mono text-xs text-muted-foreground">{groupItems.length}</span>
                 </div>
-                <div className="divide-y divide-border rounded-xl border border-border bg-card">
+                <motion.div
+                  key={group.key}
+                  variants={listVariants}
+                  initial="hidden"
+                  animate="show"
+                  className="divide-y divide-border rounded-xl border border-border bg-card"
+                >
                   {groupItems.map((n) => {
                     if (n.type === "vendita") {
-                      return <SaleNotificationRow key={n.id} notification={n} onOpen={() => n.sku && openSale(n.sku)} />;
+                      return (
+                        <motion.div key={n.id} variants={rowVariants}>
+                          <SaleNotificationRow notification={n} onOpen={() => n.sku && openSale(n.sku)} />
+                        </motion.div>
+                      );
                     }
                     if (n.type === "offerta") {
-                      return <OfferNotificationRow key={n.id} notification={n} onOpen={() => openOffer(baseOfferId(n.id))} />;
+                      return (
+                        <motion.div key={n.id} variants={rowVariants}>
+                          <OfferNotificationRow notification={n} onOpen={() => openOffer(baseOfferId(n.id))} />
+                        </motion.div>
+                      );
                     }
-                    return <ShipmentNotificationRow key={n.id} notification={n} />;
+                    return (
+                      <motion.div key={n.id} variants={rowVariants}>
+                        <ShipmentNotificationRow notification={n} />
+                      </motion.div>
+                    );
                   })}
-                </div>
+                </motion.div>
               </section>
             );
           })}

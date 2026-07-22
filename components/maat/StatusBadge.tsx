@@ -20,7 +20,7 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
     <Badge
       variant="outline"
       className={cn(
-        "gap-1.5 rounded-full border-transparent px-2.5 py-1 font-mono text-[11px] font-semibold uppercase tracking-wide",
+        "gap-1.5 rounded-full border-transparent px-2.5 py-1 font-mono text-[11px] font-semibold uppercase tracking-wide transition-colors duration-200",
         config.className,
         className
       )}

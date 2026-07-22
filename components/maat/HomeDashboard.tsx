@@ -19,6 +19,7 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { motion } from "framer-motion";
 import { Check, LayoutGrid, PackagePlus, Plus, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -41,22 +42,32 @@ function SortableWidget({ widgetKey, editing }: { widgetKey: WidgetKey; editing:
   return (
     <div
       ref={setNodeRef}
-      style={{ transform: CSS.Transform.toString(transform), transition }}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition: transition ?? "transform 320ms cubic-bezier(0.22, 1, 0.36, 1)",
+      }}
       className={cn(
         WIDGET_TIER_GRID_CLASS[def.tier],
         editing && "cursor-grab touch-none active:cursor-grabbing",
-        isDragging && "z-10 opacity-80"
+        isDragging && "z-10"
       )}
       {...attributes}
       {...listeners}
     >
-      <WidgetShell
-        editing={editing}
-        onRemove={() => removeWidget(widgetKey)}
-        removeLabel={`Rimuovi widget ${def.title}`}
+      <motion.div
+        animate={{ scale: isDragging ? 1.035 : 1 }}
+        transition={{ type: "spring", stiffness: 350, damping: 25 }}
+        style={{ boxShadow: isDragging ? "0 20px 40px -15px rgba(0,0,0,0.25)" : "none" }}
+        className="h-full rounded-xl"
       >
-        <def.component />
-      </WidgetShell>
+        <WidgetShell
+          editing={editing}
+          onRemove={() => removeWidget(widgetKey)}
+          removeLabel={`Rimuovi widget ${def.title}`}
+        >
+          <def.component />
+        </WidgetShell>
+      </motion.div>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import { Shirt, ExternalLink } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -54,14 +55,20 @@ export function OfferPopup({ offer, open, onOpenChange, onResolve }: OfferPopupP
       <DialogContent className="max-w-sm gap-5">
         <DialogHeader>
           <div className="flex items-start gap-3">
-            <span className="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-md bg-foreground/[.06] text-muted-foreground">
+            <motion.span
+              key={offer.id}
+              initial={{ scale: 0, rotate: -15 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: "spring", stiffness: 400, damping: 15 }}
+              className="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-md bg-foreground/[.06] text-muted-foreground"
+            >
               {offer.photoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={offer.photoUrl} alt={offer.itemLabel} className="size-full object-cover" />
               ) : (
                 <Shirt className="size-5" />
               )}
-            </span>
+            </motion.span>
             <div className="min-w-0 flex-1 text-left">
               <p className="font-mono text-[10px] font-semibold uppercase tracking-[.1em] text-muted-foreground/70">Offerta ricevuta</p>
               <DialogTitle className="mt-0.5 text-[16px] leading-tight">{offer.itemLabel}</DialogTitle>

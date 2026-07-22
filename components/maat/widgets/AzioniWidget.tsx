@@ -24,7 +24,7 @@ export function AzioniWidget() {
           ) : null}
         </div>
         <Link
-          href="/capi"
+          href="/inventario"
           className="flex items-center gap-1 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground"
         >
           Lavorazione <ArrowRight className="size-3.5" />

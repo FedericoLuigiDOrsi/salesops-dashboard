@@ -1,5 +1,17 @@
+"use client";
+
+import { motion, type Variants } from "framer-motion";
 import { CatalogCard } from "@/components/maat/CatalogCard";
 import type { CatalogEntry, CatalogEntryStatus } from "@/types/maat";
+
+const listVariants: Variants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.03 } },
+};
+const cardVariants: Variants = {
+  hidden: { opacity: 0, y: 8 },
+  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 28 } },
+};
 
 // Vista kanban per status — estensione confermata con Federico il 2026-07-06,
 // non nel brief originale. Colonne sui 3 valori di CatalogEntry.status; il preset
@@ -35,14 +47,16 @@ export function CatalogKanban({ entries, statuses }: CatalogKanbanProps) {
               <span className="text-[13px] font-semibold">{column.label}</span>
               <span className="font-mono text-xs text-muted-foreground">{columnEntries.length}</span>
             </div>
-            <div className="flex flex-col gap-2">
+            <motion.div key={column.status} variants={listVariants} initial="hidden" animate="show" className="flex flex-col gap-2">
               {columnEntries.map((entry) => (
-                <CatalogCard key={entry.id} entry={entry} variant="row" />
+                <motion.div key={entry.id} variants={cardVariants}>
+                  <CatalogCard entry={entry} variant="row" />
+                </motion.div>
               ))}
               {columnEntries.length === 0 && (
                 <p className="px-1 py-2 text-[12px] text-muted-foreground/70">Nessun capo</p>
               )}
-            </div>
+            </motion.div>
           </div>
         );
       })}

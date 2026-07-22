@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface StatTileProps {
@@ -7,6 +10,30 @@ interface StatTileProps {
 }
 
 export function StatTile({ number, label, attention }: StatTileProps) {
+  const [display, setDisplay] = useState(0);
+  const prevRef = useRef(0);
+
+  useEffect(() => {
+    const from = prevRef.current;
+    const to = number;
+    const duration = 600;
+    const start = performance.now();
+
+    let frame: number;
+    function tick(now: number) {
+      const progress = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setDisplay(Math.round(from + (to - from) * eased));
+      if (progress < 1) {
+        frame = requestAnimationFrame(tick);
+      } else {
+        prevRef.current = to;
+      }
+    }
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [number]);
+
   return (
     <div
       className={cn(
@@ -14,7 +41,7 @@ export function StatTile({ number, label, attention }: StatTileProps) {
         attention && "border-l-2 border-l-primary"
       )}
     >
-      <span className="font-mono text-2xl font-semibold tabular-nums">{number}</span>
+      <span className="font-mono text-2xl font-semibold tabular-nums">{display}</span>
       <span className="text-[13px] text-muted-foreground">{label}</span>
     </div>
   );

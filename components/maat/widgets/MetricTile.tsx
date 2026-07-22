@@ -3,7 +3,6 @@
 import { cn } from "@/lib/utils";
 import type { HomeMetric } from "@/lib/home-mock";
 import { isMetricUrgent } from "@/lib/urgency";
-import { GlowingEffect } from "@/components/ui/glowing-effect";
 
 const VALUE_CLASS: Record<HomeMetric["tier"], string> = {
   grande: "text-[32px] font-bold",
@@ -26,28 +25,24 @@ const TILE_PADDING_CLASS: Record<HomeMetric["tier"], string> = {
 /**
  * Tile di una metrica Panoramica: una sola struttura (valore sopra, label
  * sotto, mai troncata) — la fascia si vede solo da scala tipografica e
- * padding, non da una forma diversa. L'urgenza non è più un dot che si
- * confonde col dot-colore-per-metrica: è un bordo a sé (GlowingEffect),
- * il dot resta sempre e solo il colore decorativo della metrica.
+ * padding, non da una forma diversa.
  */
 export function MetricTile({ metric }: { metric: HomeMetric }) {
   const urgent = isMetricUrgent(metric);
+  const dotClass = cn("size-1.5 shrink-0 rounded-full", urgent ? "bg-destructive" : metric.dotColor);
 
   return (
-    <div className="relative h-full rounded-lg">
-      <GlowingEffect disabled glow={urgent} variant="destructive" borderWidth={2} />
-      <div
-        className={cn(
-          "flex h-full flex-col gap-1 rounded-lg border border-border bg-background/40",
-          TILE_PADDING_CLASS[metric.tier]
-        )}
-      >
-        <span className={cn("font-mono tabular-nums", VALUE_CLASS[metric.tier])}>{metric.value}</span>
-        <span className={cn("flex items-center gap-1.5 text-muted-foreground", LABEL_CLASS[metric.tier])}>
-          <span className={cn("size-1.5 shrink-0 rounded-full", metric.dotColor)} />
-          {metric.label}
-        </span>
-      </div>
+    <div
+      className={cn(
+        "flex h-full flex-col gap-1 rounded-lg border border-border bg-background/40",
+        TILE_PADDING_CLASS[metric.tier]
+      )}
+    >
+      <span className={cn("font-mono tabular-nums", VALUE_CLASS[metric.tier])}>{metric.value}</span>
+      <span className={cn("flex items-center gap-1.5 text-muted-foreground", LABEL_CLASS[metric.tier])}>
+        <span className={dotClass} />
+        {metric.label}
+      </span>
     </div>
   );
 }

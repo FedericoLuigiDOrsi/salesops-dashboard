@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Shirt, ExternalLink, Download, Check } from "lucide-react";
+import Link from "next/link";
+import { Shirt, ExternalLink, Download, Check, Truck } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { sales } from "@/lib/activity-mock";
@@ -77,7 +78,7 @@ export function ArticlePreview({ sku, open, onOpenChange }: ArticlePreviewProps)
         </div>
 
         <Button variant="outline" className="w-full justify-center gap-1.5" asChild>
-          <a href="#" target="_blank" rel="noopener noreferrer">
+          <a href={sale.listingUrl ?? "#"} target="_blank" rel="noopener noreferrer">
             <ExternalLink className="size-3.5" /> Vai all&apos;annuncio
           </a>
         </Button>
@@ -110,6 +111,11 @@ export function ArticlePreview({ sku, open, onOpenChange }: ArticlePreviewProps)
                 <Download className="size-4" /> Stampa etichetta
               </>
             )}
+          </Button>
+          <Button variant="outline" className="w-full justify-center gap-1.5" asChild>
+            <Link href="/logistica" onClick={() => onOpenChange(false)}>
+              <Truck className="size-4" /> Vai alla logistica
+            </Link>
           </Button>
         </div>
       </DialogContent>

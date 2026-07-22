@@ -198,6 +198,8 @@ export interface Offer {
   time: string; // "1 h"
   status: OfferStatus;
   counterCents?: number; // controfferta inviata dal venditore, se status === "counter"
+  photoUrl?: string | null; // placeholder oggi; immagine reale in futuro
+  listingUrl?: string | null; // URL annuncio sul marketplace
 }
 
 export interface Sale {
@@ -207,4 +209,6 @@ export interface Sale {
   marketplace: Marketplace;
   priceCents: number;
   time: string; // "12 min"
+  photoUrl?: string | null;
+  listingUrl?: string | null;
 }

@@ -1,5 +1,5 @@
 import { offers, sales } from "@/lib/activity-mock";
-import type { Marketplace, OfferStatus } from "@/types/maat";
+import type { Marketplace, OfferStatus, Offer } from "@/types/maat";
 
 // Inbox notifiche v2 — mirror di public/mobile/maat-shell-account.html righe
 // 3467-3577 (array N + GROUPS). Unifica vendite/offerte/spedizioni in un unico
@@ -31,6 +31,8 @@ export interface OfferNotification extends NotificationV2Base {
   listPriceCents: number;
   status: OfferStatus;
   counterCents?: number;
+  photoUrl?: string | null;
+  listingUrl?: string | null;
 }
 
 export interface ShipmentNotification extends NotificationV2Base {
@@ -129,3 +131,27 @@ export const notificationGroups: { key: "vendita" | "offerta" | "spedizione"; la
   { key: "offerta", label: "Offerte ricevute", match: (n) => n.type === "offerta" },
   { key: "spedizione", label: "Spedizioni e altro", match: (n) => n.type === "spedizione" || n.type === "altro" },
 ];
+
+// Mappa un Offer (id base, es. "off-1") in OfferNotification preservando l'id
+// base come `id` — così lo stato condiviso è keyed coerentemente tra widget Home
+// (Offer) e float/pagina (OfferNotification). L'override sovrascrive stato/controfferta.
+export function offerToNotification(
+  offer: Offer,
+  override?: { status: OfferStatus; counterCents?: number }
+): OfferNotification {
+  return {
+    id: offer.id,
+    type: "offerta",
+    unread: false,
+    itemLabel: offer.itemLabel,
+    marketplace: offer.marketplace,
+    sku: offer.sku,
+    time: offer.time,
+    offerCents: offer.offerCents,
+    listPriceCents: offer.listPriceCents,
+    status: override?.status ?? offer.status,
+    counterCents: override?.counterCents ?? offer.counterCents,
+    photoUrl: offer.photoUrl,
+    listingUrl: offer.listingUrl,
+  };
+}

@@ -39,15 +39,21 @@ Stesso meccanismo su entrambi i livelli: **fascia fissa per ruolo** (grande/medi
 
 La fascia è una proprietà del widget-key / metric-key, non un campo che l'utente edita. Scelta di quali widget/metriche mostrare e il loro ordine restano liberi esattamente come oggi (`home-layout-store.tsx`, popover "Modifica" di Panoramica).
 
-## Trattamento visivo per fascia — "Silhouette"
+## Trattamento visivo per fascia — gerarchia tipografica
 
-Non solo dimensione: **la struttura interna della tile cambia per fascia**, non solo raggio/bordo/padding.
+**Superata la "Silhouette" (3 forme per fascia) inizialmente approvata.** Implementata e vista dal vivo nel browser, Federico l'ha bocciata: le label lunghe troncavano in modo illeggibile nella pillola piccola ("Capi a catalogo" → "Capi ..."), andavano a capo goffamente nel verticale medio, e il dot urgenza si confondeva col dot-colore-per-metrica preesistente — "dimensioni e label completamente sminchiate, zero gerarchia percepibile".
 
-- **Grande**: layout orizzontale — valore in evidenza a sinistra, contesto/delta a destra (es. Entrate: `€ 2.680` + `+12%` sulla stessa riga).
-- **Medio**: layout verticale classico (label sopra, valore sotto) — sostanzialmente quello di oggi.
-- **Piccolo**: layout a pillola/riga singola — dot + label + valore inline, niente stacking verticale.
+Sostituita con **una struttura unica per tutte le fasce** (valore sopra, label sotto, mai troncata — wrap libero) dove la fascia si vede solo da scala tipografica e padding, non da una forma diversa:
 
-Approvato dopo confronto visivo di 3 direzioni (companion su porta 51576, screen `tier-treatment.html`) contro le alternative "scala di peso" (solo spazio/tipografia) ed "elevazione" (ombra + fondo muted).
+| Fascia | Valore | Padding | Label |
+|---|---|---|---|
+| Grande | 32px bold | generoso (px-4 py-3.5) | 12px muted |
+| Medio | 20px semibold | medio (px-3 py-2.5) | 10px muted |
+| Piccolo | 15px semibold | compatto (px-2.5 py-2) | 10px muted |
+
+Confrontate 3 direzioni nel companion (screen `metric-tile-redesign.html`): baseline/bug riprodotto fedelmente, "A · Gerarchia tipografica" (scelta), "B · Silhouette corretta con label brevi dedicate" (scartata — richiedeva un nuovo campo `shortLabel` per metrica, più lavoro per lo stesso risultato). Nessun cambio al modello dati: la fascia decide type-scale/padding, non serve alcuna label abbreviata.
+
+Il dot urgenza (badge/accento, vedi sotto) resta con la stessa logica di prima per ora — la sua confusione con il dot-colore-per-metrica è un problema esplicitamente rimandato, non ancora affrontato in questa iterazione.
 
 ## Geometria griglia Home — bento incastrata
 
@@ -94,6 +100,14 @@ Fascia e posizione restano fisse; il dato reale modula **badge/contatore** e **a
 - Non si introduce alcun effetto decorativo animato (niente `GridBeam`/canvas — approccio già scartato).
 - Non si ridisegna la logica di `useHomeLayout` (persistenza localStorage, add/remove widget) — resta invariata.
 - Soglie esatte per gli accenti a soglia fissa (bozze, escrow, spedizioni, ecc.) non sono definite qui — da tarare in implementazione con dati reali/Federico.
+
+## Prossimi passi (non in questa iterazione)
+
+Direzione futura indicata da Federico, **non implementata ora** — solo catturata perché non vada persa:
+
+Oggi la fascia (grande/medio/piccolo) è fissa per widget/metric-key e determina sia la dimensione sia — con la gerarchia tipografica sopra — il trattamento interno. L'idea è **invertire parzialmente il modello**: costruire una libreria di **strutture universali per dimensione di blocco** (1×1, 1×2, 2×1, 2×2, ecc.), ciascuna con un proprio template di distribuzione di testi/numeri già progettato per quella forma. L'utente sceglierebbe la dimensione del blocco (non solo se mostrarlo), e la distribuzione interna del contenuto cambierebbe di conseguenza secondo il template di quella taglia — la gerarchia percepita dipenderebbe dal blocco scelto, non da un'assegnazione fissa a priori.
+
+Questo è un cambio di modello più ampio (richiede: libreria di template per taglia, UI per scegliere la taglia per widget/metrica, probabilmente sciogliere l'attuale distinzione fascia-fissa vs fascia-scelta-dall'utente) — da brainstormare come progetto a sé quando si riprende questo lavoro.
 
 ## Verifica
 

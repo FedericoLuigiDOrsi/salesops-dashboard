@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import {
   createColumnHelper,
   flexRender,
@@ -19,6 +20,11 @@ import { EmptyState } from "@/components/maat/EmptyState";
 import { formatEUR } from "@/lib/utils";
 import { MARKETPLACE_LABELS, SHIPMENT_STATUS_LABELS, type Shipment, type ShipmentStatus } from "@/types/maat";
 import { shipments } from "@/lib/logistics-mock";
+
+const LogisticsGlobe = dynamic(() => import("./LogisticsGlobe").then((m) => m.LogisticsGlobe), {
+  ssr: false,
+  loading: () => <div className="h-[360px] animate-pulse rounded-lg border border-border bg-card" />,
+});
 
 type StatusFilter = "tutte" | ShipmentStatus;
 
@@ -128,6 +134,8 @@ export function LogisticsView() {
         <h1 className="text-[28px] font-bold tracking-tight">Logistica</h1>
         <p className="text-sm text-muted-foreground">Spedizioni in corso su tutte le piattaforme.</p>
       </div>
+
+      <LogisticsGlobe />
 
       <div className="flex flex-wrap items-center gap-3">
         <SegmentedFilter options={STATUS_OPTIONS} active={statusFilter} onChange={setStatusFilter} />

@@ -20,9 +20,9 @@ interface ActivityModalProps {
 }
 
 const STATUS_BADGE: Record<"accepted" | "rejected" | "counter", { label: string; className: string }> = {
-  accepted: { label: "Accettata", className: "bg-success-soft text-success" },
+  accepted: { label: "Accettata", className: "bg-[color-mix(in_oklab,var(--chart-2)_16%,transparent)] text-[var(--chart-2)]" },
   rejected: { label: "Rifiutata", className: "bg-muted text-muted-foreground" },
-  counter: { label: "Controfferta inviata", className: "bg-accent-soft text-accent-ink" },
+  counter: { label: "Controfferta inviata", className: "bg-primary/25 text-[#7a7000]" },
 };
 
 export function ActivityModal({ open, onOpenChange, offers }: ActivityModalProps) {
@@ -36,7 +36,7 @@ export function ActivityModal({ open, onOpenChange, offers }: ActivityModalProps
 
         <section className="flex flex-col gap-1">
           <div className="mb-1 flex items-center justify-between px-1">
-            <p className="font-mono text-[11px] font-semibold uppercase tracking-[.1em] text-muted-foreground">Vendite eseguite</p>
+            <p className="font-mono text-[11px] font-semibold uppercase tracking-[.1em] text-muted-foreground/70">Vendite eseguite</p>
             <span className="font-mono text-xs text-muted-foreground">{sales.length}</span>
           </div>
           <div className="divide-y divide-border rounded-xl border border-border bg-card">
@@ -58,7 +58,7 @@ export function ActivityModal({ open, onOpenChange, offers }: ActivityModalProps
                 </div>
                 <div className="flex shrink-0 flex-col items-end gap-0.5">
                   <span className="font-mono text-[14px] font-semibold text-[var(--chart-2)]">{formatEUR(s.priceCents)}</span>
-                  <span className="font-mono text-[11px] text-muted-foreground">{s.time}</span>
+                  <span className="font-mono text-[11px] text-muted-foreground/70">{s.time}</span>
                 </div>
               </div>
             ))}
@@ -67,7 +67,7 @@ export function ActivityModal({ open, onOpenChange, offers }: ActivityModalProps
 
         <section className="flex flex-col gap-1">
           <div className="mb-1 flex items-center justify-between px-1">
-            <p className="font-mono text-[11px] font-semibold uppercase tracking-[.1em] text-muted-foreground">Offerte ricevute</p>
+            <p className="font-mono text-[11px] font-semibold uppercase tracking-[.1em] text-muted-foreground/70">Offerte ricevute</p>
             <span className="font-mono text-xs text-muted-foreground">{offers.length}</span>
           </div>
           <div className="divide-y divide-border rounded-xl border border-border bg-card">
@@ -101,7 +101,7 @@ export function ActivityModal({ open, onOpenChange, offers }: ActivityModalProps
                       <span className="font-mono text-[14px] font-semibold">{formatEUR(o.offerCents)}</span>
                       <span className="font-mono text-[11px] text-muted-foreground line-through">{formatEUR(o.listPriceCents)}</span>
                     </div>
-                    <span className="font-mono text-[11px] text-muted-foreground">{o.time}</span>
+                    <span className="font-mono text-[11px] text-muted-foreground/70">{o.time}</span>
                   </div>
                 </div>
               );

@@ -38,8 +38,8 @@ const STATUS_LABEL: Record<(typeof accountingEntries)[number]["status"], string>
 };
 
 const STATUS_CLASS: Record<(typeof accountingEntries)[number]["status"], string> = {
-  confirmed: "border-transparent bg-success-soft text-success",
-  escrow: "border-transparent bg-accent-soft text-accent-ink",
+  confirmed: "border-transparent bg-[color-mix(in_oklab,var(--chart-2)_16%,transparent)] text-[var(--chart-2)]",
+  escrow: "border-transparent bg-primary/15 text-[#7a7000]",
   pending: "border-transparent bg-muted text-muted-foreground",
 };
 
@@ -169,7 +169,7 @@ export function AccountingView() {
     <div className="mx-auto flex max-w-5xl flex-col gap-8 px-4 py-8 sm:px-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="font-mono text-[11px] font-semibold uppercase tracking-[.12em] text-muted-foreground">
+          <p className="font-mono text-[11px] font-semibold uppercase tracking-[.12em] text-muted-foreground/70">
             Contabilità · Tenant DirtyTag
           </p>
           <h1 className="text-[28px] font-bold tracking-tight">Contabilità</h1>

@@ -37,7 +37,7 @@ export function OfferteWidget() {
     <div>
       <div className="mb-2 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <p className="font-mono text-[11px] font-semibold uppercase tracking-[.12em] text-muted-foreground">
+          <p className="font-mono text-[11px] font-semibold uppercase tracking-[.12em] text-muted-foreground/70">
             Offerte
           </p>
           <span className="font-mono text-xs text-muted-foreground">{offers.length}</span>

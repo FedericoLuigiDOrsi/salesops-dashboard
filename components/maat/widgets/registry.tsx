@@ -51,10 +51,10 @@ export const HOME_WIDGETS: WidgetDef[] = [
   },
   {
     key: "azioni",
-    title: "Azioni richieste",
-    description: "Bozze e capi in attesa di revisione",
+    title: "Prossime azioni",
+    description: "Bozze e offerte in sospeso, in un'unica coda per urgenza",
     icon: ListChecks,
-    tier: "medio",
+    tier: "grande",
     component: AzioniWidget,
   },
   {

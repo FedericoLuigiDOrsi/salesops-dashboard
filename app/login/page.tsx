@@ -77,12 +77,16 @@ export default function LoginPage() {
                 )}
               />
               <div className="-mt-1 flex justify-end">
-                <button type="button" className="font-mono text-xs font-semibold text-[#1E488F] hover:underline">
+                <button type="button" className="font-mono text-xs font-semibold text-foreground hover:underline">
                   Password dimenticata?
                 </button>
               </div>
-              <Button type="submit" className="mt-1 h-11 gap-2 text-[15px]">
-                Accedi <ArrowRight className="size-4" />
+              <Button type="submit" disabled={form.formState.isSubmitting} className="mt-1 h-11 gap-2 text-[15px]">
+                {form.formState.isSubmitting ? "Accedo…" : (
+                  <>
+                    Accedi <ArrowRight className="size-4" />
+                  </>
+                )}
               </Button>
             </form>
           </Form>

@@ -33,7 +33,7 @@ const REQUIRED_LABELS: { key: "fronte" | "retro" | "brand"; text: string }[] = [
 
 export function ReviewForm() {
   const router = useRouter();
-  const { entry, confirmEntry, updatePrices } = useMaatEntry();
+  const { entry, confirmEntry, updatePrices, updateAttribute } = useMaatEntry();
 
   const missing = ATTRIBUTE_ORDER.filter(({ key }) => entry.attributes[key] === "");
   const uncertain = ATTRIBUTE_ORDER.filter(({ key }) => UNCERTAIN_FIELDS.has(key) && entry.attributes[key] !== "");
@@ -42,10 +42,11 @@ export function ReviewForm() {
   );
   const reviewedCount = ATTRIBUTE_ORDER.length - missing.length - uncertain.length;
 
-  const missingLabels = REQUIRED_LABELS.filter(({ key }) => {
+  const missingPhotoLabels = REQUIRED_LABELS.filter(({ key }) => {
     const photo = entry.photos.find((p) => p.label === key);
     return !photo || photo.state !== "validated";
   }).map((l) => l.text);
+  const missingLabels = [...missingPhotoLabels, ...missing.map((m) => m.label)];
   const gateEnabled = missingLabels.length === 0;
 
   function handleConfirm() {
@@ -101,7 +102,13 @@ export function ReviewForm() {
           <>
             <h3 className="mb-2 mt-2 text-xs font-semibold text-muted-foreground">Mancanti</h3>
             {missing.map(({ key, label }) => (
-              <AttributeField key={key} label={label} value={entry.attributes[key]} missing />
+              <AttributeField
+                key={key}
+                label={label}
+                value={entry.attributes[key]}
+                missing
+                onSave={(value) => updateAttribute(key, value)}
+              />
             ))}
           </>
         )}
@@ -109,7 +116,13 @@ export function ReviewForm() {
           <>
             <h3 className="mb-2 mt-5 text-xs font-semibold text-muted-foreground">Da verificare</h3>
             {uncertain.map(({ key, label }) => (
-              <AttributeField key={key} label={label} value={entry.attributes[key]} uncertain />
+              <AttributeField
+                key={key}
+                label={label}
+                value={entry.attributes[key]}
+                uncertain
+                onSave={(value) => updateAttribute(key, value)}
+              />
             ))}
           </>
         )}
@@ -117,7 +130,12 @@ export function ReviewForm() {
           <>
             <h3 className="mb-2 mt-5 text-xs font-semibold text-muted-foreground">Confermati dall'AI</h3>
             {confident.map(({ key, label }) => (
-              <AttributeField key={key} label={label} value={entry.attributes[key]} />
+              <AttributeField
+                key={key}
+                label={label}
+                value={entry.attributes[key]}
+                onSave={(value) => updateAttribute(key, value)}
+              />
             ))}
           </>
         )}

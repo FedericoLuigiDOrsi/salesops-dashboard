@@ -53,6 +53,11 @@ const SLOTS: SlotDef[] = [
 
 const N = SLOTS.length;
 const MIN_READY = 5;
+const REQUIRED_LABELS = new Set<PhotoLabel>(["fronte", "retro", "brand"]);
+const REQUIRED_INDEXES = SLOTS.reduce<number[]>((acc, slot, i) => {
+  if (REQUIRED_LABELS.has(slot.photoLabel)) acc.push(i);
+  return acc;
+}, []);
 const STEP = (15 * Math.PI) / 180;
 const R = 150;
 const RANGE = 4.2;
@@ -86,7 +91,8 @@ export function PhotoCaptureMobile({ initialLabel }: PhotoCaptureMobileProps) {
   const labelTimerRef = useRef<number | null>(null);
 
   const doneCount = done.filter(Boolean).length;
-  const ready = doneCount >= MIN_READY;
+  const requiredDone = REQUIRED_INDEXES.every((i) => done[i]);
+  const ready = doneCount >= MIN_READY && requiredDone;
 
   function close() {
     // Va alla lista, non al dettaglio capo: /capi/${id} è intercettata da
@@ -381,8 +387,8 @@ export function PhotoCaptureMobile({ initialLabel }: PhotoCaptureMobileProps) {
                     >
                       <Icon className="size-[19px]" strokeWidth={1.7} />
                       {done[i] && (
-                        <span className="absolute -right-[5px] -top-[5px] grid size-[14px] place-items-center rounded-full bg-[#00804C] text-[9px] text-white">
-                          ✓
+                        <span className="absolute -right-[5px] -top-[5px] grid size-[14px] place-items-center rounded-full bg-[#00804C] text-white">
+                          <Check className="size-[9px]" strokeWidth={3} />
                         </span>
                       )}
                     </div>
@@ -432,7 +438,7 @@ export function PhotoCaptureMobile({ initialLabel }: PhotoCaptureMobileProps) {
           <button
             onClick={close}
             aria-label="Annulla acquisizione"
-            className="grid size-[34px] place-items-center rounded-full text-white transition-colors active:bg-white/20"
+            className="grid size-11 place-items-center rounded-full text-white transition-colors active:bg-white/20"
           >
             <X className="size-6" />
           </button>
@@ -441,7 +447,7 @@ export function PhotoCaptureMobile({ initialLabel }: PhotoCaptureMobileProps) {
               onClick={() => setFlash((v) => !v)}
               aria-label="Flash"
               className={cn(
-                "grid size-[34px] place-items-center rounded-full transition-colors",
+                "grid size-11 place-items-center rounded-full transition-colors",
                 flash ? "bg-[#DBE64C] text-[#001F3F] shadow-[0_0_0_2px_rgba(219,230,76,.55)]" : "bg-white/14 text-white"
               )}
             >
@@ -452,7 +458,7 @@ export function PhotoCaptureMobile({ initialLabel }: PhotoCaptureMobileProps) {
               disabled={!ready}
               aria-label="Usa foto acquisite"
               className={cn(
-                "flex h-[34px] min-w-[34px] items-center justify-center gap-[5px] rounded-xl border border-white/18 px-[9px] font-mono text-[10px] font-bold uppercase tracking-[0.06em] shadow-[0_3px_12px_rgba(0,0,0,.24)] transition-opacity",
+                "flex h-11 min-w-11 items-center justify-center gap-[5px] rounded-xl border border-white/18 px-[9px] font-mono text-[10px] font-bold uppercase tracking-[0.06em] shadow-[0_3px_12px_rgba(0,0,0,.24)] transition-opacity",
                 ready ? "bg-[#DBE64C] text-[#001F3F]" : "bg-white/14 text-white opacity-40"
               )}
             >

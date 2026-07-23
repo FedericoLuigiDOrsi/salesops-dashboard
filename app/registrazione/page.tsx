@@ -155,8 +155,12 @@ export default function RegistrazionePage() {
                   </FormItem>
                 )}
               />
-              <Button type="submit" className="mt-1 h-11 gap-2 text-[15px]">
-                Crea account <ArrowRight className="size-4" />
+              <Button type="submit" disabled={form.formState.isSubmitting} className="mt-1 h-11 gap-2 text-[15px]">
+                {form.formState.isSubmitting ? "Creo l'account…" : (
+                  <>
+                    Crea account <ArrowRight className="size-4" />
+                  </>
+                )}
               </Button>
             </form>
           </Form>

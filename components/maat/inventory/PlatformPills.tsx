@@ -6,11 +6,12 @@ import { PLATFORM_BRAND, PLATFORM_KEYS } from "@/lib/inventory-columns";
 import type { InventoryItem, PlatformListingState } from "@/lib/inventory-mock";
 
 // Colore del pallino d'angolo = stato del listing (fonte di significato primaria).
+// Token del design system, non hex ad-hoc — coerenti con StatusBadge altrove.
 const STATE_DOT: Record<NonNullable<PlatformListingState>, string> = {
-  active: "#2f9e4f",
-  pending: "#c9a400",
-  delisted: "#bbbbbb",
-  sold: "#2a2a22",
+  active: "var(--success)",
+  pending: "var(--accent-ink)",
+  delisted: "var(--muted-foreground)",
+  sold: "var(--foreground)",
 };
 
 const STATE_LABEL: Record<NonNullable<PlatformListingState>, string> = {

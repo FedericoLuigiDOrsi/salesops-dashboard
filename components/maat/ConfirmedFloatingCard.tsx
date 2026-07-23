@@ -58,7 +58,7 @@ export function ConfirmedFloatingCard({ id, onDismiss }: ConfirmedFloatingCardPr
         </div>
         <Link
           href={`/capi/${id}`}
-          className="flex-none text-xs font-semibold text-primary underline-offset-2 hover:underline"
+          className="flex-none text-xs font-semibold text-foreground underline-offset-2 hover:underline"
         >
           Apri
         </Link>

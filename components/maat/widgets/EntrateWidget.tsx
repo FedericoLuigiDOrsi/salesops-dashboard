@@ -1,15 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, TrendingUp } from "lucide-react";
+import { ArrowRight, TrendingDown, TrendingUp } from "lucide-react";
 import { Bar, BarChart, XAxis } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { formatEUR } from "@/lib/utils";
+import { cn, formatEUR } from "@/lib/utils";
 import { weeklyKpi, weeklyRevenue } from "@/lib/accounting-mock";
 import { isRevenueDown } from "@/lib/urgency";
 
 /** Andamento ricavi delle ultime settimane, vista compatta della Contabilità. */
 export function EntrateWidget() {
+  const isDown = isRevenueDown(weeklyKpi.revenueDeltaPct);
+  const DeltaIcon = isDown ? TrendingDown : TrendingUp;
   return (
     <div>
       <div className="mb-2 flex items-center justify-between">
@@ -29,12 +31,21 @@ export function EntrateWidget() {
         </Link>
       </div>
 
-      <div className="text-2xl font-bold tabular-nums">{formatEUR(weeklyKpi.revenueCents)}</div>
+      <div className="font-mono text-2xl font-bold tabular-nums">{formatEUR(weeklyKpi.revenueCents)}</div>
       <div className="mt-1 flex items-center gap-2 text-xs">
-        <span className="flex items-center gap-1 font-semibold text-[var(--chart-2)]">
-          <TrendingUp className="size-3" /> +{weeklyKpi.revenueDeltaPct}%
+        <span
+          className={cn(
+            "flex items-center gap-1 font-semibold",
+            isDown ? "text-destructive" : "text-[var(--chart-2)]"
+          )}
+        >
+          <DeltaIcon className="size-3" /> {isDown ? "" : "+"}
+          {weeklyKpi.revenueDeltaPct}%
         </span>
-        <span className="text-muted-foreground">+{formatEUR(weeklyKpi.revenueDeltaCents)} vs sett. prec.</span>
+        <span className="text-muted-foreground">
+          {isDown ? "" : "+"}
+          {formatEUR(weeklyKpi.revenueDeltaCents)} vs sett. prec.
+        </span>
       </div>
 
       <ChartContainer

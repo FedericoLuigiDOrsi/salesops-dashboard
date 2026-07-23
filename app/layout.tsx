@@ -40,7 +40,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`${GeistSans.variable} ${_jetbrainsMono.variable}`}>
+    <html lang="it" className={`${GeistSans.variable} ${_jetbrainsMono.variable}`}>
       <body className={`font-sans antialiased`}>
         <NotificationsProvider>
           <SettingsProvider>

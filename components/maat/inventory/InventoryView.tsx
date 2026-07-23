@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Plus, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn, formatEUR } from "@/lib/utils";
 import { inventoryItems, type InventoryItem } from "@/lib/inventory-mock";
@@ -14,10 +13,9 @@ import { COLUMN_DEFS, type ColumnKey } from "@/lib/inventory-columns";
 import { PlatformPills } from "@/components/maat/inventory/PlatformPills";
 import { useInventoryColumns } from "@/lib/inventory-columns-store";
 import { InventoryToolbar } from "@/components/maat/inventory/InventoryToolbar";
+import { StatusBadge } from "@/components/maat/StatusBadge";
 import {
   matchesBase,
-  STATUS_CLASS,
-  STATUS_LABEL,
   type PlatformFilter,
   type PriceBand,
   type StatusFilter,
@@ -51,7 +49,13 @@ export function InventoryView() {
   );
 
   const statusCounts = useMemo(() => {
-    const counts: Record<StatusFilter, number> = { all: baseMatched.length, bozza: 0, catalogo: 0, venduto: 0 };
+    const counts: Record<StatusFilter, number> = {
+      all: baseMatched.length,
+      local_draft: 0,
+      to_be_reviewed: 0,
+      available: 0,
+      sold: 0,
+    };
     for (const item of baseMatched) counts[item.status] += 1;
     return counts;
   }, [baseMatched]);
@@ -89,7 +93,7 @@ export function InventoryView() {
       </div>
     ),
     stato: (item) => (
-      <Badge className={cn("text-[11px]", STATUS_CLASS[item.status])}>{STATUS_LABEL[item.status]}</Badge>
+      <StatusBadge status={item.status} className="text-[11px]" />
     ),
     sku: (item) => <span className="font-mono text-xs text-muted-foreground">{item.sku}</span>,
     categoria: (item) => <span className="text-sm text-muted-foreground">{item.category}</span>,
@@ -156,7 +160,9 @@ export function InventoryView() {
             <TableHeader>
               <TableRow>
                 {orderedColumns.map((col) => (
-                  <TableHead key={col}>{COLUMN_DEFS[col].label}</TableHead>
+                  <TableHead key={col} className={col === "prezzo" ? "text-right" : undefined}>
+                    {COLUMN_DEFS[col].label}
+                  </TableHead>
                 ))}
               </TableRow>
             </TableHeader>
@@ -173,7 +179,9 @@ export function InventoryView() {
                   className="cursor-pointer hover:bg-muted/40"
                 >
                   {orderedColumns.map((col) => (
-                    <TableCell key={col}>{renderCell[col](item)}</TableCell>
+                    <TableCell key={col} className={col === "prezzo" ? "text-right" : undefined}>
+                      {renderCell[col](item)}
+                    </TableCell>
                   ))}
                 </TableRow>
               ))}
@@ -216,7 +224,7 @@ export function InventoryView() {
                 </div>
                 <div>
                   <FieldLabel>Stato</FieldLabel>
-                  <Badge className={cn("text-[11px]", STATUS_CLASS[item.status])}>{STATUS_LABEL[item.status]}</Badge>
+                  <StatusBadge status={item.status} className="text-[11px]" />
                 </div>
                 <div>
                   <FieldLabel>Categoria</FieldLabel>

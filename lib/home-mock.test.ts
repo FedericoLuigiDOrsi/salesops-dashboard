@@ -2,14 +2,16 @@ import { describe, expect, it } from "vitest";
 import { HOME_METRICS } from "./home-mock";
 
 describe("HOME_METRICS", () => {
-  it("ogni metrica ha una fascia valida", () => {
-    const validTiers = ["grande", "medio", "piccolo"];
+  it("ogni metrica ha un kind valido", () => {
+    const validKinds = ["hero", "actionable", "trend"];
     for (const m of HOME_METRICS) {
-      expect(validTiers).toContain(m.tier);
+      expect(validKinds).toContain(m.kind);
     }
   });
-  it("le fasce grande sono esattamente entrate e offerte", () => {
-    const grande = HOME_METRICS.filter((m) => m.tier === "grande").map((m) => m.key).sort();
-    expect(grande).toEqual(["entrate", "offerte"]);
+  it("esiste esattamente un hero (entrate) e le actionable sono bozze e offerte", () => {
+    const hero = HOME_METRICS.filter((m) => m.kind === "hero").map((m) => m.key);
+    expect(hero).toEqual(["entrate"]);
+    const actionable = HOME_METRICS.filter((m) => m.kind === "actionable").map((m) => m.key).sort();
+    expect(actionable).toEqual(["bozze", "offerte"]);
   });
 });

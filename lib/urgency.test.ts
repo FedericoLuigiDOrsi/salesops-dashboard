@@ -5,10 +5,8 @@ import {
   isActionQueueUrgent,
   hasUnreadNotifications,
   isRevenueDown,
-  isMetricUrgent,
 } from "./urgency";
 import type { Offer, CatalogEntry, Notification } from "@/types/maat";
-import type { HomeMetric } from "./home-mock";
 
 function makeOffer(time: string, status: Offer["status"] = "pending"): Offer {
   return { id: "o1", itemLabel: "Test", sku: "T-1", marketplace: "vinted", offerCents: 1000, listPriceCents: 1200, time, status };
@@ -80,27 +78,5 @@ describe("isRevenueDown", () => {
   it("false su delta positivo o zero", () => {
     expect(isRevenueDown(14.5)).toBe(false);
     expect(isRevenueDown(0)).toBe(false);
-  });
-});
-
-function makeMetric(key: string, value: string): HomeMetric {
-  return { key, value, label: "Test", dotColor: "bg-primary", tier: "medio" };
-}
-
-describe("isMetricUrgent", () => {
-  it("bozze >= 10 è urgente", () => {
-    expect(isMetricUrgent(makeMetric("bozze", "12"))).toBe(true);
-    expect(isMetricUrgent(makeMetric("bozze", "5"))).toBe(false);
-  });
-  it("escrow >= 500 euro è urgente", () => {
-    expect(isMetricUrgent(makeMetric("escrow", "€ 940"))).toBe(true);
-    expect(isMetricUrgent(makeMetric("escrow", "€ 120"))).toBe(false);
-  });
-  it("spedizioni >= 8 è urgente", () => {
-    expect(isMetricUrgent(makeMetric("spedizioni", "10"))).toBe(true);
-    expect(isMetricUrgent(makeMetric("spedizioni", "3"))).toBe(false);
-  });
-  it("una metrica senza soglia definita non è mai urgente", () => {
-    expect(isMetricUrgent(makeMetric("catalogo", "9999"))).toBe(false);
   });
 });

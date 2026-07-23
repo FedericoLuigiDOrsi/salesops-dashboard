@@ -54,7 +54,7 @@ export const HOME_WIDGETS: WidgetDef[] = [
     title: "Prossime azioni",
     description: "Bozze e offerte in sospeso, in un'unica coda per urgenza",
     icon: ListChecks,
-    tier: "grande",
+    tier: "medio",
     component: AzioniWidget,
   },
   {

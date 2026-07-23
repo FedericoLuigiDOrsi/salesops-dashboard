@@ -8,8 +8,11 @@ describe("HOME_WIDGETS", () => {
       expect(validTiers).toContain(w.tier);
     }
   });
-  it("le fasce grande sono esattamente azioni, offerte e panoramica", () => {
+  it("le fasce grande sono esattamente offerte e panoramica", () => {
     const grande = HOME_WIDGETS.filter((w) => w.tier === "grande").map((w) => w.key).sort();
-    expect(grande).toEqual(["azioni", "offerte", "panoramica"]);
+    expect(grande).toEqual(["offerte", "panoramica"]);
+  });
+  it("prossime azioni usa la fascia media", () => {
+    expect(HOME_WIDGETS.find((w) => w.key === "azioni")?.tier).toBe("medio");
   });
 });

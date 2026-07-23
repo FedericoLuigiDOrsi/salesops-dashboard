@@ -172,10 +172,39 @@
   }
 }
 
+@keyframes maat-action-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes maat-priority-breathe {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-tick,
   .animate-chip-in,
-  .animate-shimmer {
+  .animate-shimmer,
+  [class*="maat-action-in"],
+  [class*="maat-priority-breathe"] {
     animation: none;
+  }
+  [class*="maat-action-in"] {
+    opacity: 1;
+    transform: none;
   }
 }

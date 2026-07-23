@@ -1,170 +1,279 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { AlertTriangle, ArrowRight, CheckCircle2, Clock, HandCoins, Pencil } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowRight,
+  CalendarDays,
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+  Clock,
+  HandCoins,
+  Pencil,
+} from "lucide-react";
+import { EmptyState } from "@/components/maat/EmptyState";
 import { cn } from "@/lib/utils";
 import { nextActions, type NextAction } from "@/lib/next-actions";
+
+const INITIAL_VISIBLE = 3;
 
 const KIND_TAG: Record<NextAction["kind"], { label: string; className: string; Icon: typeof Pencil }> = {
   bozza: { label: "Bozza", className: "bg-accent-soft text-accent-ink", Icon: Pencil },
   offerta: { label: "Offerta", className: "bg-success-soft text-success", Icon: HandCoins },
 };
 
-const BAND_STRIPE: Record<NextAction["band"], string> = {
-  0: "shadow-[inset_3px_0_0_var(--destructive)]",
-  1: "shadow-[inset_3px_0_0_var(--primary)]",
-  2: "",
-};
-
 const BAND_URG_CLASS: Record<NextAction["band"], string> = {
   0: "text-destructive",
   1: "text-accent-ink",
-  2: "text-muted-foreground font-medium",
+  2: "text-muted-foreground",
 };
+
+const FOCUS_SURFACE: Record<NextAction["band"], string> = {
+  0: "bg-danger-soft shadow-[inset_3px_0_0_var(--destructive)]",
+  1: "bg-accent-soft shadow-[inset_3px_0_0_var(--primary)]",
+  2: "bg-neutral-soft",
+};
+
+const FOCUS_PRIORITY: Record<NextAction["band"], string> = {
+  0: "Priorità alta",
+  1: "Entro oggi",
+  2: "Da pianificare",
+};
+
+const GROUPS: {
+  band: NextAction["band"];
+  label: string;
+  Icon: typeof AlertTriangle;
+  iconClass: string;
+  badgeClass: string;
+}[] = [
+  {
+    band: 0,
+    label: "Da gestire ora",
+    Icon: AlertTriangle,
+    iconClass: "text-destructive",
+    badgeClass: "bg-danger-soft text-destructive",
+  },
+  {
+    band: 1,
+    label: "Da gestire oggi",
+    Icon: Clock,
+    iconClass: "text-accent-ink",
+    badgeClass: "bg-accent-soft text-accent-ink",
+  },
+  {
+    band: 2,
+    label: "Da pianificare",
+    Icon: CalendarDays,
+    iconClass: "text-muted-foreground",
+    badgeClass: "bg-neutral-soft text-muted-foreground",
+  },
+];
 
 function KindTag({ kind }: { kind: NextAction["kind"] }) {
   const { label, className, Icon } = KIND_TAG[kind];
   return (
     <span
       className={cn(
-        "inline-flex shrink-0 items-center gap-1 rounded-full px-1.5 py-0.5 font-mono text-[9.5px] font-semibold uppercase tracking-wide",
+        "hidden h-[18px] shrink-0 items-center gap-1 rounded-full px-1.5 font-mono text-[8.5px] font-semibold uppercase tracking-wide sm:inline-flex",
         className
       )}
     >
-      <Icon className="size-2.5" />
+      <Icon className="size-2.5" strokeWidth={1.5} />
       {label}
     </span>
   );
 }
 
-function ActionRow({ item }: { item: NextAction }) {
+function GarmentThumbnail({ item, compact = false }: { item: NextAction; compact?: boolean }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        "flex shrink-0 items-center justify-center rounded-lg border border-border",
+        compact ? "h-12 w-11" : "h-16 w-[58px]",
+        item.kind === "offerta" ? "bg-success-soft text-success/70" : "bg-secondary text-muted-foreground"
+      )}
+    >
+      <svg
+        viewBox="0 0 48 56"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+        className={compact ? "h-[34px] w-7" : "h-[43px] w-[37px]"}
+      >
+        <path d="m17 8 7 4 7-4 10 7-6 9-4-3v27H17V21l-4 3-6-9 10-7Z" />
+        <path d="M19 9c.5 3 2.2 4.5 5 4.5S28.5 12 29 9" />
+      </svg>
+    </span>
+  );
+}
+
+function ActionRow({ item, index }: { item: NextAction; index: number }) {
   return (
     <Link
       href={item.href}
-      className={cn(
-        "flex items-center gap-3 rounded-lg border-b border-border p-2.5 transition-colors last:border-0 hover:bg-foreground/[.03]",
-        BAND_STRIPE[item.band]
-      )}
+      aria-label={`${item.ctaLabel} ${item.name}`}
+      style={{ animationDelay: `${index * 55}ms` }}
+      className="group grid min-h-[62px] grid-cols-[44px_minmax(0,1fr)_auto_16px] items-center gap-2.5 border-b border-border px-1 py-2 text-left opacity-0 [animation:maat-action-in_.4s_cubic-bezier(.22,1,.36,1)_forwards] last:border-0 hover:bg-foreground/[.025] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-card active:scale-[.995] sm:gap-3"
     >
-      <span className="flex size-10 shrink-0 items-center justify-center rounded-md border border-border bg-background font-mono text-[9px] uppercase text-muted-foreground">
-        Foto
-      </span>
-      <div className="min-w-0 flex-1 overflow-hidden">
-        <div className="flex items-center gap-1.5 overflow-hidden">
+      <GarmentThumbnail item={item} compact />
+      <span className="min-w-0">
+        <span className="flex min-w-0 items-center gap-1.5">
           <KindTag kind={item.kind} />
-          <span className="truncate text-[13px] font-semibold">{item.name}</span>
-        </div>
-        <div className="mt-0.5 flex items-center gap-1.5 overflow-hidden">
-          <span className="min-w-0 truncate font-mono text-xs text-muted-foreground">{item.meta}</span>
-          <span className="size-0.5 shrink-0 rounded-full bg-muted-foreground/60" />
-          <span className={cn("shrink-0 truncate font-mono text-xs", BAND_URG_CLASS[item.band])}>
-            {item.urgLabel}
-          </span>
-        </div>
-      </div>
-      <span className="flex shrink-0 items-center gap-1 rounded-md border border-foreground px-2.5 py-1.5 text-xs font-semibold text-foreground transition-colors">
-        <span className="hidden md:inline">{item.ctaLabel}</span>
-        <ArrowRight className="size-3" />
+          <span className="truncate text-[12.5px] font-semibold tracking-[-.01em] sm:text-[13px]">{item.name}</span>
+        </span>
+        <span className="mt-1 block truncate font-mono text-[10px] text-muted-foreground">{item.meta}</span>
       </span>
+      <span className="flex min-w-[66px] flex-col items-end gap-1 sm:min-w-[112px]">
+        <span className="text-[10.5px] font-bold leading-none sm:text-[11px]">{item.ctaLabel}</span>
+        <span className={cn("hidden items-center justify-end gap-1 whitespace-nowrap font-mono text-[10px] sm:flex", BAND_URG_CLASS[item.band])}>
+          <Clock className="size-3" strokeWidth={1.5} />
+          {item.urgLabel}
+        </span>
+      </span>
+      <ArrowRight
+        className="size-3.5 text-muted-foreground transition-transform duration-[180ms] ease-[cubic-bezier(.22,1,.36,1)] group-hover:translate-x-0.5 group-hover:text-foreground"
+        strokeWidth={1.5}
+      />
     </Link>
   );
 }
 
-const GROUPS: { band: NextAction["band"]; label: string; Icon: typeof AlertTriangle; badgeClass: string }[] = [
-  { band: 0, label: "In ritardo · adesso", Icon: AlertTriangle, badgeClass: "bg-danger-soft text-destructive" },
-  { band: 1, label: "Entro oggi", Icon: Clock, badgeClass: "bg-accent-soft text-accent-ink" },
-  { band: 2, label: "Questa settimana", Icon: undefined as unknown as typeof AlertTriangle, badgeClass: "bg-neutral-soft text-muted-foreground" },
-];
-
-/** Coda unica prossime azioni: bozze da revisionare + offerte in sospeso, per urgenza. */
+/** Coda unica: una prossima azione in focus, poi una preview ordinata per priorità. */
 export function AzioniWidget() {
+  const [expanded, setExpanded] = useState(false);
   const actions = nextActions();
-  const [hero, ...rest] = actions;
+  const [focus, ...rest] = actions;
+  const visibleRest = expanded ? rest : rest.slice(0, INITIAL_VISIBLE);
+  const hiddenCount = rest.length - visibleRest.length;
+  const urgentCount = actions.filter((item) => item.band === 0).length;
+
+  if (!focus) {
+    return (
+      <div>
+        <WidgetHeader count={0} urgentCount={0} />
+        <EmptyState
+          icon={<CheckCircle2 className="size-5 text-success" strokeWidth={1.5} />}
+          title="Coda completata"
+          subtitle="Bozze e offerte sono tutte gestite. Le nuove azioni compariranno qui in ordine di priorità."
+        />
+      </div>
+    );
+  }
+
+  const [primaryMeta, ...secondaryMetaParts] = focus.meta.split(" · ");
+  const secondaryMeta = secondaryMetaParts.join(" · ");
 
   return (
     <div>
-      <div className="mb-2 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <p className="font-mono text-[11px] font-semibold uppercase tracking-[.12em] text-muted-foreground">
-            Prossime azioni
+      <WidgetHeader count={actions.length} urgentCount={urgentCount} />
+
+      <section
+        aria-label="Prossima azione"
+        className={cn(
+          "grid grid-cols-[52px_minmax(0,1fr)] items-center gap-3 rounded-[10px] p-3 pl-4 [animation:maat-action-in_.4s_cubic-bezier(.22,1,.36,1)_both] sm:grid-cols-[58px_minmax(0,1fr)_auto] sm:gap-3.5 sm:p-[15px] sm:pl-[18px]",
+          FOCUS_SURFACE[focus.band]
+        )}
+      >
+        <GarmentThumbnail item={focus} />
+        <div className="min-w-0">
+          <div className="mb-1 flex flex-wrap items-center gap-1.5 font-mono text-[9.5px] font-semibold uppercase tracking-[.07em]">
+            <span className={BAND_URG_CLASS[focus.band]}>{FOCUS_PRIORITY[focus.band]}</span>
+            <span className="size-0.5 rounded-full bg-current opacity-50" />
+            <span>{KIND_TAG[focus.kind].label}</span>
+            <span className="size-0.5 rounded-full bg-current opacity-50" />
+            <span>{focus.urgLabel}</span>
+          </div>
+          <h3 className="truncate text-[14px] font-bold leading-tight tracking-[-.02em] sm:text-[16px]">{focus.name}</h3>
+          <p className="mt-1.5 flex flex-wrap items-baseline gap-1.5 font-mono text-[11px] text-muted-foreground">
+            <strong className="text-[13px] font-semibold text-foreground">{primaryMeta}</strong>
+            {secondaryMeta ? <span>{secondaryMeta}</span> : null}
           </p>
-          <span className="font-mono text-xs text-muted-foreground">{actions.length}</span>
-          {actions[0]?.band === 0 ? (
-            <span aria-label="Azioni in ritardo" className="size-1.5 shrink-0 rounded-full bg-destructive" />
-          ) : null}
         </div>
         <Link
-          href="/inventario"
-          className="flex items-center gap-1 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+          href={focus.href}
+          className="col-span-2 flex min-h-10 items-center justify-center gap-1.5 rounded-lg bg-primary px-3.5 text-xs font-bold text-primary-foreground transition-colors hover:bg-accent-pressed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-card active:scale-[.98] sm:col-span-1"
         >
-          Lavorazione <ArrowRight className="size-3.5" />
+          {focus.ctaLabel}
+          <ArrowRight className="size-3.5" strokeWidth={1.5} />
         </Link>
-      </div>
+      </section>
 
-      {!hero ? (
-        <div className="flex flex-col items-center gap-2 py-8 text-center">
-          <span className="flex size-11 items-center justify-center rounded-full bg-success-soft">
-            <CheckCircle2 className="size-5 text-success" />
-          </span>
-          <p className="text-[14px] font-semibold">Coda completata</p>
-          <p className="max-w-[280px] text-[13px] text-muted-foreground">
-            Nessuna azione urgente al momento. Bozze e offerte sono tutte gestite.
-          </p>
-        </div>
-      ) : (
-        <div className="flex flex-col gap-2">
-          <Link
-            href={hero.href}
-            className="flex items-center gap-4 rounded-lg bg-surface-dark p-4 text-text-on-dark shadow-[inset_4px_0_0_var(--destructive)] transition-opacity hover:opacity-90"
-          >
-            <span className="flex size-11 shrink-0 items-center justify-center rounded-md bg-white/10 font-mono text-[9px] uppercase text-text-on-dark/50">
-              Foto
-            </span>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2 overflow-hidden">
-                <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-white/15 px-1.5 py-0.5 font-mono text-[9.5px] font-semibold uppercase tracking-wide">
-                  {KIND_TAG[hero.kind].label}
-                </span>
-                <span className="min-w-0 truncate font-mono text-[11px] font-semibold text-[#F4979A]">
-                  {hero.urgLabel}
-                </span>
-              </div>
-              <p className="mt-1 truncate text-[16px] font-bold tracking-tight">{hero.name}</p>
-              <p className="truncate font-mono text-xs text-text-on-dark/55">{hero.meta}</p>
-            </div>
-            <span className="shrink-0 rounded-md bg-primary px-3.5 py-2 text-xs font-semibold text-primary-foreground">
-              {hero.ctaLabel}
-            </span>
-          </Link>
+      {rest.length > 0 ? (
+        <div className="mt-[18px]">
+          {GROUPS.map(({ band, label, Icon, iconClass, badgeClass }) => {
+            const items = visibleRest.filter((item) => item.band === band);
+            if (items.length === 0) return null;
+            return (
+              <section key={band} className="mt-3.5 first:mt-0">
+                <div className="flex h-7 items-center gap-1.5 px-0.5 font-mono text-[9.5px] font-semibold uppercase tracking-[.09em] text-muted-foreground">
+                  <Icon className={cn("size-3", iconClass)} strokeWidth={1.5} />
+                  <span>{label}</span>
+                  <span className={cn("inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1.5 text-[9px]", badgeClass)}>
+                    {items.length}
+                  </span>
+                </div>
+                <div>
+                  {items.map((item, index) => (
+                    <ActionRow key={item.id} item={item} index={index} />
+                  ))}
+                </div>
+              </section>
+            );
+          })}
 
-          {rest.length > 0 ? (
-            <div className="flex flex-col">
-              {GROUPS.map(({ band, label, Icon, badgeClass }) => {
-                const items = rest.filter((it) => it.band === band);
-                if (items.length === 0) return null;
-                return (
-                  <div key={band}>
-                    <div className="flex items-center gap-1.5 px-1 py-1.5">
-                      {Icon ? <Icon className={cn("size-3", band === 0 ? "text-destructive" : "text-accent-ink")} /> : null}
-                      <span className="font-mono text-[10.5px] font-semibold uppercase tracking-[.1em] text-muted-foreground">
-                        {label}
-                      </span>
-                      <span className={cn("rounded-full px-1.5 py-0.5 font-mono text-[10px] font-semibold", badgeClass)}>
-                        {items.length}
-                      </span>
-                    </div>
-                    <div className="flex flex-col">
-                      {items.map((item) => (
-                        <ActionRow key={item.id} item={item} />
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+          {hiddenCount > 0 || expanded ? (
+            <button
+              type="button"
+              aria-expanded={expanded}
+              onClick={() => setExpanded((value) => !value)}
+              className="mt-1 flex min-h-[42px] w-full items-center justify-center gap-1.5 border-t border-border pt-2 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-card active:translate-y-px"
+            >
+              {expanded ? (
+                <>
+                  Riduci elenco <ChevronUp className="size-3.5" strokeWidth={1.5} />
+                </>
+              ) : (
+                <>
+                  Mostra altre {hiddenCount} azioni <ChevronDown className="size-3.5" strokeWidth={1.5} />
+                </>
+              )}
+            </button>
           ) : null}
         </div>
-      )}
+      ) : null}
     </div>
+  );
+}
+
+function WidgetHeader({ count, urgentCount }: { count: number; urgentCount: number }) {
+  return (
+    <header className="mb-[18px] flex items-start justify-between gap-4">
+      <div>
+        <div className="flex items-center gap-2">
+          <h2 className="text-[17px] font-bold tracking-[-.025em]">Prossime azioni</h2>
+          <span className="inline-flex h-[22px] min-w-[22px] items-center justify-center rounded-full bg-neutral-soft px-1.5 font-mono text-[10px] font-semibold">
+            {count}
+          </span>
+        </div>
+        {urgentCount > 0 ? (
+          <div className="mt-1.5 flex items-center gap-1.5 font-mono text-[11px] text-muted-foreground">
+            <span aria-hidden="true" className="size-1.5 rounded-full bg-destructive [animation:maat-priority-breathe_2.2s_cubic-bezier(.22,1,.36,1)_infinite]" />
+            <span>{urgentCount} ad alta priorità</span>
+          </div>
+        ) : null}
+      </div>
+      <Link
+        href="/inventario"
+        className="flex min-h-10 items-center gap-1.5 text-[13px] font-semibold text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-card active:translate-y-px"
+      >
+        <span className="hidden sm:inline">Apri coda</span>
+        <ArrowRight className="size-3.5" strokeWidth={1.5} />
+      </Link>
+    </header>
   );
 }

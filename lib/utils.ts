@@ -14,3 +14,7 @@ const eurFormatter = new Intl.NumberFormat("it-IT", {
 export function formatEUR(cents: number) {
   return eurFormatter.format(cents / 100);
 }
+
+export function formatHoursAgo(hoursAgo: number) {
+  return hoursAgo < 24 ? `${hoursAgo}h fa` : `${Math.round(hoursAgo / 24)}g fa`;
+}

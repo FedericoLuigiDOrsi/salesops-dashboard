@@ -5,8 +5,6 @@ import Globe, { type GlobeMethods } from "react-globe.gl";
 import { shipments } from "@/lib/logistics-mock";
 import { buildArcs, buildRings, DIRTYTAG_ORIGIN } from "@/lib/logistics-globe-data";
 
-const GLOBE_HEIGHT = 360;
-
 function hasWebGL(): boolean {
   try {
     const canvas = document.createElement("canvas");
@@ -16,7 +14,12 @@ function hasWebGL(): boolean {
   }
 }
 
-export function LogisticsGlobe() {
+interface LogisticsGlobeProps {
+  /** Altezza in px del canvas — il contenitore (hero) controlla il resto del chrome. */
+  height?: number;
+}
+
+export function LogisticsGlobe({ height = 360 }: LogisticsGlobeProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const globeRef = useRef<GlobeMethods | undefined>(undefined);
   const [width, setWidth] = useState(0);
@@ -47,8 +50,8 @@ export function LogisticsGlobe() {
   if (!webglSupported) {
     return (
       <div
-        className="flex items-center justify-center rounded-lg border border-border bg-card text-sm text-muted-foreground"
-        style={{ height: GLOBE_HEIGHT }}
+        className="flex items-center justify-center text-sm text-text-on-dark/60"
+        style={{ height }}
       >
         Visualizzazione 3D non supportata su questo dispositivo.
       </div>
@@ -56,16 +59,12 @@ export function LogisticsGlobe() {
   }
 
   return (
-    <div
-      ref={containerRef}
-      className="overflow-hidden rounded-lg border border-border bg-card"
-      style={{ height: GLOBE_HEIGHT }}
-    >
+    <div ref={containerRef} className="size-full" style={{ height }}>
       {width > 0 && (
         <Globe
           ref={globeRef}
           width={width}
-          height={GLOBE_HEIGHT}
+          height={height}
           backgroundColor="rgba(0,0,0,0)"
           globeImageUrl="/earth-dark.jpg"
           onGlobeReady={() => setReady(true)}

@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { StatusBadge } from "@/components/maat/StatusBadge";
 import type { CatalogEntry } from "@/types/maat";
@@ -15,6 +15,7 @@ function formatDate(iso: string) {
 }
 
 export function CatalogTable({ entries }: CatalogTableProps) {
+  const router = useRouter();
   return (
     <div className="overflow-hidden rounded-lg border border-border">
       <Table>
@@ -30,18 +31,26 @@ export function CatalogTable({ entries }: CatalogTableProps) {
         </TableHeader>
         <TableBody>
           {entries.map((entry) => (
-            <TableRow key={entry.id} className="cursor-pointer">
+            <TableRow
+              key={entry.id}
+              role="link"
+              tabIndex={0}
+              onClick={() => router.push(`/capi/${entry.id}`)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  router.push(`/capi/${entry.id}`);
+                }
+              }}
+              className="cursor-pointer hover:bg-muted/40"
+            >
               <TableCell>
-                <Link href={`/capi/${entry.id}`} className="block">
-                  <div className="flex size-9 items-center justify-center rounded-md border border-border bg-background">
-                    <span className="font-mono text-[8px] uppercase tracking-wide text-muted-foreground/60">Foto</span>
-                  </div>
-                </Link>
+                <div className="flex size-9 items-center justify-center rounded-md border border-border bg-background">
+                  <span className="font-mono text-[8px] uppercase tracking-wide text-muted-foreground/60">Foto</span>
+                </div>
               </TableCell>
-              <TableCell>
-                <Link href={`/capi/${entry.id}`} className="block font-medium">
-                  {entry.attributes.brand} — {entry.attributes.tipoCapo}
-                </Link>
+              <TableCell className="font-medium">
+                {entry.attributes.brand} — {entry.attributes.tipoCapo}
               </TableCell>
               <TableCell className="font-mono text-muted-foreground">{entry.attributes.taglia}</TableCell>
               <TableCell>

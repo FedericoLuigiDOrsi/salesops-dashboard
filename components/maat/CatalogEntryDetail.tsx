@@ -55,10 +55,14 @@ export function CatalogEntryDetail() {
   const router = useRouter();
   const { entry, confirmEntry, revertToDraft, updateAttribute, updateMeasure } = useMaatEntry();
 
-  const missingLabels = REQUIRED_LABELS.filter(({ key }) => {
+  const missingAttributeKeys = (Object.keys(ATTRIBUTE_LABELS) as AttrKey[]).filter(
+    (key) => entry.attributes[key] === ""
+  );
+  const missingPhotoLabels = REQUIRED_LABELS.filter(({ key }) => {
     const photo = entry.photos.find((p) => p.label === key);
     return !photo || photo.state !== "validated";
   }).map((l) => l.text);
+  const missingLabels = [...missingPhotoLabels, ...missingAttributeKeys.map((key) => ATTRIBUTE_LABELS[key])];
   const gateEnabled = missingLabels.length === 0;
   const isConfirmed = entry.status === "available";
 
@@ -141,7 +145,8 @@ export function CatalogEntryDetail() {
           <Button
             variant="ghost"
             size="icon"
-            title="Elimina"
+            title="Non ancora disponibile"
+            disabled
             className="rounded-[11px] text-destructive transition-transform active:scale-95 hover:bg-destructive/10 hover:text-destructive"
           >
             <Trash2 className="size-[18px]" />

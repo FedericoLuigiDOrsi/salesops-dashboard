@@ -6,6 +6,7 @@ const STATUS_CONFIG: Record<CatalogEntryStatus, { label: string; className: stri
   local_draft: { label: "Locale", className: "bg-neutral-soft text-muted-foreground" },
   to_be_reviewed: { label: "Bozza", className: "bg-primary text-primary-foreground" },
   available: { label: "Confermato", className: "bg-success-soft text-success" },
+  sold: { label: "Venduto", className: "bg-muted text-muted-foreground" },
 };
 
 interface StatusBadgeProps {

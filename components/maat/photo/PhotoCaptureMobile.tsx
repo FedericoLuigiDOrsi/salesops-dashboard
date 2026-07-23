@@ -381,8 +381,8 @@ export function PhotoCaptureMobile({ initialLabel }: PhotoCaptureMobileProps) {
                     >
                       <Icon className="size-[19px]" strokeWidth={1.7} />
                       {done[i] && (
-                        <span className="absolute -right-[5px] -top-[5px] grid size-[14px] place-items-center rounded-full bg-[#00804C] text-[9px] text-white">
-                          ✓
+                        <span className="absolute -right-[5px] -top-[5px] grid size-[14px] place-items-center rounded-full bg-[#00804C] text-white">
+                          <Check className="size-[9px]" strokeWidth={3} />
                         </span>
                       )}
                     </div>

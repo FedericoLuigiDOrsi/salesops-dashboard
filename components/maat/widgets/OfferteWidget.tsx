@@ -205,9 +205,9 @@ export function OfferteWidget() {
                       type="button"
                       aria-label={`Rifiuta offerta ${o.itemLabel}`}
                       onClick={() => handleResolve(o, "rejected")}
-                      className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-border text-destructive transition-colors hover:bg-destructive/10"
+                      className="flex size-11 shrink-0 items-center justify-center rounded-lg border border-border text-destructive transition-colors hover:bg-destructive/10"
                     >
-                      <X className="size-3.5" />
+                      <X className="size-4" />
                     </button>
                   </div>
                 </motion.div>

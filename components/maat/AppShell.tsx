@@ -83,7 +83,7 @@ export function AppShell({ children }: AppShellProps) {
         style={{ width: collapsed ? 64 : 216 }}
       >
         <div className={cn("flex h-14 items-center gap-2 px-4", collapsed && "justify-center px-0")}>
-          <span className="flex size-8 shrink-0 items-center justify-center rounded-[9px] bg-[#DBE64C] font-mono text-sm font-extrabold text-[#001F3F]">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-[9px] bg-primary font-mono text-sm font-extrabold text-primary-foreground">
             M
           </span>
           {!collapsed && <span className="font-mono text-sm font-semibold uppercase tracking-wide">MAAT</span>}
@@ -102,7 +102,7 @@ export function AppShell({ children }: AppShellProps) {
         <Link
           href={CREA_CAPO_HREF}
           className={cn(
-            "mx-2 mb-2 flex items-center gap-2 rounded-md bg-[#DBE64C] px-3 py-2.5 text-sm font-semibold text-[#001F3F] transition-transform active:translate-y-px",
+            "mx-2 mb-2 flex items-center gap-2 rounded-md bg-primary px-3 py-2.5 text-sm font-semibold text-primary-foreground transition-transform active:translate-y-px",
             collapsed && "justify-center px-0"
           )}
           title="Crea capo"
@@ -129,7 +129,7 @@ export function AppShell({ children }: AppShellProps) {
               "badgeFromNotifications" in item && item.badgeFromNotifications ? unreadCount : undefined;
             const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href);
             const itemClass = cn(
-              "relative flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
+              "relative flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar",
               collapsed && "justify-center px-0",
               isActive
                 ? "bg-sidebar-accent text-sidebar-foreground"
@@ -140,7 +140,7 @@ export function AppShell({ children }: AppShellProps) {
                 {!collapsed && (
                   <span
                     className={cn(
-                      "absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-r-full bg-[#DBE64C] transition-opacity",
+                      "absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-r-full bg-primary transition-opacity",
                       isActive ? "opacity-100" : "opacity-0"
                     )}
                   />
@@ -148,7 +148,7 @@ export function AppShell({ children }: AppShellProps) {
                 <Icon className="size-4.5 shrink-0" />
                 {!collapsed && label}
                 {!collapsed && badge ? (
-                  <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-[#DBE64C] px-1 font-mono text-[10px] font-semibold text-[#001F3F]">
+                  <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 font-mono text-[10px] font-semibold text-primary-foreground">
                     {badge}
                   </span>
                 ) : null}
@@ -184,7 +184,7 @@ export function AppShell({ children }: AppShellProps) {
             collapsed && "justify-center px-0"
           )}
         >
-          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#DBE64C] font-mono text-xs font-semibold text-[#001F3F]">
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary font-mono text-xs font-semibold text-primary-foreground">
             {mockUserProfile.iniziali}
           </div>
           {!collapsed && (
@@ -201,7 +201,7 @@ export function AppShell({ children }: AppShellProps) {
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-background px-4 md:hidden">
           <Link href="/" className="flex items-center gap-2" aria-label="Home">
-            <span className="flex size-7 shrink-0 items-center justify-center rounded-[8px] bg-[#DBE64C] font-mono text-xs font-extrabold text-[#001F3F]">
+            <span className="flex size-7 shrink-0 items-center justify-center rounded-[8px] bg-primary font-mono text-xs font-extrabold text-primary-foreground">
               M
             </span>
             <span className="font-mono text-sm font-semibold uppercase tracking-wide">MAAT</span>
@@ -211,7 +211,7 @@ export function AppShell({ children }: AppShellProps) {
             type="button"
             onClick={openNotifications}
             aria-label="Notifiche"
-            className="relative flex size-9 items-center justify-center rounded-full hover:bg-accent"
+            className="relative flex size-11 items-center justify-center rounded-full hover:bg-accent"
           >
             <Bell className="size-4.5" />
             {unreadCount > 0 && <span className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-primary" />}
@@ -220,7 +220,7 @@ export function AppShell({ children }: AppShellProps) {
             type="button"
             onClick={() => openSettings("account")}
             aria-label="Account"
-            className="flex size-8 items-center justify-center rounded-full bg-[#DBE64C] font-mono text-xs font-semibold text-[#001F3F]"
+            className="flex size-11 items-center justify-center rounded-full bg-primary font-mono text-xs font-semibold text-primary-foreground"
           >
             {mockUserProfile.iniziali}
           </button>
@@ -237,14 +237,14 @@ export function AppShell({ children }: AppShellProps) {
         >
           <Link
             href="/"
-            className="flex flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium text-muted-foreground data-[active=true]:text-primary"
+            className="flex flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset data-[active=true]:text-foreground data-[active=true]:font-semibold"
             data-active={pathname === "/"}
           >
             <Home className="size-5" /> Home
           </Link>
           <Link
             href="/inventario"
-            className="flex flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium text-muted-foreground data-[active=true]:text-primary"
+            className="flex flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset data-[active=true]:text-foreground data-[active=true]:font-semibold"
             data-active={pathname.startsWith("/inventario")}
           >
             <Package className="size-5" /> Inventario
@@ -253,7 +253,7 @@ export function AppShell({ children }: AppShellProps) {
             <Link
               href={CREA_CAPO_HREF}
               aria-label="Crea capo"
-              className="-mt-[18px] flex size-14 items-center justify-center rounded-full bg-[#DBE64C] text-[#001F3F] shadow-lg active:translate-y-px"
+              className="-mt-[18px] flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg active:translate-y-px"
             >
               <Plus className="size-7" strokeWidth={2.25} />
             </Link>
@@ -261,16 +261,20 @@ export function AppShell({ children }: AppShellProps) {
           <button
             type="button"
             onClick={openNotifications}
-            className="flex flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium text-muted-foreground data-[active=true]:text-primary"
+            className="flex flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset data-[active=true]:text-foreground data-[active=true]:font-semibold"
             data-active={pathname.startsWith("/notifiche")}
           >
-            <Bell className="size-5" /> Notifiche
+            <span className="relative flex">
+              <Bell className="size-5" />
+              {unreadCount > 0 && <span className="absolute -right-0.5 -top-0.5 size-1.5 rounded-full bg-primary" />}
+            </span>
+            Notifiche
           </button>
           <button
             type="button"
             onClick={() => setMoreOpen(true)}
             aria-label="Altre sezioni"
-            className="flex flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium text-muted-foreground data-[active=true]:text-primary"
+            className="flex flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset data-[active=true]:text-foreground data-[active=true]:font-semibold"
             data-active={isOverflowActive}
           >
             <Menu className="size-5" /> Altro

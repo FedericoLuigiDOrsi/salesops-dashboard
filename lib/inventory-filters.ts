@@ -28,22 +28,10 @@ export const PRICE_OPTIONS: { value: PriceBand; label: string }[] = [
 
 export const STATUS_SEGMENTS: { value: StatusFilter; label: string }[] = [
   { value: "all", label: "Tutti" },
-  { value: "bozza", label: "Bozze" },
-  { value: "catalogo", label: "A catalogo" },
-  { value: "venduto", label: "Venduti" },
+  { value: "to_be_reviewed", label: "Bozze" },
+  { value: "available", label: "A catalogo" },
+  { value: "sold", label: "Venduti" },
 ];
-
-export const STATUS_LABEL: Record<InventoryStatus, string> = {
-  bozza: "Bozza",
-  catalogo: "A catalogo",
-  venduto: "Venduto",
-};
-
-export const STATUS_CLASS: Record<InventoryStatus, string> = {
-  bozza: "border-transparent bg-primary/20 text-[#7a7000]",
-  catalogo: "border-transparent bg-[color-mix(in_oklab,var(--chart-2)_16%,transparent)] text-[var(--chart-2)]",
-  venduto: "border-transparent bg-muted text-muted-foreground",
-};
 
 export function matchesPrice(cents: number, band: PriceBand) {
   const eur = cents / 100;

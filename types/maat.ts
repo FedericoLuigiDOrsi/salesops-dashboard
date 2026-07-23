@@ -1,4 +1,4 @@
-export type CatalogEntryStatus = "local_draft" | "to_be_reviewed" | "available";
+export type CatalogEntryStatus = "local_draft" | "to_be_reviewed" | "available" | "sold";
 
 export type PhotoLabel = "fronte" | "retro" | "brand" | "taglia" | "materiale" | "difetti" | "extra" | "aruco";
 export type PhotoState = "captured" | "processing" | "validated" | "rejected";

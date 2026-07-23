@@ -160,7 +160,9 @@ export function InventoryView() {
             <TableHeader>
               <TableRow>
                 {orderedColumns.map((col) => (
-                  <TableHead key={col}>{COLUMN_DEFS[col].label}</TableHead>
+                  <TableHead key={col} className={col === "prezzo" ? "text-right" : undefined}>
+                    {COLUMN_DEFS[col].label}
+                  </TableHead>
                 ))}
               </TableRow>
             </TableHeader>
@@ -177,7 +179,9 @@ export function InventoryView() {
                   className="cursor-pointer hover:bg-muted/40"
                 >
                   {orderedColumns.map((col) => (
-                    <TableCell key={col}>{renderCell[col](item)}</TableCell>
+                    <TableCell key={col} className={col === "prezzo" ? "text-right" : undefined}>
+                      {renderCell[col](item)}
+                    </TableCell>
                   ))}
                 </TableRow>
               ))}

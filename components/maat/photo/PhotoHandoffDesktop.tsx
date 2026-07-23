@@ -43,7 +43,10 @@ export function PhotoHandoffDesktop() {
   const matrix = useMemo(() => qrMatrix(23), []);
 
   function close() {
-    router.push(`/capi/${entry.id}`);
+    // Non /capi/${id}: quella rotta è intercettata come Sheet laterale da
+    // app/capi/@modal/(.)[id] — evitiamo lo stesso mismatch già corretto
+    // lato mobile (vedi PhotoCaptureMobile.close()).
+    router.push("/capi");
   }
 
   function goReview() {

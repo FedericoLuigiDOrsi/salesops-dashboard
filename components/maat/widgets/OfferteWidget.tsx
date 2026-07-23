@@ -2,11 +2,15 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Check, X } from "lucide-react";
+import { AnimatePresence, motion, type Variants } from "framer-motion";
+import { ArrowRight, Check, ChevronDown, RefreshCw, RotateCcw, Shirt, X, type LucideIcon } from "lucide-react";
 import { cn, formatEUR } from "@/lib/utils";
 import { offers } from "@/lib/activity-mock";
 import { hasUrgentOffer } from "@/lib/urgency";
 import { useOverlays } from "@/lib/overlays-store";
+import type { Offer, OfferStatus } from "@/types/maat";
+
+const INITIAL_VISIBLE = 3;
 
 /** Toast minimale e autonomo: niente provider esterni da montare in layout. */
 function useLocalToast() {
@@ -19,18 +23,59 @@ function useLocalToast() {
   return { message, notify: setMessage };
 }
 
-const RESOLVED_BADGE: Record<"accepted" | "rejected" | "counter", { label: string; className: string }> = {
-  accepted: { label: "Accettata", className: "bg-[color-mix(in_oklab,var(--chart-2)_16%,transparent)] text-[var(--chart-2)]" },
-  rejected: { label: "Rifiutata", className: "bg-destructive/10 text-destructive" },
-  counter: { label: "Controfferta", className: "bg-primary/25 text-[#7a7000]" },
+const RESOLVED_BANNER: Record<
+  Exclude<OfferStatus, "pending">,
+  { icon: LucideIcon; iconBg: string; bannerBg: string; ring: string; strike?: boolean; label: (o: Offer, counterCents?: number) => string }
+> = {
+  accepted: {
+    icon: Check,
+    iconBg: "bg-success text-white",
+    bannerBg: "bg-success-soft",
+    ring: "shadow-[inset_3px_0_0_var(--success)]",
+    label: (o) => `Accettata a ${formatEUR(o.offerCents)} · ${o.sku}`,
+  },
+  rejected: {
+    icon: X,
+    iconBg: "bg-destructive/10 text-destructive",
+    bannerBg: "bg-destructive/10",
+    ring: "shadow-[inset_3px_0_0_var(--destructive)]",
+    strike: true,
+    label: (o) => `Rifiutata · ${formatEUR(o.offerCents)} · ${o.sku}`,
+  },
+  counter: {
+    icon: RefreshCw,
+    iconBg: "bg-primary/25 text-[#7a7000]",
+    bannerBg: "bg-primary/10",
+    ring: "shadow-[inset_3px_0_0_var(--primary)]",
+    label: (o, counterCents) => `Controfferta a ${formatEUR(counterCents ?? o.offerCents)} · ${o.sku}`,
+  },
 };
 
-/** Offerte in sospeso: click sulla riga apre il float, ✓/✗ restano scorciatoie. */
+const listVariants: Variants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.04 } },
+};
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 8 },
+  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 28 } },
+  exit: { opacity: 0, transition: { duration: 0.12 } },
+};
+
+/** Offerte in sospeso: card ricche con margine e azioni inline, banner animato a risoluzione. */
 export function OfferteWidget() {
   const { openOffer, offerStatus, resolveOffer } = useOverlays();
   const { message, notify } = useLocalToast();
+  const [expanded, setExpanded] = useState(false);
 
-  function handleResolve(offer: { id: string; itemLabel: string; offerCents: number }, status: "accepted" | "rejected") {
+  const effective = offers.map((o) => {
+    const override = offerStatus[o.id];
+    return { offer: o, status: override?.status ?? o.status, counterCents: override?.counterCents };
+  });
+  const pendingCount = effective.filter((e) => e.status === "pending").length;
+  const visible = expanded ? effective : effective.slice(0, INITIAL_VISIBLE);
+  const hiddenCount = effective.length - visible.length;
+
+  function handleResolve(offer: Offer, status: "accepted" | "rejected") {
     resolveOffer(offer.id, status);
     notify(
       status === "accepted"
@@ -46,7 +91,11 @@ export function OfferteWidget() {
           <p className="font-mono text-[11px] font-semibold uppercase tracking-[.12em] text-muted-foreground/70">
             Offerte
           </p>
-          <span className="font-mono text-xs text-muted-foreground">{offers.length}</span>
+          {pendingCount > 0 ? (
+            <span className="rounded-full bg-primary px-1.5 py-0.5 font-mono text-[10px] font-semibold text-primary-foreground">
+              {pendingCount}
+            </span>
+          ) : null}
           {hasUrgentOffer(offers) ? (
             <span aria-label="Offerte in attesa da tempo" className="size-1.5 shrink-0 rounded-full bg-destructive" />
           ) : null}
@@ -62,70 +111,119 @@ export function OfferteWidget() {
       {offers.length === 0 ? (
         <p className="py-4 text-[13px] text-muted-foreground">Nessuna offerta in sospeso.</p>
       ) : (
-        <div className="flex flex-col gap-1">
-          {offers.map((o) => {
-            const status = offerStatus[o.id]?.status ?? o.status;
-            const resolved = status !== "pending";
-            const badge = resolved ? RESOLVED_BADGE[status as "accepted" | "rejected" | "counter"] : null;
-            return (
-              <div
-                key={o.id}
-                role="button"
-                tabIndex={0}
-                onClick={() => openOffer(o.id)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    openOffer(o.id);
-                  }
-                }}
-                className="flex cursor-pointer items-center gap-3 rounded-lg p-2 text-left transition-colors hover:bg-foreground/[.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <span className="size-1.5 shrink-0 rounded-full bg-[var(--chart-1)]" />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-[13px] font-medium">{o.itemLabel}</p>
-                  <p className="font-mono text-xs text-muted-foreground">{o.sku}</p>
-                </div>
-                <span className="font-mono text-[13px] font-semibold">{formatEUR(o.offerCents)}</span>
-                {badge ? (
-                  <span
-                    className={cn(
-                      "shrink-0 rounded-full px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide",
-                      badge.className
-                    )}
+        <motion.div variants={listVariants} initial="hidden" animate="show" className="flex flex-col gap-2">
+          <AnimatePresence initial={false}>
+            {visible.map(({ offer: o, status, counterCents }) => {
+              if (status !== "pending") {
+                const banner = RESOLVED_BANNER[status];
+                const Icon = banner.icon;
+                return (
+                  <motion.div
+                    key={o.id}
+                    layout
+                    variants={itemVariants}
+                    initial="hidden"
+                    animate="show"
+                    exit="exit"
+                    className={cn("flex items-center gap-3 rounded-xl p-3", banner.bannerBg, banner.ring)}
                   >
-                    {badge.label}
-                  </span>
-                ) : (
-                  <div className="flex shrink-0 items-center gap-1">
+                    <span className={cn("flex size-9 shrink-0 items-center justify-center rounded-lg", banner.iconBg)}>
+                      <Icon className="size-4" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className={cn("truncate text-[14px] font-medium", banner.strike && "text-muted-foreground line-through")}>
+                        {o.itemLabel}
+                      </p>
+                      <p className="font-mono text-[11px] text-muted-foreground">{banner.label(o, counterCents)}</p>
+                    </div>
                     <button
                       type="button"
-                      aria-label={`Accetta offerta ${o.itemLabel}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleResolve(o, "accepted");
-                      }}
-                      className="flex size-7 items-center justify-center rounded-md border border-border text-[var(--chart-2)] transition-colors hover:bg-[var(--chart-2)]/10"
+                      onClick={() => resolveOffer(o.id, "pending")}
+                      className="flex shrink-0 items-center gap-1 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground"
                     >
-                      <Check className="size-3.5" />
+                      <RotateCcw className="size-3.5" /> Annulla
+                    </button>
+                  </motion.div>
+                );
+              }
+
+              const diffPct = Math.round(((o.offerCents - o.listPriceCents) / o.listPriceCents) * 100);
+              const positive = diffPct >= 0;
+
+              return (
+                <motion.div
+                  key={o.id}
+                  layout
+                  variants={itemVariants}
+                  initial="hidden"
+                  animate="show"
+                  exit="exit"
+                  className="rounded-xl border border-border p-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground/50">
+                      <Shirt className="size-5" strokeWidth={1.5} />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[14px] font-semibold">{o.itemLabel}</p>
+                      <p className="font-mono text-[11px] text-muted-foreground">{o.sku}</p>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <div className="flex items-baseline justify-end gap-1.5">
+                        <span className="font-mono text-[16px] font-semibold">{formatEUR(o.offerCents)}</span>
+                        <span
+                          className={cn(
+                            "rounded-full px-1.5 py-0.5 font-mono text-[10px] font-semibold",
+                            positive ? "bg-success-soft text-success" : "bg-destructive/10 text-destructive"
+                          )}
+                        >
+                          {positive ? "+" : "−"}
+                          {Math.abs(diffPct)}%
+                        </span>
+                      </div>
+                      <p className="font-mono text-[11px] text-muted-foreground line-through">{formatEUR(o.listPriceCents)}</p>
+                    </div>
+                  </div>
+                  <div className="mt-2.5 flex gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => handleResolve(o, "accepted")}
+                      className="flex-1 rounded-lg bg-primary py-1.5 text-[13px] font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+                    >
+                      Accetta
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={`Controfferta per ${o.itemLabel}`}
+                      onClick={() => openOffer(o.id)}
+                      className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground"
+                    >
+                      <RefreshCw className="size-3.5" />
                     </button>
                     <button
                       type="button"
                       aria-label={`Rifiuta offerta ${o.itemLabel}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleResolve(o, "rejected");
-                      }}
-                      className="flex size-7 items-center justify-center rounded-md border border-border text-destructive transition-colors hover:bg-destructive/10"
+                      onClick={() => handleResolve(o, "rejected")}
+                      className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-border text-destructive transition-colors hover:bg-destructive/10"
                     >
                       <X className="size-3.5" />
                     </button>
                   </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+
+          {hiddenCount > 0 ? (
+            <button
+              type="button"
+              onClick={() => setExpanded(true)}
+              className="flex items-center justify-center gap-1.5 py-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Vedi altre {hiddenCount} offerte <ChevronDown className="size-3.5" />
+            </button>
+          ) : null}
+        </motion.div>
       )}
 
       {message ? (

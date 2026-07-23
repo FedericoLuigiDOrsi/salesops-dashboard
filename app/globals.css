@@ -306,6 +306,53 @@
   .maat-weather-sun,
   .maat-weather-cloud,
   .maat-timeline-marker::after {
+
     animation: none;
+  }
+  [class*="maat-action-in"] {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.shipping-label-print {
+  page: shipping-label;
+}
+
+@page shipping-label {
+  size: 100mm 150mm;
+  margin: 0;
+}
+
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+
+  [data-slot="dialog-overlay"] {
+    display: none !important;
+  }
+
+  .shipping-label-dialog {
+    position: static !important;
+    display: block !important;
+    width: auto !important;
+    max-width: none !important;
+    max-height: none !important;
+    transform: none !important;
+    overflow: visible !important;
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .shipping-label-print,
+  .shipping-label-print * {
+    visibility: visible !important;
+  }
+
+  .shipping-label-print {
+    position: fixed;
+    inset: 0;
+    margin: 0;
   }
 }

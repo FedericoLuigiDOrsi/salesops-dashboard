@@ -15,7 +15,6 @@ describe("HOME_WIDGETS", () => {
   });
   it("prossime azioni usa la fascia media", () => {
     expect(HOME_WIDGETS.find((w) => w.key === "azioni")?.tier).toBe("medio");
-  });
   it("registra una sola volta ogni widget e copre tutto il layout iniziale", () => {
     const keys = HOME_WIDGETS.map((widget) => widget.key);
     expect(new Set(keys).size).toBe(keys.length);
@@ -29,5 +28,7 @@ describe("HOME_WIDGETS", () => {
       "note",
       "tempo-operativo",
     ]));
+  });
+
   });
 });

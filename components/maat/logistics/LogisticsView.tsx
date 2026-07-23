@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { SegmentedFilter } from "@/components/maat/SegmentedFilter";
 import { LogisticsCard } from "@/components/maat/logistics/LogisticsCard";
 import { LogisticsHero } from "@/components/maat/logistics/LogisticsHero";
+import { ShippingLabelDialog } from "@/components/maat/logistics/ShippingLabelDialog";
 import { shipments as initialShipments } from "@/lib/logistics-mock";
 import { MARKETPLACE_LABELS, SHIPMENT_STATUS_LABELS, type Marketplace, type Shipment, type ShipmentStatus } from "@/types/maat";
 
@@ -31,6 +32,7 @@ export function LogisticsView() {
   const [heroOpen, setHeroOpen] = useState(true);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOverCol, setDragOverCol] = useState<ShipmentStatus | null>(null);
+  const [labelShipment, setLabelShipment] = useState<Shipment | null>(null);
   // il drop legge l'id da qui, non dallo stato: dragstart→drop può scattare prima
   // che React committi il re-render innescato da setDraggingId.
   const dragIdRef = useRef<string | null>(null);
@@ -142,7 +144,7 @@ export function LogisticsView() {
 
       {heroOpen && <LogisticsHero stats={stats} onClose={() => setHeroOpen(false)} />}
 
-      <div className="grid min-h-0 flex-1 auto-cols-[minmax(220px,1fr)] grid-flow-col gap-3.5 overflow-x-auto">
+      <div className="grid min-h-0 flex-1 auto-cols-[minmax(282px,1fr)] grid-flow-col gap-3.5 overflow-x-auto">
         {COLUMNS.map((col) => {
           const cards = filtered.filter((s) => s.status === col.key).sort(sortFn);
           const hot = dragOverCol === col.key;
@@ -175,6 +177,7 @@ export function LogisticsView() {
                     dragging={draggingId === s.id}
                     onDragStart={handleDragStart}
                     onDragEnd={() => setDraggingId(null)}
+                    onOpenLabel={setLabelShipment}
                   />
                 ))}
                 {cards.length === 0 && (
@@ -187,6 +190,13 @@ export function LogisticsView() {
           );
         })}
       </div>
+
+      <ShippingLabelDialog
+        shipment={labelShipment}
+        onOpenChange={(open) => {
+          if (!open) setLabelShipment(null);
+        }}
+      />
     </div>
   );
 }

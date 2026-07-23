@@ -3,7 +3,7 @@ import type { CatalogEntry, Notification, Offer } from "@/types/maat";
 const OFFER_URGENT_MINUTES = 6 * 60;
 const ACTION_QUEUE_URGENT_MS = 48 * 60 * 60 * 1000;
 
-function parseElapsedMinutes(time: string): number {
+export function parseElapsedMinutes(time: string): number {
   const t = time.trim().toLowerCase();
   if (t === "ieri") return 24 * 60;
   const dayMatch = t.match(/^(\d+)\s*g/);

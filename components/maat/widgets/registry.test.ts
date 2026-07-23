@@ -8,8 +8,8 @@ describe("HOME_WIDGETS", () => {
       expect(validTiers).toContain(w.tier);
     }
   });
-  it("le fasce grande sono esattamente panoramica e offerte", () => {
+  it("le fasce grande sono esattamente azioni, offerte e panoramica", () => {
     const grande = HOME_WIDGETS.filter((w) => w.tier === "grande").map((w) => w.key).sort();
-    expect(grande).toEqual(["offerte", "panoramica"]);
+    expect(grande).toEqual(["azioni", "offerte", "panoramica"]);
   });
 });

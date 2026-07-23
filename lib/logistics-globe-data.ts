@@ -3,14 +3,12 @@ import type { Shipment, ShipmentStatus } from "@/types/maat";
 /** Magazzino DirtyTag — Napoli. */
 export const DIRTYTAG_ORIGIN = { lat: 40.8518, lng: 14.2681 };
 
-/**
- * shipped/in_transit condividono lo stesso testo in StatusBadge (--muted-foreground);
- * qui usiamo --info per in_transit per rendere gli archi distinguibili sul globo.
- */
+// Stessi colori delle colonne della board Kanban Logistica, per coerenza visiva.
 export const STATUS_ARC_COLOR: Record<ShipmentStatus, string> = {
-  shipped: "#5B6670", // --muted-foreground
-  in_transit: "#1E488F", // --info
-  out_for_delivery: "#00804C", // --success
+  da_fare: "#DBE64C", // --primary
+  fatti: "#1E488F", // --info
+  spediti: "#5B6670", // --muted-foreground
+  consegnati: "#00804C", // --success
 };
 
 export interface ArcDatum {

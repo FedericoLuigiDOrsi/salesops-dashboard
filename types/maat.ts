@@ -158,12 +158,15 @@ export interface Lot {
   pricePaidCents?: number | null; // "Prezzo pagato" al fornitore per l'intero carico, facoltativo nel dialog
 }
 
-export type ShipmentStatus = "shipped" | "in_transit" | "out_for_delivery";
+// Pipeline di fulfillment (board Kanban Logistica): da_fare/fatti precedono la
+// spedizione vera e propria, spediti/consegnati la seguono.
+export type ShipmentStatus = "da_fare" | "fatti" | "spediti" | "consegnati";
 
 export const SHIPMENT_STATUS_LABELS: Record<ShipmentStatus, string> = {
-  shipped: "Spedita",
-  in_transit: "In transito",
-  out_for_delivery: "In consegna",
+  da_fare: "Da fare",
+  fatti: "Fatti",
+  spediti: "Spediti",
+  consegnati: "Consegnati",
 };
 
 export interface Shipment {
@@ -175,8 +178,7 @@ export interface Shipment {
   trackingCode: string;
   recipient: string;
   status: ShipmentStatus;
-  shippedAt: string; // "14 lug"
-  expectedDeliveryAt: string; // "18 lug"
+  hoursAgo: number; // da quando la vendita è entrata in pipeline
   priceCents: number;
   destinationCity: { name: string; lat: number; lng: number };
 }

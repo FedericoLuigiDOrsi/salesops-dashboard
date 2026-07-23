@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { sales } from "@/lib/activity-mock";
 import { shipments } from "@/lib/logistics-mock";
 import { MARKETPLACE_LABELS, SHIPMENT_STATUS_LABELS } from "@/types/maat";
-import { formatEUR } from "@/lib/utils";
+import { formatEUR, formatHoursAgo } from "@/lib/utils";
 
 // Anteprima articolo da una vendita — mirror di public/mobile/maat-shell-account.html
 // righe 2824-2856 (markup) + 4042-4128 (logica). Il mockup usa un dizionario
@@ -95,7 +95,8 @@ export function ArticlePreview({ sku, open, onOpenChange }: ArticlePreviewProps)
                 <span className="font-mono text-xs text-muted-foreground/70">{shipment.trackingCode}</span>
               </div>
               <div>
-                {SHIPMENT_STATUS_LABELS[shipment.status]} · entro <b className="font-semibold text-foreground">{shipment.expectedDeliveryAt}</b>
+                {SHIPMENT_STATUS_LABELS[shipment.status]} · aggiornato{" "}
+                <b className="font-semibold text-foreground">{formatHoursAgo(shipment.hoursAgo)}</b>
               </div>
             </div>
           ) : (

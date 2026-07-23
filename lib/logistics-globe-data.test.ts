@@ -11,9 +11,8 @@ function mockShipment(overrides: Partial<Shipment> = {}): Shipment {
     carrier: "BRT",
     trackingCode: "TEST-001",
     recipient: "Test",
-    status: "in_transit",
-    shippedAt: "1 lug",
-    expectedDeliveryAt: "5 lug",
+    status: "spediti",
+    hoursAgo: 10,
     priceCents: 1000,
     destinationCity: { name: "Milano", lat: 45.4642, lng: 9.19 },
     ...overrides,
@@ -34,21 +33,23 @@ describe("buildArcs", () => {
       startLng: DIRTYTAG_ORIGIN.lng,
       endLat: 45.4642,
       endLng: 9.19,
-      color: STATUS_ARC_COLOR.in_transit,
+      color: STATUS_ARC_COLOR.spediti,
     });
   });
 
   it("colora l'arco in base allo status della spedizione", () => {
     const shipments = [
-      mockShipment({ id: "a", status: "shipped" }),
-      mockShipment({ id: "b", status: "in_transit" }),
-      mockShipment({ id: "c", status: "out_for_delivery" }),
+      mockShipment({ id: "a", status: "da_fare" }),
+      mockShipment({ id: "b", status: "fatti" }),
+      mockShipment({ id: "c", status: "spediti" }),
+      mockShipment({ id: "d", status: "consegnati" }),
     ];
     const arcs = buildArcs(shipments);
     expect(arcs.map((a) => a.color)).toEqual([
-      STATUS_ARC_COLOR.shipped,
-      STATUS_ARC_COLOR.in_transit,
-      STATUS_ARC_COLOR.out_for_delivery,
+      STATUS_ARC_COLOR.da_fare,
+      STATUS_ARC_COLOR.fatti,
+      STATUS_ARC_COLOR.spediti,
+      STATUS_ARC_COLOR.consegnati,
     ]);
   });
 
@@ -61,6 +62,6 @@ describe("buildRings", () => {
   it("crea un ring per ogni destinazione, con lo stesso colore dell'arco", () => {
     const shipments = [mockShipment({ id: "sh-1" })];
     const rings = buildRings(shipments);
-    expect(rings).toEqual([{ id: "sh-1", lat: 45.4642, lng: 9.19, color: STATUS_ARC_COLOR.in_transit }]);
+    expect(rings).toEqual([{ id: "sh-1", lat: 45.4642, lng: 9.19, color: STATUS_ARC_COLOR.spediti }]);
   });
 });

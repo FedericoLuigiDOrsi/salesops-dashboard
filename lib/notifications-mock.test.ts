@@ -10,6 +10,7 @@ const base: Offer = {
   offerCents: 19000,
   listPriceCents: 24000,
   time: "1 h",
+  receivedAt: "2026-07-23T08:00:00.000Z",
   status: "pending",
 };
 

@@ -9,7 +9,7 @@ import {
 import type { Offer, CatalogEntry, Notification } from "@/types/maat";
 
 function makeOffer(time: string, status: Offer["status"] = "pending"): Offer {
-  return { id: "o1", itemLabel: "Test", sku: "T-1", marketplace: "vinted", offerCents: 1000, listPriceCents: 1200, time, status };
+  return { id: "o1", itemLabel: "Test", sku: "T-1", marketplace: "vinted", offerCents: 1000, listPriceCents: 1200, time, receivedAt: "2026-07-21T10:00:00.000Z", status };
 }
 
 describe("isOfferUrgent", () => {

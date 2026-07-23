@@ -51,8 +51,8 @@ function SortableWidget({ widgetKey, editing }: { widgetKey: WidgetKey; editing:
         editing && "cursor-grab touch-none active:cursor-grabbing",
         isDragging && "z-10"
       )}
-      {...attributes}
-      {...listeners}
+      {...(editing ? attributes : {})}
+      {...(editing ? listeners : {})}
     >
       <motion.div
         animate={{ scale: isDragging ? 1.035 : 1 }}

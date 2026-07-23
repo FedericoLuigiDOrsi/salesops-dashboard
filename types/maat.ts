@@ -186,7 +186,8 @@ export interface Shipment {
 // ---------------------------------------------------------------------------
 // Attività (offerte + vendite) — condivise tra Home (card offerte/vendite) e
 // Notifiche v2 (gruppi Vendite/Offerte + popup controfferta + anteprima).
-// Importi in centesimi. `time` è relativo ("12 min", "3 h", "ieri").
+// Importi in centesimi. `time` è copy relativo; `receivedAt` è la sorgente
+// stabile per ordinamento e logiche temporali.
 // ---------------------------------------------------------------------------
 
 export type OfferStatus = "pending" | "accepted" | "rejected" | "counter";
@@ -199,6 +200,7 @@ export interface Offer {
   offerCents: number; // prezzo offerto dall'acquirente
   listPriceCents: number; // prezzo di listino
   time: string; // "1 h"
+  receivedAt: string; // ISO 8601, usato per ordinare senza interpretare il copy localizzato
   status: OfferStatus;
   counterCents?: number; // controfferta inviata dal venditore, se status === "counter"
   photoUrl?: string | null; // placeholder oggi; immagine reale in futuro

@@ -1,5 +1,5 @@
 import type { ComponentType } from "react";
-import { BadgeEuro, Bell, ChartColumn, Gauge, Globe, HandCoins, ListChecks, type LucideIcon } from "lucide-react";
+import { Archive, BadgeEuro, Bell, ChartColumn, CloudSun, Gauge, Globe, HandCoins, ListChecks, StickyNote, Target, Trophy, type LucideIcon } from "lucide-react";
 import type { WidgetKey } from "@/lib/home-layout-store";
 import type { Tier } from "@/lib/tiers";
 import { AzioniWidget } from "./AzioniWidget";
@@ -9,6 +9,11 @@ import { NotificheWidget } from "./NotificheWidget";
 import { OfferteWidget } from "./OfferteWidget";
 import { PanoramicaWidget } from "./PanoramicaWidget";
 import { VenditeWidget } from "./VenditeWidget";
+import { InventarioFermoWidget } from "./InventarioFermoWidget";
+import { NoteWidget } from "./NoteWidget";
+import { TargetSettimanaleWidget } from "./TargetSettimanaleWidget";
+import { TempoOperativoWidget } from "./TempoOperativoWidget";
+import { TopPerformerWidget } from "./TopPerformerWidget";
 
 export interface WidgetDef {
   key: WidgetKey;
@@ -80,6 +85,47 @@ export const HOME_WIDGETS: WidgetDef[] = [
     icon: Globe,
     tier: "medio",
     component: LogisticaWidget,
+    bleed: true,
+  },
+  {
+    key: "top-performer",
+    title: "Top performer",
+    description: "Ranking di capi e categorie per vendite",
+    icon: Trophy,
+    tier: "medio",
+    component: TopPerformerWidget,
+  },
+  {
+    key: "inventario-fermo",
+    title: "Inventario fermo",
+    description: "Capi invenduti oltre una soglia configurabile",
+    icon: Archive,
+    tier: "medio",
+    component: InventarioFermoWidget,
+  },
+  {
+    key: "target-settimanale",
+    title: "Target settimanale",
+    description: "Progresso verso l’obiettivo di entrate",
+    icon: Target,
+    tier: "piccolo",
+    component: TargetSettimanaleWidget,
+  },
+  {
+    key: "note",
+    title: "Note",
+    description: "Un promemoria personale sempre visibile",
+    icon: StickyNote,
+    tier: "piccolo",
+    component: NoteWidget,
+  },
+  {
+    key: "tempo-operativo",
+    title: "Tempo operativo",
+    description: "Ora, clima e avanzamento della giornata",
+    icon: CloudSun,
+    tier: "piccolo",
+    component: TempoOperativoWidget,
     bleed: true,
   },
 ];

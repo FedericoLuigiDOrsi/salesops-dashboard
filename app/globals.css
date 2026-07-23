@@ -136,6 +136,70 @@
     background-size: 200% 100%;
     animation: maat-shimmer 1.6s ease-in-out infinite;
   }
+  .maat-clock-ambient {
+    animation: maat-clock-ambient 8s cubic-bezier(0.22, 1, 0.36, 1) infinite alternate;
+  }
+  .maat-live-dot {
+    animation: maat-live-dot 1.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  }
+  .maat-weather-rays {
+    animation: maat-weather-spin 13s linear infinite;
+  }
+  .maat-weather-sun {
+    box-shadow: 0 0 12px rgba(219, 230, 76, 0.24);
+    animation: maat-weather-sun 3.2s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  }
+  .maat-weather-cloud {
+    position: absolute;
+    right: 2px;
+    bottom: 2px;
+    width: 34px;
+    height: 10px;
+    border-radius: 999px;
+    background: var(--text-on-dark);
+    box-shadow: 0 4px 9px rgba(0, 10, 24, 0.18);
+    animation: maat-weather-cloud 4.8s cubic-bezier(0.22, 1, 0.36, 1) infinite alternate;
+  }
+  .maat-weather-cloud::before,
+  .maat-weather-cloud::after {
+    content: "";
+    position: absolute;
+    bottom: 3px;
+    border-radius: 50%;
+    background: inherit;
+  }
+  .maat-weather-cloud::before {
+    left: 6px;
+    width: 13px;
+    height: 13px;
+  }
+  .maat-weather-cloud::after {
+    right: 6px;
+    width: 17px;
+    height: 17px;
+  }
+  .maat-weather-cloud-back {
+    right: 19px;
+    bottom: 8px;
+    opacity: 0.3;
+    animation-duration: 6.4s;
+    animation-direction: alternate-reverse;
+  }
+  .maat-clock[data-phase="night"] .maat-weather-rays {
+    opacity: 0;
+  }
+  .maat-clock[data-phase="night"] .maat-weather-sun {
+    background: var(--text-on-dark);
+    box-shadow: inset 6px -2px 0 rgba(0, 31, 63, 0.25), 0 0 12px rgba(246, 247, 237, 0.16);
+  }
+  .maat-timeline-marker::after {
+    content: "";
+    position: absolute;
+    inset: -5px;
+    border: 1px solid rgba(219, 230, 76, 0.4);
+    border-radius: 50%;
+    animation: maat-marker-pulse 2.2s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  }
 }
 
 @keyframes maat-tick {
@@ -195,6 +259,35 @@
   }
 }
 
+@keyframes maat-clock-ambient {
+  from { opacity: 0.55; transform: translate3d(0, 0, 0) scale(0.92); }
+  to { opacity: 1; transform: translate3d(-16px, 16px, 0) scale(1.06); }
+}
+
+@keyframes maat-live-dot {
+  0%, 100% { opacity: 0.5; transform: scale(0.82); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes maat-weather-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes maat-weather-sun {
+  0%, 100% { opacity: 0.82; transform: scale(0.92); }
+  50% { opacity: 1; transform: scale(1.08); }
+}
+
+@keyframes maat-weather-cloud {
+  from { transform: translate3d(-4px, 0, 0); }
+  to { transform: translate3d(3px, 0, 0); }
+}
+
+@keyframes maat-marker-pulse {
+  0%, 100% { opacity: 0; transform: scale(0.72); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-tick,
   .animate-chip-in,
@@ -206,5 +299,13 @@
   [class*="maat-action-in"] {
     opacity: 1;
     transform: none;
+  }
+  .maat-clock-ambient,
+  .maat-live-dot,
+  .maat-weather-rays,
+  .maat-weather-sun,
+  .maat-weather-cloud,
+  .maat-timeline-marker::after {
+    animation: none;
   }
 }

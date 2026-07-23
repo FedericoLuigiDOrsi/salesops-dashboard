@@ -8,11 +8,11 @@ import type { Offer, Sale } from "@/types/maat";
 // inizializzato da questi dati — nessuno store condiviso, coerente col prototipo.
 
 export const offers: Offer[] = [
-  { id: "off-1", itemLabel: "Burberry · Trench", sku: "B-088", marketplace: "grailed", offerCents: 19000, listPriceCents: 24000, time: "1 h", status: "pending" },
-  { id: "off-2", itemLabel: "Levi's · Giacca denim", sku: "B-102", marketplace: "depop", offerCents: 5500, listPriceCents: 6800, time: "2 h", status: "pending" },
-  { id: "off-3", itemLabel: "Dr. Martens · 1460", sku: "B-099", marketplace: "depop", offerCents: 7500, listPriceCents: 8800, time: "5 h", status: "pending" },
-  { id: "off-4", itemLabel: "Nike · Hoodie vintage", sku: "B-093", marketplace: "vinted", offerCents: 4000, listPriceCents: 5200, time: "6 h", status: "pending" },
-  { id: "off-5", itemLabel: "Acne · Maglione lana", sku: "B-097", marketplace: "vestiaire", offerCents: 9500, listPriceCents: 11500, time: "ieri", status: "pending" },
+  { id: "off-1", itemLabel: "Burberry · Trench", sku: "B-088", marketplace: "grailed", offerCents: 19000, listPriceCents: 24000, time: "1 h", receivedAt: "2026-07-23T08:00:00.000Z", status: "pending" },
+  { id: "off-2", itemLabel: "Levi's · Giacca denim", sku: "B-102", marketplace: "depop", offerCents: 5500, listPriceCents: 6800, time: "2 h", receivedAt: "2026-07-23T07:00:00.000Z", status: "pending" },
+  { id: "off-3", itemLabel: "Dr. Martens · 1460", sku: "B-099", marketplace: "depop", offerCents: 7500, listPriceCents: 8800, time: "5 h", receivedAt: "2026-07-23T04:00:00.000Z", status: "pending" },
+  { id: "off-4", itemLabel: "Nike · Hoodie vintage", sku: "B-093", marketplace: "vinted", offerCents: 4000, listPriceCents: 5200, time: "6 h", receivedAt: "2026-07-23T03:00:00.000Z", status: "pending" },
+  { id: "off-5", itemLabel: "Acne · Maglione lana", sku: "B-097", marketplace: "vestiaire", offerCents: 9500, listPriceCents: 11500, time: "ieri", receivedAt: "2026-07-22T09:00:00.000Z", status: "pending" },
 ];
 
 export const sales: Sale[] = [

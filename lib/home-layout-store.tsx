@@ -1,18 +1,34 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { DEFAULT_PINNED_METRICS, DEFAULT_SELECTED_METRICS } from "@/lib/home-mock";
 
 // Chiavi dei widget disponibili in Home. Vivono qui e non nella registry per
 // evitare un ciclo di import runtime (widgets → store → registry → widgets):
 // la registry importa da questo file solo il tipo.
-export const WIDGET_KEYS = ["panoramica", "offerte", "vendite", "azioni", "notifiche", "entrate", "logistica"] as const;
+export const WIDGET_KEYS = [
+  "panoramica",
+  "offerte",
+  "vendite",
+  "azioni",
+  "notifiche",
+  "entrate",
+  "logistica",
+  "top-performer",
+  "inventario-fermo",
+  "target-settimanale",
+  "note",
+  "tempo-operativo",
+] as const;
 export type WidgetKey = (typeof WIDGET_KEYS)[number];
 
-// Layout iniziale = lo stato del mockup public/mobile/maat-shell-account.html.
-export const DEFAULT_LAYOUT: WidgetKey[] = ["panoramica", "offerte", "vendite", "logistica"];
+const NEW_WIDGET_KEYS: WidgetKey[] = ["top-performer", "inventario-fermo", "target-settimanale", "note", "tempo-operativo"];
 
-const STORAGE_KEY = "maat.home.layout.v1";
+// Layout iniziale: i cinque nuovi widget restano visibili di default durante la fase di valutazione.
+export const DEFAULT_LAYOUT: WidgetKey[] = ["panoramica", "offerte", "vendite", "logistica", ...NEW_WIDGET_KEYS];
+
+const STORAGE_KEY = "maat.home.layout.v2";
+const LEGACY_STORAGE_KEY = "maat.home.layout.v1";
 
 interface HomeLayoutContextValue {
   layout: WidgetKey[];
@@ -45,31 +61,39 @@ export function HomeLayoutProvider({ children }: { children: ReactNode }) {
   const [layout, setLayout] = useState<WidgetKey[]>(DEFAULT_LAYOUT);
   const [metrics, setMetrics] = useState<string[]>(DEFAULT_SELECTED_METRICS);
   const [pinnedMetrics, setPinnedMetrics] = useState<string[]>(DEFAULT_PINNED_METRICS);
-  const hydrated = useRef(false);
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
+      const currentRaw = window.localStorage.getItem(STORAGE_KEY);
+      const legacyRaw = currentRaw ? null : window.localStorage.getItem(LEGACY_STORAGE_KEY);
+      const raw = currentRaw ?? legacyRaw;
       if (raw) {
         const saved = JSON.parse(raw) as { layout?: unknown[]; metrics?: unknown[]; pinnedMetrics?: unknown[] };
-        if (Array.isArray(saved.layout)) setLayout(saved.layout.filter(isWidgetKey));
+        if (Array.isArray(saved.layout)) {
+          const savedLayout = saved.layout.filter(isWidgetKey);
+          const migratedLayout = legacyRaw
+            ? [...savedLayout, ...NEW_WIDGET_KEYS.filter((key) => !savedLayout.includes(key))]
+            : savedLayout;
+          setLayout(migratedLayout);
+        }
         if (Array.isArray(saved.metrics)) setMetrics(asStringArray(saved.metrics));
         if (Array.isArray(saved.pinnedMetrics)) setPinnedMetrics(asStringArray(saved.pinnedMetrics));
       }
     } catch {
       // storage corrotto o non disponibile: si riparte dal default
     }
-    hydrated.current = true;
+    setHydrated(true);
   }, []);
 
   useEffect(() => {
-    if (!hydrated.current) return;
+    if (!hydrated) return;
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ layout, metrics, pinnedMetrics }));
     } catch {
       // storage pieno o bloccato: il layout resta solo in memoria
     }
-  }, [layout, metrics, pinnedMetrics]);
+  }, [hydrated, layout, metrics, pinnedMetrics]);
 
   const value = useMemo<HomeLayoutContextValue>(
     () => ({

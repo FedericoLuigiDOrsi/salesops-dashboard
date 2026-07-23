@@ -1,9 +1,10 @@
 import type { ComponentType } from "react";
-import { BadgeEuro, Bell, ChartColumn, Gauge, HandCoins, ListChecks, type LucideIcon } from "lucide-react";
+import { BadgeEuro, Bell, ChartColumn, Gauge, Globe, HandCoins, ListChecks, type LucideIcon } from "lucide-react";
 import type { WidgetKey } from "@/lib/home-layout-store";
 import type { Tier } from "@/lib/tiers";
 import { AzioniWidget } from "./AzioniWidget";
 import { EntrateWidget } from "./EntrateWidget";
+import { LogisticaWidget } from "./LogisticaWidget";
 import { NotificheWidget } from "./NotificheWidget";
 import { OfferteWidget } from "./OfferteWidget";
 import { PanoramicaWidget } from "./PanoramicaWidget";
@@ -19,6 +20,8 @@ export interface WidgetDef {
   /** Fascia fissa: determina il footprint nella bento grid desktop (mobile è sempre 1 colonna). */
   tier: Tier;
   component: ComponentType;
+  /** Il widget porta la propria card (hero dark full-bleed): salta il chrome standard della shell. */
+  bleed?: boolean;
 }
 
 export const HOME_WIDGETS: WidgetDef[] = [
@@ -69,6 +72,15 @@ export const HOME_WIDGETS: WidgetDef[] = [
     icon: ChartColumn,
     tier: "medio",
     component: EntrateWidget,
+  },
+  {
+    key: "logistica",
+    title: "Logistica",
+    description: "Rete di spedizioni live, conteggi per stato",
+    icon: Globe,
+    tier: "medio",
+    component: LogisticaWidget,
+    bleed: true,
   },
 ];
 

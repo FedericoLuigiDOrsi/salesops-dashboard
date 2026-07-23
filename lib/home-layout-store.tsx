@@ -6,11 +6,11 @@ import { DEFAULT_SELECTED_METRICS } from "@/lib/home-mock";
 // Chiavi dei widget disponibili in Home. Vivono qui e non nella registry per
 // evitare un ciclo di import runtime (widgets → store → registry → widgets):
 // la registry importa da questo file solo il tipo.
-export const WIDGET_KEYS = ["panoramica", "offerte", "vendite", "azioni", "notifiche", "entrate"] as const;
+export const WIDGET_KEYS = ["panoramica", "offerte", "vendite", "azioni", "notifiche", "entrate", "logistica"] as const;
 export type WidgetKey = (typeof WIDGET_KEYS)[number];
 
 // Layout iniziale = lo stato del mockup public/mobile/maat-shell-account.html.
-export const DEFAULT_LAYOUT: WidgetKey[] = ["panoramica", "offerte", "vendite"];
+export const DEFAULT_LAYOUT: WidgetKey[] = ["panoramica", "offerte", "vendite", "logistica"];
 
 const STORAGE_KEY = "maat.home.layout.v1";
 

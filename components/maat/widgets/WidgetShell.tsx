@@ -9,6 +9,8 @@ interface WidgetShellProps {
   onRemove: () => void;
   removeLabel: string;
   children: ReactNode;
+  /** Il widget porta la propria card (es. hero dark full-bleed): niente bordo/bg/padding standard. */
+  bleed?: boolean;
 }
 
 /**
@@ -16,12 +18,14 @@ interface WidgetShellProps {
  * (bordo tratteggiato, jiggle-lite, pulsante rimuovi). In edit mode il
  * contenuto è inerte — come le app della home iPad mentre "ballano".
  */
-export function WidgetShell({ editing, onRemove, removeLabel, children }: WidgetShellProps) {
+export function WidgetShell({ editing, onRemove, removeLabel, children, bleed }: WidgetShellProps) {
   return (
     <section
       className={cn(
-        "relative h-full rounded-xl border border-border bg-card p-5 transition-transform",
-        editing && "scale-[.98] border-dashed"
+        "relative h-full rounded-xl transition-transform",
+        bleed ? "overflow-hidden" : "border border-border bg-card p-5",
+        editing && "scale-[.98]",
+        editing && !bleed && "border-dashed"
       )}
     >
       {editing ? (
@@ -35,7 +39,7 @@ export function WidgetShell({ editing, onRemove, removeLabel, children }: Widget
           <X className="size-3.5" />
         </button>
       ) : null}
-      <div className={cn(editing && "pointer-events-none select-none")}>{children}</div>
+      <div className={cn("h-full", editing && "pointer-events-none select-none")}>{children}</div>
     </section>
   );
 }

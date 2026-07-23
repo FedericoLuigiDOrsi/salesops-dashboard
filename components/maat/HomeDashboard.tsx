@@ -64,6 +64,7 @@ function SortableWidget({ widgetKey, editing }: { widgetKey: WidgetKey; editing:
           editing={editing}
           onRemove={() => removeWidget(widgetKey)}
           removeLabel={`Rimuovi widget ${def.title}`}
+          bleed={def.bleed}
         >
           <def.component />
         </WidgetShell>

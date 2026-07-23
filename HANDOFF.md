@@ -6,7 +6,7 @@
 > Questo documento è la fonte di verità per riprendere lo sviluppo: tienilo aggiornato
 > a fine di ogni sessione.
 
-Ultimo aggiornamento: 2026-07-20 · Owner: Federico D'Orsi
+Ultimo aggiornamento: 2026-07-23 · Owner: Federico D'Orsi
 
 > 👥 **Onboarding team e metodo di lavoro (HTML-first → Next.js):** [`docs/GUIDA-TEAM.md`](docs/GUIDA-TEAM.md).
 > Questo file è invece la vista "stato + backlog" per riprendere lo sviluppo.
@@ -186,6 +186,12 @@ Tipi in `types/maat.ts` (`Lot` esteso: `name`/`executedAt`/`pricePaidCents`).
       ordine preservato. **Nota bene**: resta un hydration warning dev sui Popover Radix
       (`aria-controls`) — **pre-esistente**, verificato con test A/B su commit `730e254` senza dnd-kit;
       non ha impatto funzionale, fix da fare a livello dipendenze (React 19 + radix).
+- [x] **Fase 11** — Home, redesign **Prossime azioni**: struttura "Focus, poi coda" derivata dal sample
+      HTML approvato. Una sola azione prioritaria usa il focus panel; la preview mostra tre righe con
+      verbi operativi espliciti (`Revisiona`/`Rispondi`), gruppi `Da gestire ora`/`Da gestire oggi`/
+      `Da pianificare`, espansione controllata e fallback illustrato al posto del placeholder "Foto".
+      Il widget torna alla fascia **media 2×1**, coerente con la spec bento; empty state riusa il
+      componente canonico e tutte le animazioni rispettano `prefers-reduced-motion`.
 
 Piano originale completo: era in `~/.claude/plans/jaunty-stirring-raven.md` (locale — se serve
 storicizzarlo, va copiato qui in `docs/`).

@@ -39,15 +39,23 @@ const rowVariants: Variants = {
 export function NotificationInboxContent({ variant = "page" }: { variant?: "page" | "panel" }) {
   const { openOffer, openSale, offerStatus } = useOverlays();
   const [filter, setFilter] = useState<FilterKey>("tutte");
+  const [readIds, setReadIds] = useState<Set<string>>(() => new Set());
+
+  function markRead(id: string) {
+    setReadIds((prev) => (prev.has(id) ? prev : new Set(prev).add(id)));
+  }
 
   const items = useMemo<NotificationV2[]>(
     () =>
       notificationsV2.map((n) => {
-        if (n.type !== "offerta") return n;
+        const unread = readIds.has(n.id) ? false : n.unread;
+        if (n.type !== "offerta") return { ...n, unread };
         const override = offerStatus[baseOfferId(n.id)];
-        return override ? { ...n, status: override.status, counterCents: override.counterCents ?? n.counterCents } : n;
+        return override
+          ? { ...n, unread, status: override.status, counterCents: override.counterCents ?? n.counterCents }
+          : { ...n, unread };
       }),
-    [offerStatus]
+    [offerStatus, readIds]
   );
 
   const counts = useMemo(
@@ -85,7 +93,7 @@ export function NotificationInboxContent({ variant = "page" }: { variant?: "page
       {items.length === 0 ? (
         <EmptyState icon={<Bell className="size-5 text-muted-foreground" />} title="Nessuna notifica" subtitle="Vendite, offerte e spedizioni appariranno qui." />
       ) : (
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-6" aria-live="polite">
           {visibleGroups.map((group) => {
             const groupItems = items.filter(group.match);
             if (groupItems.length === 0) return null;
@@ -106,14 +114,26 @@ export function NotificationInboxContent({ variant = "page" }: { variant?: "page
                     if (n.type === "vendita") {
                       return (
                         <motion.div key={n.id} variants={rowVariants}>
-                          <SaleNotificationRow notification={n} onOpen={() => n.sku && openSale(n.sku)} />
+                          <SaleNotificationRow
+                            notification={n}
+                            onOpen={() => {
+                              markRead(n.id);
+                              n.sku && openSale(n.sku);
+                            }}
+                          />
                         </motion.div>
                       );
                     }
                     if (n.type === "offerta") {
                       return (
                         <motion.div key={n.id} variants={rowVariants}>
-                          <OfferNotificationRow notification={n} onOpen={() => openOffer(baseOfferId(n.id))} />
+                          <OfferNotificationRow
+                            notification={n}
+                            onOpen={() => {
+                              markRead(n.id);
+                              openOffer(baseOfferId(n.id));
+                            }}
+                          />
                         </motion.div>
                       );
                     }

@@ -52,6 +52,12 @@
   --text-3: #9AA0A6;
   --border-strong: rgba(0,31,63,.18);
   --info: #1E488F;
+  /* v2.2 — token InventoryTable/ChannelDots (design handoff "Riprogettazione tabelle inventario premium", 2026-07-27) */
+  --channel-vinted: oklch(58% 0.07 200);
+  --channel-grailed: oklch(55% 0.06 320);
+  --channel-depop: oklch(62% 0.09 70);
+  --tint-bozza: rgba(219,230,76,.24);
+  --tint-ink-faint: rgba(0,31,63,.03);
 }
 
 @theme inline {
@@ -130,6 +136,9 @@
   }
   .animate-chip-in {
     animation: maat-chip-in 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .animate-bar-in {
+    animation: maat-bar-in 0.2s cubic-bezier(0.22, 1, 0.36, 1);
   }
   .animate-shimmer {
     background-image: linear-gradient(100deg, transparent 30%, rgba(0, 31, 63, 0.06) 50%, transparent 70%);
@@ -224,6 +233,17 @@
   to {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+@keyframes maat-bar-in {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 

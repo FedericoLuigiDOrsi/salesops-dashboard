@@ -2,16 +2,14 @@
 
 import { useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { Plus, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { cn, formatEUR } from "@/lib/utils";
+import { formatEUR } from "@/lib/utils";
 import { inventoryItems, type InventoryItem } from "@/lib/inventory-mock";
 import { AutomazioniDrawer } from "@/components/maat/inventory/AutomazioniDrawer";
-import { COLUMN_DEFS, type ColumnKey } from "@/lib/inventory-columns";
+import type { PlatformKey } from "@/lib/inventory-columns";
 import { PlatformPills } from "@/components/maat/inventory/PlatformPills";
-import { useInventoryColumns } from "@/lib/inventory-columns-store";
+import { InventoryTable } from "@/components/maat/inventory/InventoryTable";
 import { InventoryToolbar } from "@/components/maat/inventory/InventoryToolbar";
 import { StatusBadge } from "@/components/maat/StatusBadge";
 import {
@@ -29,7 +27,7 @@ function FieldLabel({ children }: { children: ReactNode }) {
 }
 
 export function InventoryView() {
-  const router = useRouter();
+  const [items, setItems] = useState<InventoryItem[]>(inventoryItems);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [view, setView] = useState<ViewMode>("table");
@@ -38,14 +36,13 @@ export function InventoryView() {
   const [price, setPrice] = useState<PriceBand>("all");
   const [platform, setPlatform] = useState<PlatformFilter>("all");
   const [automazioniOpen, setAutomazioniOpen] = useState(false);
-  const { visibleColumns } = useInventoryColumns();
 
   const baseFilters = { search, category, size, price, platform };
 
   const baseMatched = useMemo(
-    () => inventoryItems.filter((item) => matchesBase(item, baseFilters)),
+    () => items.filter((item) => matchesBase(item, baseFilters)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [search, category, size, price, platform]
+    [items, search, category, size, price, platform]
   );
 
   const statusCounts = useMemo(() => {
@@ -75,34 +72,32 @@ export function InventoryView() {
 
   const hasActiveFilters = search !== "" || category !== "all" || size !== "all" || price !== "all" || platform !== "all";
 
-  const renderCell: Record<ColumnKey, (item: InventoryItem) => ReactNode> = {
-    capo: (item) => (
-      <div className="flex items-center gap-3">
-        <div className="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-background">
-          {item.photoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={item.photoUrl} alt="" className="size-full object-cover" />
-          ) : (
-            <span className="font-mono text-[7px] uppercase text-muted-foreground/50">Foto</span>
-          )}
-        </div>
-        <div className="min-w-0">
-          <div className="truncate font-medium">{item.brand}</div>
-          <div className="truncate text-xs text-muted-foreground">{item.tipoCapo}</div>
-        </div>
-      </div>
-    ),
-    stato: (item) => (
-      <StatusBadge status={item.status} className="text-[11px]" />
-    ),
-    sku: (item) => <span className="font-mono text-xs text-muted-foreground">{item.sku}</span>,
-    categoria: (item) => <span className="text-sm text-muted-foreground">{item.category}</span>,
-    taglia: (item) => <span className="text-sm text-muted-foreground">{item.size}</span>,
-    prezzo: (item) => <span className="font-mono text-sm">{formatEUR(item.priceCents)}</span>,
-    piattaforme: (item) => <PlatformPills platforms={item.platforms} />,
-  };
+  function publishItems(ids: string[]) {
+    const idSet = new Set(ids);
+    setItems((prev) =>
+      prev.map((item) =>
+        idSet.has(item.id)
+          ? { ...item, status: "available", platforms: { vinted: "active", grailed: "active", depop: "active" } }
+          : item
+      )
+    );
+  }
 
-  const orderedColumns: ColumnKey[] = ["capo", ...visibleColumns];
+  function deleteItems(ids: string[]) {
+    const idSet = new Set(ids);
+    setItems((prev) => prev.filter((item) => !idSet.has(item.id)));
+  }
+
+  function toggleChannel(id: string, platform: PlatformKey) {
+    setItems((prev) =>
+      prev.map((item) => {
+        if (item.id !== id) return item;
+        const current = item.platforms[platform];
+        const published = current === "active" || current === "sold";
+        return { ...item, platforms: { ...item.platforms, [platform]: published ? null : "active" } };
+      })
+    );
+  }
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 sm:px-8">
@@ -150,43 +145,16 @@ export function InventoryView() {
         onReset={resetFilters}
       />
 
-      {filtered.length === 0 ? (
+      {view === "table" ? (
+        <InventoryTable
+          items={filtered}
+          onPublish={publishItems}
+          onDelete={deleteItems}
+          onToggleChannel={toggleChannel}
+        />
+      ) : filtered.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
           Nessun capo corrisponde ai filtri selezionati.
-        </div>
-      ) : view === "table" ? (
-        <div className="overflow-hidden rounded-xl border border-border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                {orderedColumns.map((col) => (
-                  <TableHead key={col} className={col === "prezzo" ? "text-right" : undefined}>
-                    {COLUMN_DEFS[col].label}
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.map((item) => (
-                <TableRow
-                  key={item.id}
-                  role="link"
-                  tabIndex={0}
-                  onClick={() => router.push(`/capi/${item.id}`)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") router.push(`/capi/${item.id}`);
-                  }}
-                  className="cursor-pointer hover:bg-muted/40"
-                >
-                  {orderedColumns.map((col) => (
-                    <TableCell key={col} className={col === "prezzo" ? "text-right" : undefined}>
-                      {renderCell[col](item)}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">

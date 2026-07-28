@@ -284,8 +284,7 @@ export function InventoryToolbar(props: InventoryToolbarProps) {
           onChange={(v) => onPlatformChange(v as PlatformFilter)}
         />
 
-        {/* ColumnManager sospeso: la nuova InventoryTable ha un set di colonne fisso (design handoff 2026-07-27).
-            Riattivare quando il set diventa di nuovo configurabile. */}
+        {view === "table" && <ColumnManager />}
 
         <div className="flex items-baseline gap-1.5 font-mono tabular-nums sm:ml-auto">
           <span className="inline-block overflow-hidden">

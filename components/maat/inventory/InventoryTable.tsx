@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowDown, ArrowUp, Check, ChevronRight, Pencil, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,11 +9,33 @@ import { SegmentedFilter } from "@/components/maat/SegmentedFilter";
 import { ChannelDots } from "@/components/maat/inventory/ChannelDots";
 import { cn, formatEUR } from "@/lib/utils";
 import type { InventoryItem, InventoryStatus } from "@/lib/inventory-mock";
-import type { PlatformKey } from "@/lib/inventory-columns";
+import { COLUMN_DEFS, type ColumnKey, type PlatformKey } from "@/lib/inventory-columns";
+import { useInventoryColumns } from "@/lib/inventory-columns-store";
 
-type SortKey = "capo" | "stato" | "categoria" | "taglia" | "canali" | "prezzo";
 type Density = "comoda" | "compatta";
 type ViewMode = "elenco" | "per-stato";
+
+// Larghezza fissa per colonna (px) o flessibile per "capo" (spec design handoff).
+// "sku" non è nello spec ma resta configurabile: eredita la larghezza di "stato".
+const COLUMN_WIDTH: Record<ColumnKey, string> = {
+  capo: "minmax(220px,1.5fr)",
+  stato: "132px",
+  sku: "132px",
+  categoria: "118px",
+  taglia: "84px",
+  piattaforme: "112px",
+  prezzo: "92px",
+};
+
+const COLUMN_ALIGN: Partial<Record<ColumnKey, "right">> = { prezzo: "right" };
+
+// Il design handoff chiama questa colonna "Canali" (ChannelDots); altrove nell'app
+// (ColumnManager, vista Griglia) resta "Piattaforme" — override solo di visualizzazione.
+const COLUMN_LABEL: Partial<Record<ColumnKey, string>> = { piattaforme: "Canali" };
+
+function columnLabel(key: ColumnKey) {
+  return COLUMN_LABEL[key] ?? COLUMN_DEFS[key].label;
+}
 
 // Rank per sort colonna Stato e ordine corsie "Per stato": confermato < bozza < venduto
 // (spec design handoff). "local_draft" non è nel prototipo: trattato come stadio precedente.
@@ -38,32 +60,23 @@ const STATUS_LANE_DOT: Record<InventoryStatus, string> = {
   sold: "var(--muted-foreground)",
 };
 
-const GRID_COLS = "grid-cols-[40px_minmax(220px,1.5fr)_132px_118px_84px_112px_92px]";
-
-const COLUMNS: { key: SortKey; label: string; align?: "right" }[] = [
-  { key: "capo", label: "Capo" },
-  { key: "stato", label: "Stato" },
-  { key: "categoria", label: "Categoria" },
-  { key: "taglia", label: "Taglia" },
-  { key: "canali", label: "Canali" },
-  { key: "prezzo", label: "Prezzo", align: "right" },
-];
-
 function publishedCount(item: InventoryItem) {
   return Object.values(item.platforms).filter((s) => s === "active" || s === "sold").length;
 }
 
-function compareItems(a: InventoryItem, b: InventoryItem, key: SortKey): number {
+function compareItems(a: InventoryItem, b: InventoryItem, key: ColumnKey): number {
   switch (key) {
     case "capo":
       return a.brand.localeCompare(b.brand);
     case "stato":
       return STATUS_RANK[a.status] - STATUS_RANK[b.status];
+    case "sku":
+      return a.sku.localeCompare(b.sku);
     case "categoria":
       return a.category.localeCompare(b.category);
     case "taglia":
       return a.size.localeCompare(b.size);
-    case "canali":
+    case "piattaforme":
       return publishedCount(a) - publishedCount(b);
     case "prezzo":
       return a.priceCents - b.priceCents;
@@ -149,37 +162,91 @@ function SortHeaderCell({
 }
 
 function HeaderRow({
+  orderedColumns,
+  gridTemplateColumns,
   allSelected,
   onToggleSelectAll,
   sortKey,
   sortDir,
   onSort,
 }: {
+  orderedColumns: ColumnKey[];
+  gridTemplateColumns: string;
   allSelected: boolean;
   onToggleSelectAll: () => void;
-  sortKey: SortKey | null;
+  sortKey: ColumnKey | null;
   sortDir: 1 | -1;
-  onSort: (key: SortKey) => void;
+  onSort: (key: ColumnKey) => void;
 }) {
   return (
-    <div className={cn("grid items-center gap-x-3 bg-secondary py-2.5 pl-4 pr-5", GRID_COLS)}>
+    <div className="grid items-center gap-x-3 bg-secondary py-2.5 pl-4 pr-5" style={{ gridTemplateColumns }}>
       <RowCheckbox checked={allSelected} onChange={onToggleSelectAll} ariaLabel="Seleziona tutti" />
-      {COLUMNS.map((col) => (
+      {orderedColumns.map((key) => (
         <SortHeaderCell
-          key={col.key}
-          label={col.label}
-          align={col.align}
-          active={sortKey === col.key}
+          key={key}
+          label={columnLabel(key)}
+          align={COLUMN_ALIGN[key]}
+          active={sortKey === key}
           dir={sortDir}
-          onClick={() => onSort(col.key)}
+          onClick={() => onSort(key)}
         />
       ))}
     </div>
   );
 }
 
+function ColumnCell({
+  columnKey,
+  item,
+  onToggleChannel,
+}: {
+  columnKey: ColumnKey;
+  item: InventoryItem;
+  onToggleChannel: (id: string, platform: PlatformKey) => void;
+}): ReactNode {
+  switch (columnKey) {
+    case "capo":
+      return (
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex size-[42px] shrink-0 items-center justify-center overflow-hidden rounded-[8px] bg-secondary">
+            {item.photoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={item.photoUrl} alt="" className="size-full object-cover" />
+            ) : (
+              <span className="font-mono text-[7px] uppercase text-muted-foreground/50">Foto</span>
+            )}
+          </div>
+          <div className="min-w-0">
+            <div className="truncate text-[14px] font-semibold tracking-[-.01em] text-foreground">{item.brand}</div>
+            <div className="truncate text-xs text-muted-foreground">{item.tipoCapo}</div>
+          </div>
+        </div>
+      );
+    case "stato":
+      return <StatoCell status={item.status} />;
+    case "sku":
+      return <span className="truncate font-mono text-[13px] text-muted-foreground">{item.sku}</span>;
+    case "categoria":
+      return <span className="truncate text-[13px] text-muted-foreground">{item.category}</span>;
+    case "taglia":
+      return <span className="font-mono text-[13px] text-foreground">{item.size}</span>;
+    case "piattaforme":
+      return (
+        <ChannelDots
+          platforms={item.platforms}
+          itemStatus={item.status}
+          onToggle={(platform) => onToggleChannel(item.id, platform)}
+        />
+      );
+    case "prezzo":
+      return <span className="font-mono text-[14px] font-medium text-foreground">{formatEUR(item.priceCents)}</span>;
+  }
+}
+
 function Row({
   item,
+  orderedColumns,
+  gridTemplateColumns,
   density,
   selected,
   hovered,
@@ -190,6 +257,8 @@ function Row({
   onToggleChannel,
 }: {
   item: InventoryItem;
+  orderedColumns: ColumnKey[];
+  gridTemplateColumns: string;
   density: Density;
   selected: boolean;
   hovered: boolean;
@@ -203,10 +272,9 @@ function Row({
     <div
       className={cn(
         "relative grid items-center gap-x-3 border-t border-border pl-4 pr-5",
-        GRID_COLS,
         density === "comoda" ? "py-[15px]" : "py-[9px]"
       )}
-      style={selected ? { boxShadow: "inset 3px 0 0 var(--primary)" } : undefined}
+      style={{ gridTemplateColumns, ...(selected ? { boxShadow: "inset 3px 0 0 var(--primary)" } : {}) }}
       onMouseEnter={() => onHoverChange(item.id)}
       onMouseLeave={() => onHoverChange(null)}
     >
@@ -216,36 +284,11 @@ function Row({
         ariaLabel={`Seleziona ${item.brand} ${item.tipoCapo}`}
       />
 
-      <div className="flex min-w-0 items-center gap-3">
-        <div className="flex size-[42px] shrink-0 items-center justify-center overflow-hidden rounded-[8px] bg-secondary">
-          {item.photoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={item.photoUrl} alt="" className="size-full object-cover" />
-          ) : (
-            <span className="font-mono text-[7px] uppercase text-muted-foreground/50">Foto</span>
-          )}
+      {orderedColumns.map((key) => (
+        <div key={key} className={COLUMN_ALIGN[key] === "right" ? "text-right" : undefined}>
+          <ColumnCell columnKey={key} item={item} onToggleChannel={onToggleChannel} />
         </div>
-        <div className="min-w-0">
-          <div className="truncate text-[14px] font-semibold tracking-[-.01em] text-foreground">{item.brand}</div>
-          <div className="truncate text-xs text-muted-foreground">{item.tipoCapo}</div>
-        </div>
-      </div>
-
-      <div>
-        <StatoCell status={item.status} />
-      </div>
-      <div className="truncate text-[13px] text-muted-foreground">{item.category}</div>
-      <div className="font-mono text-[13px] text-foreground">{item.size}</div>
-      <div>
-        <ChannelDots
-          platforms={item.platforms}
-          itemStatus={item.status}
-          onToggle={(platform) => onToggleChannel(item.id, platform)}
-        />
-      </div>
-      <div className="text-right font-mono text-[14px] font-medium text-foreground">
-        {formatEUR(item.priceCents)}
-      </div>
+      ))}
 
       {hovered && (
         <div className="absolute right-3.5 top-1/2 flex -translate-y-1/2 gap-1 rounded-[11px] border border-border bg-card p-1 shadow-e2">
@@ -399,13 +442,24 @@ interface InventoryTableProps {
 
 export function InventoryTable({ items, onPublish, onDelete, onToggleChannel }: InventoryTableProps) {
   const router = useRouter();
-  const [sortKey, setSortKey] = useState<SortKey | null>(null);
+  const { visibleColumns } = useInventoryColumns();
+  const orderedColumns = useMemo<ColumnKey[]>(() => ["capo", ...visibleColumns], [visibleColumns]);
+  const gridTemplateColumns = useMemo(
+    () => ["40px", ...orderedColumns.map((key) => COLUMN_WIDTH[key])].join(" "),
+    [orderedColumns]
+  );
+  const [sortKey, setSortKey] = useState<ColumnKey | null>(null);
   const [sortDir, setSortDir] = useState<1 | -1>(1);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [density, setDensity] = useState<Density>("comoda");
   const [viewMode, setViewMode] = useState<ViewMode>("elenco");
   const [collapsedLanes, setCollapsedLanes] = useState<Set<InventoryStatus>>(new Set());
   const [hoveredRowId, setHoveredRowId] = useState<string | null>(null);
+
+  // Se la colonna ordinata viene nascosta da ColumnManager, l'ordinamento non ha più senso.
+  useEffect(() => {
+    if (sortKey && !orderedColumns.includes(sortKey)) setSortKey(null);
+  }, [orderedColumns, sortKey]);
 
   const sortedItems = useMemo(() => {
     if (!sortKey) return items;
@@ -424,7 +478,7 @@ export function InventoryTable({ items, onPublish, onDelete, onToggleChannel }: 
 
   const allSelected = sortedItems.length > 0 && selectedIds.size === sortedItems.length;
 
-  function handleSort(key: SortKey) {
+  function handleSort(key: ColumnKey) {
     if (sortKey === key) setSortDir((d) => (d === 1 ? -1 : 1));
     else {
       setSortKey(key);
@@ -493,6 +547,8 @@ export function InventoryTable({ items, onPublish, onDelete, onToggleChannel }: 
       />
 
       <HeaderRow
+        orderedColumns={orderedColumns}
+        gridTemplateColumns={gridTemplateColumns}
         allSelected={allSelected}
         onToggleSelectAll={toggleSelectAll}
         sortKey={sortKey}
@@ -510,6 +566,8 @@ export function InventoryTable({ items, onPublish, onDelete, onToggleChannel }: 
             <Row
               key={item.id}
               item={item}
+              orderedColumns={orderedColumns}
+              gridTemplateColumns={gridTemplateColumns}
               density={density}
               selected={selectedIds.has(item.id)}
               hovered={hoveredRowId === item.id}
@@ -532,6 +590,8 @@ export function InventoryTable({ items, onPublish, onDelete, onToggleChannel }: 
                   <Row
                     key={item.id}
                     item={item}
+                    orderedColumns={orderedColumns}
+                    gridTemplateColumns={gridTemplateColumns}
                     density={density}
                     selected={selectedIds.has(item.id)}
                     hovered={hoveredRowId === item.id}

@@ -25,15 +25,17 @@ export const COLUMN_DEFS: Record<ColumnKey, ColumnDef> = {
   piattaforme: { key: "piattaforme", label: "Piattaforme" },
 };
 
-// Stato promosso in seconda posizione, subito dopo l'identità pinnata.
+// Stato promosso in seconda posizione, subito dopo l'identità pinnata. Ordine
+// allineato al design handoff "Riprogettazione tabelle inventario premium"
+// (Capo·Stato·Categoria·Taglia·Canali·Prezzo); SKU non è nello spec, resta in coda.
 export const DEFAULT_COLUMN_ORDER: ColumnKey[] = [
   "capo",
   "stato",
-  "sku",
   "categoria",
   "taglia",
-  "prezzo",
   "piattaforme",
+  "prezzo",
+  "sku",
 ];
 
 // Tutte le colonne configurabili (mostra/nascondi/riordino) = default meno la pinnata.

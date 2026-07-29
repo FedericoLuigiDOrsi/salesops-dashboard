@@ -1284,11 +1284,15 @@ export function RepublishSheet({ open, onOpenChange, items, onConfirm }: Republi
 
   function handleConfirm() {
     if (platforms.length === 0) return;
-    const parsed = priceInput.trim() ? Math.round(parseFloat(priceInput.replace(",", ".")) * 100) : null;
+    let priceCents: number | null = null;
+    if (isSingle && priceInput.trim()) {
+      const parsed = Math.round(parseFloat(priceInput.replace(",", ".")) * 100);
+      if (Number.isFinite(parsed)) priceCents = parsed;
+    }
     onConfirm(
       items.map((i) => i.id),
       platforms,
-      isSingle && Number.isFinite(parsed) ? parsed : isSingle ? null : null
+      priceCents
     );
     onOpenChange(false);
   }
@@ -1480,7 +1484,7 @@ git commit -m "feat(publishing): dialog anteprima diff bulk price edit"
 "use client";
 
 import { useMemo, useState } from "react";
-import { MoreVertical, RotateCcw, Ban, Percent, Euro } from "lucide-react";
+import { MoreVertical, RotateCcw, Ban, Percent, Euro, Layers } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -1497,7 +1501,6 @@ import { PLATFORM_KEYS, type PlatformKey } from "@/lib/inventory-columns";
 import { PlatformPills } from "@/components/maat/inventory/PlatformPills";
 import { RepublishSheet } from "@/components/maat/publishing/RepublishSheet";
 import { BulkPricePreviewDialog } from "@/components/maat/publishing/BulkPricePreviewDialog";
-import { Layers } from "lucide-react";
 
 interface LiveTabProps {
   items: InventoryItem[];
@@ -1785,8 +1788,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { inventoryItems, type InventoryItem } from "@/lib/inventory-mock";
 import { getToPublishItems, getLiveItems } from "@/lib/publishing-mock";
-import type { BulkPriceMode } from "@/lib/publishing-bulk";
-import { applyBulkPriceDelta } from "@/lib/publishing-bulk";
+import { applyBulkPriceDelta, type BulkPriceMode } from "@/lib/publishing-bulk";
 import type { PlatformKey } from "@/lib/inventory-columns";
 import { PublishingStrategyProvider, usePublishingStrategy } from "@/lib/publishing-strategy-store";
 import { StrategySheet } from "@/components/maat/publishing/StrategySheet";

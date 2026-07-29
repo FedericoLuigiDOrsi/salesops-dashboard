@@ -18,7 +18,7 @@ function makeItem(overrides: Partial<InventoryItem> = {}): InventoryItem {
     category: "Giacche",
     size: "M",
     priceCents: 10000,
-    status: "catalogo",
+    status: "available",
     photoUrl: null,
     platforms: { vinted: null, grailed: null, depop: null },
     ...overrides,
@@ -30,7 +30,7 @@ describe("isReadyToPublish", () => {
     expect(isReadyToPublish(makeItem())).toBe(true);
   });
   it("false per una bozza", () => {
-    expect(isReadyToPublish(makeItem({ status: "bozza" }))).toBe(false);
+    expect(isReadyToPublish(makeItem({ status: "to_be_reviewed" }))).toBe(false);
   });
   it("false se già listato ovunque anche solo su una piattaforma", () => {
     expect(
@@ -66,8 +66,8 @@ describe("isSoldOutEverywhere", () => {
 
 describe("getToPublishItems / getLiveItems / getDraftCount", () => {
   const items = [
-    makeItem({ id: "a", status: "catalogo" }), // ready to publish
-    makeItem({ id: "b", status: "bozza" }), // draft, escluso da entrambe
+    makeItem({ id: "a", status: "available" }), // ready to publish
+    makeItem({ id: "b", status: "to_be_reviewed" }), // draft, escluso da entrambe
     makeItem({ id: "c", platforms: { vinted: "active", grailed: null, depop: null } }), // live
   ];
 

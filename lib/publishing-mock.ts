@@ -1,7 +1,7 @@
 import type { InventoryItem } from "./inventory-mock";
 
 export function isReadyToPublish(item: InventoryItem): boolean {
-  return item.status === "catalogo" && Object.values(item.platforms).every((v) => v === null);
+  return item.status === "available" && Object.values(item.platforms).every((v) => v === null);
 }
 
 export function isLive(item: InventoryItem): boolean {
@@ -23,5 +23,5 @@ export function getLiveItems(items: InventoryItem[]): InventoryItem[] {
 }
 
 export function getDraftCount(items: InventoryItem[]): number {
-  return items.filter((item) => item.status === "bozza").length;
+  return items.filter((item) => item.status === "to_be_reviewed").length;
 }

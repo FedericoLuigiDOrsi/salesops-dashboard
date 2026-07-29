@@ -154,20 +154,6 @@ export function AppShell({ children }: AppShellProps) {
                 ) : null}
               </>
             );
-            // Notifiche apre il float sopra la sezione corrente, non naviga.
-            if (href === "/notifiche") {
-              return (
-                <button
-                  key={label}
-                  type="button"
-                  onClick={openNotifications}
-                  title={collapsed ? label : undefined}
-                  className={cn(itemClass, "w-full text-left")}
-                >
-                  {inner}
-                </button>
-              );
-            }
             return (
               <Link key={label} href={href} title={collapsed ? label : undefined} className={itemClass}>
                 {inner}
@@ -258,9 +244,8 @@ export function AppShell({ children }: AppShellProps) {
               <Plus className="size-7" strokeWidth={2.25} />
             </Link>
           </div>
-          <button
-            type="button"
-            onClick={openNotifications}
+          <Link
+            href="/notifiche"
             className="flex flex-1 flex-col items-center justify-center gap-1 text-[11px] font-medium text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset data-[active=true]:text-foreground data-[active=true]:font-semibold"
             data-active={pathname.startsWith("/notifiche")}
           >
@@ -269,7 +254,7 @@ export function AppShell({ children }: AppShellProps) {
               {unreadCount > 0 && <span className="absolute -right-0.5 -top-0.5 size-1.5 rounded-full bg-primary" />}
             </span>
             Notifiche
-          </button>
+          </Link>
           <button
             type="button"
             onClick={() => setMoreOpen(true)}

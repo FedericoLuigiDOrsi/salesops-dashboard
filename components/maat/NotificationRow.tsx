@@ -1,9 +1,16 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Coins, Tag, Truck, Check, Package } from "lucide-react";
+import { Coins, Tag, Truck, Check, Package, MoreVertical, MailOpen, Mail, Trash2 } from "lucide-react";
 import { cn, formatEUR } from "@/lib/utils";
 import { MARKETPLACE_LABELS } from "@/types/maat";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import type { SaleNotification, OfferNotification, ShipmentNotification, NotificationV2Sub } from "@/lib/notifications-mock";
 
 function Pill({ children }: { children: ReactNode }) {
@@ -30,26 +37,78 @@ function RowIcon({ unread, children }: { unread: boolean; children: ReactNode })
   );
 }
 
-export function SaleNotificationRow({ notification, onOpen }: { notification: SaleNotification; onOpen: () => void }) {
+/** Barra a sinistra per le righe non lette — leggibile anche a colpo d'occhio in liste dense. */
+function UnreadBar({ unread }: { unread: boolean }) {
+  if (!unread) return null;
+  return <span className="absolute inset-y-0 left-0 w-0.5 bg-primary" aria-hidden />;
+}
+
+interface RowActionsProps {
+  onToggleRead?: () => void;
+  onDelete?: () => void;
+}
+
+/** Menu "..." letto/non letto + elimina — condiviso da tutte le righe con stato mutabile. */
+function RowMenu({ unread, onToggleRead, onDelete }: { unread: boolean } & Required<RowActionsProps>) {
   return (
-    <button type="button" onClick={onOpen} className="flex w-full items-center gap-3 p-3 text-left transition-colors hover:bg-foreground/[.03]">
-      <RowIcon unread={notification.unread}>
-        <Coins className="size-4" />
-      </RowIcon>
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-1.5 text-[13px] font-medium">
-          {notification.itemLabel}
-          {notification.marketplace && <Pill>{MARKETPLACE_LABELS[notification.marketplace]}</Pill>}
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={(e) => e.stopPropagation()}
+          aria-label="Altre azioni"
+          className="size-7 shrink-0 text-muted-foreground hover:text-foreground"
+        >
+          <MoreVertical className="size-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+        <DropdownMenuItem onSelect={onToggleRead}>
+          {unread ? <MailOpen className="size-4" /> : <Mail className="size-4" />}
+          {unread ? "Segna come letta" : "Segna come non letta"}
+        </DropdownMenuItem>
+        <DropdownMenuItem variant="destructive" onSelect={onDelete}>
+          <Trash2 className="size-4" />
+          Elimina notifica
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+export function SaleNotificationRow({
+  notification,
+  onOpen,
+  onToggleRead,
+  onDelete,
+}: { notification: SaleNotification; onOpen: () => void } & RowActionsProps) {
+  return (
+    <div className="relative flex w-full items-center gap-3 p-3 transition-colors hover:bg-foreground/[.03]">
+      <UnreadBar unread={notification.unread} />
+      <button type="button" onClick={onOpen} className="flex min-w-0 flex-1 items-center gap-3 text-left">
+        <RowIcon unread={notification.unread}>
+          <Coins className="size-4" />
+        </RowIcon>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-1.5 text-[13px] font-medium">
+            {notification.itemLabel}
+            {notification.marketplace && <Pill>{MARKETPLACE_LABELS[notification.marketplace]}</Pill>}
+          </div>
+          <div className="mt-0.5 text-xs text-muted-foreground">
+            {notification.sku && <span className="font-mono text-foreground/70">SKU {notification.sku}</span>} · Vendita eseguita
+          </div>
         </div>
-        <div className="mt-0.5 text-xs text-muted-foreground">
-          {notification.sku && <span className="font-mono text-foreground/70">SKU {notification.sku}</span>} · Vendita eseguita
+      </button>
+      <div className="flex shrink-0 items-center gap-1.5">
+        <div className="flex flex-col items-end gap-0.5">
+          <span className="font-mono text-[15px] font-semibold text-[var(--chart-2)]">{formatEUR(notification.priceCents)}</span>
+          <span className="font-mono text-[11px] text-muted-foreground/70">{notification.time}</span>
         </div>
+        {onToggleRead && onDelete && <RowMenu unread={notification.unread} onToggleRead={onToggleRead} onDelete={onDelete} />}
       </div>
-      <div className="flex shrink-0 flex-col items-end gap-0.5">
-        <span className="font-mono text-[15px] font-semibold text-[var(--chart-2)]">{formatEUR(notification.priceCents)}</span>
-        <span className="font-mono text-[11px] text-muted-foreground/70">{notification.time}</span>
-      </div>
-    </button>
+    </div>
   );
 }
 
@@ -59,47 +118,57 @@ const OFFER_BADGE: Record<"accepted" | "rejected" | "counter", { label: string; 
   counter: { label: "Controfferta inviata", className: "bg-primary/25 text-[#7a7000]" },
 };
 
-export function OfferNotificationRow({ notification, onOpen }: { notification: OfferNotification; onOpen: () => void }) {
+export function OfferNotificationRow({
+  notification,
+  onOpen,
+  onToggleRead,
+  onDelete,
+}: { notification: OfferNotification; onOpen: () => void } & RowActionsProps) {
   const resolved = notification.status !== "pending";
   const badge = resolved ? OFFER_BADGE[notification.status as "accepted" | "rejected" | "counter"] : null;
   return (
-    <button
-      type="button"
-      disabled={resolved}
-      onClick={onOpen}
-      className={cn(
-        "flex w-full items-center gap-3 p-3 text-left transition-colors",
-        resolved ? "cursor-default opacity-60" : "hover:bg-foreground/[.03]"
-      )}
-    >
-      <RowIcon unread={notification.unread && !resolved}>
-        <Tag className="size-4" />
-      </RowIcon>
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-1.5 text-[13px] font-medium">
-          {notification.itemLabel}
-          {notification.marketplace && <Pill>{MARKETPLACE_LABELS[notification.marketplace]}</Pill>}
-          {badge && (
-            <span className={cn("rounded-full px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wide", badge.className)}>
-              {badge.label}
-            </span>
-          )}
+    <div className={cn("relative flex w-full items-center gap-3 p-3 transition-colors", !resolved && "hover:bg-foreground/[.03]")}>
+      <UnreadBar unread={notification.unread && !resolved} />
+      <button
+        type="button"
+        disabled={resolved}
+        onClick={onOpen}
+        className={cn("flex min-w-0 flex-1 items-center gap-3 text-left", resolved && "cursor-default opacity-60")}
+      >
+        <RowIcon unread={notification.unread && !resolved}>
+          <Tag className="size-4" />
+        </RowIcon>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-1.5 text-[13px] font-medium">
+            {notification.itemLabel}
+            {notification.marketplace && <Pill>{MARKETPLACE_LABELS[notification.marketplace]}</Pill>}
+            {badge && (
+              <span className={cn("rounded-full px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wide", badge.className)}>
+                {badge.label}
+              </span>
+            )}
+          </div>
+          <div className="mt-0.5 text-xs text-muted-foreground">
+            {notification.sku && <span className="font-mono text-foreground/70">SKU {notification.sku}</span>} · Offerta ricevuta
+          </div>
         </div>
-        <div className="mt-0.5 text-xs text-muted-foreground">
-          {notification.sku && <span className="font-mono text-foreground/70">SKU {notification.sku}</span>} · Offerta ricevuta
+      </button>
+      <div className="flex shrink-0 items-center gap-1.5">
+        <div className="flex flex-col items-end gap-0.5">
+          <div className="flex items-baseline gap-1.5">
+            <span className="font-mono text-[15px] font-semibold">{formatEUR(notification.offerCents)}</span>
+            <span className="font-mono text-xs text-muted-foreground line-through">{formatEUR(notification.listPriceCents)}</span>
+          </div>
+          <span className="font-mono text-[11px] text-muted-foreground/70">
+            {notification.time}
+            {!resolved && <span className="ml-1 font-semibold text-foreground">· Rispondi ›</span>}
+          </span>
         </div>
+        {onToggleRead && onDelete && (
+          <RowMenu unread={notification.unread && !resolved} onToggleRead={onToggleRead} onDelete={onDelete} />
+        )}
       </div>
-      <div className="flex shrink-0 flex-col items-end gap-0.5">
-        <div className="flex items-baseline gap-1.5">
-          <span className="font-mono text-[15px] font-semibold">{formatEUR(notification.offerCents)}</span>
-          <span className="font-mono text-xs text-muted-foreground line-through">{formatEUR(notification.listPriceCents)}</span>
-        </div>
-        <span className="font-mono text-[11px] text-muted-foreground/70">
-          {notification.time}
-          {!resolved && <span className="ml-1 font-semibold text-foreground">· Rispondi ›</span>}
-        </span>
-      </div>
-    </button>
+    </div>
   );
 }
 
@@ -111,7 +180,11 @@ const SHIPMENT_ICON: Record<NotificationV2Sub, typeof Truck> = {
   delisting: Package,
 };
 
-export function ShipmentNotificationRow({ notification }: { notification: ShipmentNotification }) {
+export function ShipmentNotificationRow({
+  notification,
+  onToggleRead,
+  onDelete,
+}: { notification: ShipmentNotification } & RowActionsProps) {
   const Icon = SHIPMENT_ICON[notification.sub];
   const metaParts = [
     notification.itemLabel,
@@ -120,7 +193,8 @@ export function ShipmentNotificationRow({ notification }: { notification: Shipme
   ].filter(Boolean);
 
   return (
-    <div className="flex items-center gap-3 p-3">
+    <div className="relative flex items-center gap-3 p-3">
+      <UnreadBar unread={notification.unread} />
       <RowIcon unread={notification.unread}>
         <Icon className="size-4" />
       </RowIcon>
@@ -129,6 +203,7 @@ export function ShipmentNotificationRow({ notification }: { notification: Shipme
         <div className="mt-0.5 text-xs text-muted-foreground">{metaParts.join(" · ")}</div>
       </div>
       <span className="shrink-0 font-mono text-[11px] text-muted-foreground/70">{notification.time}</span>
+      {onToggleRead && onDelete && <RowMenu unread={notification.unread} onToggleRead={onToggleRead} onDelete={onDelete} />}
     </div>
   );
 }

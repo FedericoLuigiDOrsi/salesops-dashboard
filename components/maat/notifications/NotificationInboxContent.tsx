@@ -7,12 +7,15 @@ import { EmptyState } from "@/components/maat/EmptyState";
 import { SaleNotificationRow, OfferNotificationRow, ShipmentNotificationRow } from "@/components/maat/NotificationRow";
 import { notificationsV2, notificationGroups, type NotificationV2 } from "@/lib/notifications-mock";
 import { useOverlays } from "@/lib/overlays-store";
+import { useNotifications } from "@/lib/notifications-store";
 import { cn } from "@/lib/utils";
 
 // Corpo riusabile della inbox notifiche: segmented + gruppi + righe. Consumato
 // sia dalla pagina piena /notifiche sia dal float NotificationsPanel. Le righe
 // aprono i float globali via telecomando (overlays-store); lo stato delle
-// offerte è quello condiviso, keyed sull'id base (n-off-1 → off-1).
+// offerte è quello condiviso, keyed sull'id base (n-off-1 → off-1). Letto/non
+// letto ed eliminazione vivono in notifications-store — condiviso tra le due
+// istanze montate (pagina + float) e con il badge in AppShell.
 
 type FilterKey = "tutte" | "vendita" | "offerta" | "spedizione";
 
@@ -38,24 +41,26 @@ const rowVariants: Variants = {
 
 export function NotificationInboxContent({ variant = "page" }: { variant?: "page" | "panel" }) {
   const { openOffer, openSale, offerStatus } = useOverlays();
+  const { isUnreadV2, isDeletedV2, toggleReadV2, removeV2 } = useNotifications();
   const [filter, setFilter] = useState<FilterKey>("tutte");
-  const [readIds, setReadIds] = useState<Set<string>>(() => new Set());
 
-  function markRead(id: string) {
-    setReadIds((prev) => (prev.has(id) ? prev : new Set(prev).add(id)));
+  function markRead(id: string, baseUnread: boolean) {
+    if (isUnreadV2(id, baseUnread)) toggleReadV2(id, baseUnread);
   }
 
   const items = useMemo<NotificationV2[]>(
     () =>
-      notificationsV2.map((n) => {
-        const unread = readIds.has(n.id) ? false : n.unread;
-        if (n.type !== "offerta") return { ...n, unread };
-        const override = offerStatus[baseOfferId(n.id)];
-        return override
-          ? { ...n, unread, status: override.status, counterCents: override.counterCents ?? n.counterCents }
-          : { ...n, unread };
-      }),
-    [offerStatus, readIds]
+      notificationsV2
+        .filter((n) => !isDeletedV2(n.id))
+        .map((n) => {
+          const unread = isUnreadV2(n.id, n.unread);
+          if (n.type !== "offerta") return { ...n, unread };
+          const override = offerStatus[baseOfferId(n.id)];
+          return override
+            ? { ...n, unread, status: override.status, counterCents: override.counterCents ?? n.counterCents }
+            : { ...n, unread };
+        }),
+    [offerStatus, isUnreadV2, isDeletedV2]
   );
 
   const counts = useMemo(
@@ -117,9 +122,11 @@ export function NotificationInboxContent({ variant = "page" }: { variant?: "page
                           <SaleNotificationRow
                             notification={n}
                             onOpen={() => {
-                              markRead(n.id);
+                              markRead(n.id, n.unread);
                               n.sku && openSale(n.sku);
                             }}
+                            onToggleRead={() => toggleReadV2(n.id, n.unread)}
+                            onDelete={() => removeV2(n.id)}
                           />
                         </motion.div>
                       );
@@ -130,16 +137,22 @@ export function NotificationInboxContent({ variant = "page" }: { variant?: "page
                           <OfferNotificationRow
                             notification={n}
                             onOpen={() => {
-                              markRead(n.id);
+                              markRead(n.id, n.unread);
                               openOffer(baseOfferId(n.id));
                             }}
+                            onToggleRead={() => toggleReadV2(n.id, n.unread)}
+                            onDelete={() => removeV2(n.id)}
                           />
                         </motion.div>
                       );
                     }
                     return (
                       <motion.div key={n.id} variants={rowVariants}>
-                        <ShipmentNotificationRow notification={n} />
+                        <ShipmentNotificationRow
+                          notification={n}
+                          onToggleRead={() => toggleReadV2(n.id, n.unread)}
+                          onDelete={() => removeV2(n.id)}
+                        />
                       </motion.div>
                     );
                   })}

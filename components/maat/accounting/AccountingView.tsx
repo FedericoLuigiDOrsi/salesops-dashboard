@@ -1,17 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Bar, BarChart, CartesianGrid, Cell, XAxis, Area, AreaChart } from "recharts";
 import { Download, Plus, Shield, TrendingUp, Wallet, Tag, Vault, ListChecks } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { SortableTableHead } from "@/components/maat/SortableTableHead";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { RegistraCaricoDialog } from "@/components/maat/accounting/RegistraCaricoDialog";
 import { formatEUR, cn } from "@/lib/utils";
 import { MARKETPLACE_LABELS } from "@/types/maat";
-import type { Lot, LotType, Supplier } from "@/types/maat";
+import type { AccountingEntry, Lot, LotType, Supplier } from "@/types/maat";
 import {
   weeklyKpi,
   topCategory,
@@ -43,6 +44,62 @@ const STATUS_CLASS: Record<(typeof accountingEntries)[number]["status"], string>
   pending: "border-transparent bg-muted text-muted-foreground",
 };
 
+// Rank stato per sort colonna "Stato": in transito → in escrow → liquidato.
+const STATUS_RANK: Record<(typeof accountingEntries)[number]["status"], number> = {
+  pending: 0,
+  escrow: 1,
+  confirmed: 2,
+};
+
+type TxSortKey = "eventDate" | "itemLabel" | "marketplace" | "grossAmountCents" | "platformFeeCents" | "shippingCostCents" | "netAmountCents" | "status";
+
+function compareTx(a: AccountingEntry, b: AccountingEntry, key: TxSortKey): number {
+  switch (key) {
+    case "eventDate":
+      return a.eventDate.localeCompare(b.eventDate);
+    case "itemLabel":
+      return a.itemLabel.localeCompare(b.itemLabel);
+    case "marketplace":
+      return MARKETPLACE_LABELS[a.marketplace].localeCompare(MARKETPLACE_LABELS[b.marketplace]);
+    case "status":
+      return STATUS_RANK[a.status] - STATUS_RANK[b.status];
+    default:
+      return a[key] - b[key];
+  }
+}
+
+type LoadSortKey = "name" | "executedAt" | "supplierName" | "category" | "quantity" | "pricePaidCents";
+
+function compareLoads(a: Lot, b: Lot, key: LoadSortKey): number {
+  switch (key) {
+    case "name":
+      return (a.name || a.code).localeCompare(b.name || b.code);
+    case "executedAt":
+      return a.executedAt.localeCompare(b.executedAt);
+    case "supplierName":
+      return a.supplierName.localeCompare(b.supplierName);
+    case "category":
+      return a.category.localeCompare(b.category);
+    case "quantity":
+      return a.quantity - b.quantity;
+    case "pricePaidCents":
+      return (a.pricePaidCents ?? -1) - (b.pricePaidCents ?? -1);
+  }
+}
+
+function useTableSort<TKey extends string>() {
+  const [key, setKey] = useState<TKey | null>(null);
+  const [dir, setDir] = useState<1 | -1>(1);
+  function toggle(next: TKey) {
+    if (key === next) setDir((d) => (d === 1 ? -1 : 1));
+    else {
+      setKey(next);
+      setDir(1);
+    }
+  }
+  return { key, dir, toggle };
+}
+
 function initials(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   const a = parts[0]?.[0] ?? "";
@@ -71,6 +128,18 @@ export function AccountingView() {
   const [loads, setLoads] = useState<Lot[]>(initialLoadHistory);
   const [highlightSupplier, setHighlightSupplier] = useState<string | null>(null);
   const [caricoOpen, setCaricoOpen] = useState(false);
+  const txSort = useTableSort<TxSortKey>();
+  const loadsSort = useTableSort<LoadSortKey>();
+
+  const sortedEntries = useMemo(() => {
+    if (!txSort.key) return accountingEntries;
+    return [...accountingEntries].sort((a, b) => compareTx(a, b, txSort.key!) * txSort.dir);
+  }, [txSort.key, txSort.dir]);
+
+  const sortedLoads = useMemo(() => {
+    if (!loadsSort.key) return loads;
+    return [...loads].sort((a, b) => compareLoads(a, b, loadsSort.key!) * loadsSort.dir);
+  }, [loads, loadsSort.key, loadsSort.dir]);
 
   const txTotals = accountingEntries.reduce(
     (acc, e) => ({
@@ -360,22 +429,58 @@ export function AccountingView() {
         <div className="mb-3 flex items-center justify-between">
           <h3 className="text-base font-semibold">Ultime transazioni</h3>
         </div>
-        <div className="overflow-hidden rounded-xl border border-border">
+        <div className="overflow-hidden rounded-[14px] border border-border shadow-e1">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Data</TableHead>
-                <TableHead>Capo</TableHead>
-                <TableHead>Piattaforma</TableHead>
-                <TableHead className="text-right">Lordo</TableHead>
-                <TableHead className="text-right">Commissioni</TableHead>
-                <TableHead className="text-right">Spedizione</TableHead>
-                <TableHead className="text-right">Netto</TableHead>
-                <TableHead>Stato</TableHead>
+                <SortableTableHead active={txSort.key === "eventDate"} dir={txSort.dir} onClick={() => txSort.toggle("eventDate")}>
+                  Data
+                </SortableTableHead>
+                <SortableTableHead active={txSort.key === "itemLabel"} dir={txSort.dir} onClick={() => txSort.toggle("itemLabel")}>
+                  Capo
+                </SortableTableHead>
+                <SortableTableHead active={txSort.key === "marketplace"} dir={txSort.dir} onClick={() => txSort.toggle("marketplace")}>
+                  Piattaforma
+                </SortableTableHead>
+                <SortableTableHead
+                  align="right"
+                  active={txSort.key === "grossAmountCents"}
+                  dir={txSort.dir}
+                  onClick={() => txSort.toggle("grossAmountCents")}
+                >
+                  Lordo
+                </SortableTableHead>
+                <SortableTableHead
+                  align="right"
+                  active={txSort.key === "platformFeeCents"}
+                  dir={txSort.dir}
+                  onClick={() => txSort.toggle("platformFeeCents")}
+                >
+                  Commissioni
+                </SortableTableHead>
+                <SortableTableHead
+                  align="right"
+                  active={txSort.key === "shippingCostCents"}
+                  dir={txSort.dir}
+                  onClick={() => txSort.toggle("shippingCostCents")}
+                >
+                  Spedizione
+                </SortableTableHead>
+                <SortableTableHead
+                  align="right"
+                  active={txSort.key === "netAmountCents"}
+                  dir={txSort.dir}
+                  onClick={() => txSort.toggle("netAmountCents")}
+                >
+                  Netto
+                </SortableTableHead>
+                <SortableTableHead active={txSort.key === "status"} dir={txSort.dir} onClick={() => txSort.toggle("status")}>
+                  Stato
+                </SortableTableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {accountingEntries.map((e) => (
+              {sortedEntries.map((e) => (
                 <TableRow key={e.id}>
                   <TableCell className="font-mono text-xs text-muted-foreground">
                     {new Date(e.eventDate).toLocaleDateString("it-IT", { day: "numeric", month: "numeric" })}
@@ -450,20 +555,54 @@ export function AccountingView() {
             Speso ultimi 90gg · <b className="font-semibold text-foreground">{formatEUR(loadsSpentCents)}</b>
           </span>
         </div>
-        <div className="overflow-hidden rounded-xl border border-border">
+        <div className="overflow-hidden rounded-[14px] border border-border shadow-e1">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Carico</TableHead>
-                <TableHead>Data</TableHead>
-                <TableHead>Fornitore</TableHead>
-                <TableHead>Categoria</TableHead>
-                <TableHead className="text-right">Q.tà</TableHead>
-                <TableHead className="text-right">Prezzo pagato</TableHead>
+                <SortableTableHead active={loadsSort.key === "name"} dir={loadsSort.dir} onClick={() => loadsSort.toggle("name")}>
+                  Carico
+                </SortableTableHead>
+                <SortableTableHead
+                  active={loadsSort.key === "executedAt"}
+                  dir={loadsSort.dir}
+                  onClick={() => loadsSort.toggle("executedAt")}
+                >
+                  Data
+                </SortableTableHead>
+                <SortableTableHead
+                  active={loadsSort.key === "supplierName"}
+                  dir={loadsSort.dir}
+                  onClick={() => loadsSort.toggle("supplierName")}
+                >
+                  Fornitore
+                </SortableTableHead>
+                <SortableTableHead
+                  active={loadsSort.key === "category"}
+                  dir={loadsSort.dir}
+                  onClick={() => loadsSort.toggle("category")}
+                >
+                  Categoria
+                </SortableTableHead>
+                <SortableTableHead
+                  align="right"
+                  active={loadsSort.key === "quantity"}
+                  dir={loadsSort.dir}
+                  onClick={() => loadsSort.toggle("quantity")}
+                >
+                  Q.tà
+                </SortableTableHead>
+                <SortableTableHead
+                  align="right"
+                  active={loadsSort.key === "pricePaidCents"}
+                  dir={loadsSort.dir}
+                  onClick={() => loadsSort.toggle("pricePaidCents")}
+                >
+                  Prezzo pagato
+                </SortableTableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {loads.map((l) => (
+              {sortedLoads.map((l) => (
                 <TableRow key={l.id}>
                   <TableCell className="font-mono text-xs font-semibold">{l.name || l.code}</TableCell>
                   <TableCell className="font-mono text-xs text-muted-foreground">

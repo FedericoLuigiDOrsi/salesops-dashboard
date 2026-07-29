@@ -1,12 +1,13 @@
 "use client";
 
+import { useRef } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
-import { Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/maat/StatusBadge";
 import { AttributeCluster } from "@/components/maat/AttributeCluster";
 import { ArticleMediaTrack } from "@/components/maat/ArticleMediaTrack";
+import { PriceMarginCard } from "@/components/maat/PriceMarginCard";
 import { useMaatEntry } from "@/lib/maat-store";
 import { getMeasureCategory, MEASURE_FIELDS, CATEGORY_LABELS } from "@/lib/measures";
 import { cn } from "@/lib/utils";
@@ -29,8 +30,8 @@ const ATTRIBUTE_LABELS: Record<AttrKey, string> = {
 
 const CLUSTERS: { name: string; keys: AttrKey[] }[] = [
   { name: "Identità", keys: ["brand", "tipoCapo", "genere", "stagionalita"] },
-  { name: "Colore & materiale", keys: ["colore", "materiale", "stile"] },
-  { name: "Taglia & condizioni", keys: ["taglia", "condizioni", "difetti"] },
+  { name: "Colore & materiale", keys: ["colore", "materiale", "stile", "taglia"] },
+  { name: "Taglia & condizioni", keys: ["condizioni", "difetti"] },
 ];
 
 const REQUIRED_LABELS: { key: "fronte" | "retro" | "brand"; text: string }[] = [
@@ -39,21 +40,10 @@ const REQUIRED_LABELS: { key: "fronte" | "retro" | "brand"; text: string }[] = [
   { key: "brand", text: "Brand" },
 ];
 
-const SPRING = { type: "spring", stiffness: 400, damping: 32 } as const;
-
-const STAGGER_CONTAINER = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.06 } },
-};
-
-const STAGGER_ITEM = {
-  hidden: { opacity: 0, y: 8 },
-  show: { opacity: 1, y: 0, transition: SPRING },
-};
-
 export function CatalogEntryDetail() {
   const router = useRouter();
-  const { entry, confirmEntry, revertToDraft, updateAttribute, updateMeasure } = useMaatEntry();
+  const attributesRef = useRef<HTMLDivElement>(null);
+  const { entry, confirmEntry, revertToDraft, updateAttribute, updateMeasure, updatePrices } = useMaatEntry();
 
   const missingAttributeKeys = (Object.keys(ATTRIBUTE_LABELS) as AttrKey[]).filter(
     (key) => entry.attributes[key] === ""
@@ -68,110 +58,71 @@ export function CatalogEntryDetail() {
 
   const measureCategory = getMeasureCategory(entry.attributes.tipoCapo);
   const measureFields = MEASURE_FIELDS[measureCategory];
+  const completedAttributes = Object.keys(ATTRIBUTE_LABELS).length - missingAttributeKeys.length;
+  const completedGateItems = completedAttributes + (REQUIRED_LABELS.length - missingPhotoLabels.length);
+  const formattedDate = new Intl.DateTimeFormat("it-IT", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(new Date(entry.createdAt));
+  const validatedPhotos = entry.photos.filter((photo) => photo.state === "validated").length;
+
+  function editFields() {
+    if (isConfirmed) revertToDraft();
+    attributesRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
 
   return (
     <div className="flex flex-col">
       {/* Header */}
-      <div className="flex flex-wrap items-start justify-between gap-4 border-b border-border p-5">
+      <div className="flex flex-wrap items-start justify-between gap-5 px-5 pb-0 pt-5 md:px-7 md:pt-6">
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2.5">
-            <StatusBadge status={entry.status} />
-            {entry.sku && <span className="font-mono text-xs text-muted-foreground">{entry.sku}</span>}
-          </div>
-          <h1 className="mt-1.5 text-[21px] font-bold tracking-tight text-foreground">
-            {entry.attributes.brand}
-            {" — "}
-            {entry.attributes.tipoCapo}
+          <StatusBadge status={entry.status} />
+          <h1 className="mt-2.5 text-[26px] font-extrabold leading-[1.1] tracking-[-.03em] text-foreground">
+            {entry.attributes.brand || "Brand da definire"}
+            <span className="ml-2 text-[16px] font-medium tracking-normal text-muted-foreground">
+              {entry.attributes.tipoCapo || "Tipo di capo"}
+            </span>
           </h1>
-          {!gateEnabled && !isConfirmed && (
-            <p className="mt-1 text-xs text-muted-foreground">Mancano: {missingLabels.join(", ")}</p>
-          )}
+          <p className="mt-1.5 font-mono text-[10px] font-semibold uppercase tracking-[.06em] text-muted-foreground">
+            {entry.sku ?? "SKU non assegnato"} · {entry.accountId} · {formattedDate}
+          </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
-          <div className="relative inline-flex gap-0.5 rounded-full bg-foreground/[.05] p-[3px]">
-            <motion.button
-              type="button"
-              onClick={revertToDraft}
-              whileTap={{ scale: 0.96 }}
-              className={cn(
-                "relative z-10 rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
-                !isConfirmed ? "text-background" : "text-muted-foreground"
-              )}
-            >
-              {!isConfirmed && (
-                <motion.span
-                  layoutId="status-pill"
-                  transition={SPRING}
-                  className="absolute inset-0 -z-10 rounded-full bg-foreground"
-                />
-              )}
-              Bozza
-            </motion.button>
-            <motion.button
-              type="button"
-              onClick={() => gateEnabled && confirmEntry()}
-              disabled={!gateEnabled}
-              whileTap={gateEnabled ? { scale: 0.96 } : undefined}
-              title={!gateEnabled ? `Mancano: ${missingLabels.join(", ")}` : undefined}
-              className={cn(
-                "relative z-10 inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
-                isConfirmed ? "text-white" : "text-muted-foreground"
-              )}
-            >
-              {isConfirmed && (
-                <motion.span
-                  layoutId="status-pill"
-                  transition={SPRING}
-                  className="absolute inset-0 -z-10 rounded-full bg-success"
-                />
-              )}
-              <span className="size-1.5 rounded-full bg-current" /> Confermato
-            </motion.button>
-          </div>
-
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="ghost" size="icon" onClick={editFields} title={isConfirmed ? "Riporta in bozza e modifica" : "Modifica campi"} className="rounded-[10px] bg-foreground/[.05] text-muted-foreground hover:bg-foreground/[.09] hover:text-foreground">
+            <Pencil className="size-4" strokeWidth={1.7} />
+          </Button>
+          <Button variant="ghost" size="icon" title="Non ancora disponibile" disabled className="rounded-[10px] bg-foreground/[.05] text-destructive hover:bg-destructive/10 hover:text-destructive">
+            <Trash2 className="size-4" strokeWidth={1.7} />
+          </Button>
           {!isConfirmed && (
             <Button
               size="sm"
               disabled={!gateEnabled}
               onClick={confirmEntry}
               title={!gateEnabled ? `Mancano: ${missingLabels.join(", ")}` : undefined}
-              className="rounded-full enabled:active:scale-[0.97]"
+              className="h-9 rounded-[12px] px-4 enabled:active:scale-[0.98]"
             >
               Conferma capo
             </Button>
           )}
-
-          <Button
-            variant="ghost"
-            size="icon"
-            title="Non ancora disponibile"
-            disabled
-            className="rounded-[11px] text-destructive transition-transform active:scale-95 hover:bg-destructive/10 hover:text-destructive"
-          >
-            <Trash2 className="size-[18px]" />
-          </Button>
         </div>
       </div>
 
-      {/* Media + campi */}
-      <div className="grid grid-cols-1 md:grid-cols-[380px_1fr]">
-        <div className="border-b border-border bg-gradient-to-b from-background to-card p-5 md:border-b-0 md:border-r">
-          <ArticleMediaTrack
-            photos={entry.photos}
-            onCapture={(label) => router.push(`/capi/${entry.id}/foto/${label}`)}
-            onRetake={(label) => router.push(`/capi/${entry.id}/foto/${label}`)}
-          />
-        </div>
+      {/* Media */}
+      <div className="px-5 py-5 md:px-7 md:py-[22px]">
+        <ArticleMediaTrack
+          photos={entry.photos}
+          onCapture={(label) => router.push(`/capi/${entry.id}/foto/${label}`)}
+          onRetake={(label) => router.push(`/capi/${entry.id}/foto/${label}`)}
+        />
+      </div>
 
-        <motion.div
-          className="flex max-h-[600px] flex-col gap-3.5 overflow-y-auto p-5"
-          initial="hidden"
-          animate="show"
-          variants={STAGGER_CONTAINER}
-        >
-          {CLUSTERS.map((cluster) => (
-            <motion.div key={cluster.name} variants={STAGGER_ITEM}>
+      {/* Attributi */}
+      <div ref={attributesRef} className="grid border-t border-border px-5 md:grid-cols-3 md:px-7">
+        {CLUSTERS.map((cluster, index) => (
+          <div key={cluster.name} className={cn("py-2 md:px-5", index === 0 && "md:pl-0", index > 0 && "border-t border-border md:border-l md:border-t-0", index === CLUSTERS.length - 1 && "md:pr-0")}>
               <AttributeCluster
                 name={cluster.name}
                 fields={cluster.keys.map((key) => ({
@@ -180,41 +131,44 @@ export function CatalogEntryDetail() {
                   value: entry.attributes[key],
                   onChange: (value: string) => updateAttribute(key, value),
                 }))}
+                metaField={index === CLUSTERS.length - 1 ? { label: "Fonte", value: `AI · ${validatedPhotos} foto` } : undefined}
               />
-            </motion.div>
-          ))}
+          </div>
+        ))}
+      </div>
 
-          {/* Misure — calcolate dalla foto ArUco, categoria derivata da tipoCapo */}
-          <motion.div variants={STAGGER_ITEM} className="rounded-[14px] border border-border bg-card px-4 pb-3">
-            <div className="flex items-center gap-2 py-3 font-mono text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-              <span className="size-1.5 rounded-full bg-primary" />
-              Misure
-              <span className="ml-auto normal-case tracking-normal text-muted-foreground/70">
-                {CATEGORY_LABELS[measureCategory]}
-              </span>
-            </div>
-            <div className="flex items-center gap-4">
+      {/* Misure + prezzo */}
+      <div className="grid gap-6 border-t border-border px-5 py-5 md:px-7 lg:grid-cols-[1.3fr_1fr] lg:gap-7">
+        <section>
+          <div className="mb-2.5 flex items-baseline gap-2.5">
+            <span className="font-mono text-[10px] font-semibold uppercase tracking-[.14em] text-muted-foreground">Misure</span>
+            <span className="font-mono text-[10px] font-medium uppercase tracking-[.1em] text-muted-foreground/75">
+              {CATEGORY_LABELS[measureCategory]} · ArUco
+            </span>
+          </div>
+          <div className="flex items-start gap-5">
               <svg
                 viewBox="0 0 120 150"
-                width="80"
-                height="100"
+                width="66"
+                height="83"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="1.4"
+                strokeWidth="1.5"
                 strokeLinejoin="round"
-                className="shrink-0 text-foreground"
+                className="mt-1 shrink-0 text-foreground"
               >
                 <path d="M40 18 L30 26 L18 40 L26 50 L34 44 L34 132 L86 132 L86 44 L94 50 L102 40 L90 26 L80 18 L70 24 Q60 32 50 24 Z" />
                 <line x1="50" y1="24" x2="50" y2="132" strokeDasharray="3 3" strokeWidth="1" opacity=".5" />
                 <line x1="70" y1="24" x2="70" y2="132" strokeDasharray="3 3" strokeWidth="1" opacity=".5" />
               </svg>
-              <div className="flex-1">
+              <div className="grid flex-1 grid-cols-1 gap-x-5 sm:grid-cols-2">
                 {measureFields.map(({ key, label }, i) => (
                   <div
                     key={key}
                     className={cn(
                       "flex items-center justify-between gap-3 py-2 text-[12.5px] text-muted-foreground",
-                      i > 0 && "border-t border-border"
+                      i > 0 && "border-t border-border",
+                      i === 1 && "sm:border-t-0"
                     )}
                   >
                     <span>{label}</span>
@@ -225,7 +179,7 @@ export function CatalogEntryDetail() {
                         const num = parseFloat(e.currentTarget.textContent?.replace(/[^0-9.]/g, "") ?? "");
                         if (!Number.isNaN(num)) updateMeasure(key, num);
                       }}
-                      className="w-16 rounded-lg border border-transparent bg-muted px-2 py-1 text-right font-mono font-medium text-foreground outline-none transition-colors hover:border-border focus:border-primary focus:bg-card focus:ring-[3px] focus:ring-primary/25"
+                      className="w-[72px] rounded-[7px] border border-transparent bg-transparent px-1.5 py-1 text-right font-mono font-medium text-foreground outline-none transition-colors hover:border-border hover:bg-muted focus:border-primary focus:bg-card focus:ring-[3px] focus:ring-primary/25"
                     >
                       {entry.measures[key] != null ? `${entry.measures[key]} cm` : "—"}
                     </span>
@@ -233,14 +187,18 @@ export function CatalogEntryDetail() {
                 ))}
               </div>
             </div>
-          </motion.div>
-
-          {/* Metadata */}
-          <motion.div variants={STAGGER_ITEM} className="flex justify-between pt-1 text-xs text-muted-foreground">
-            <span className="font-mono">{new Date(entry.createdAt).toLocaleDateString("it-IT")}</span>
-            <span className="font-mono">{entry.accountId}</span>
-          </motion.div>
-        </motion.div>
+        </section>
+        <PriceMarginCard
+          compact
+          purchasePriceCents={entry.purchasePriceCents}
+          suggestedSalePriceCents={entry.suggestedSalePriceCents}
+          onChange={updatePrices}
+          completion={{
+            current: completedGateItems,
+            total: Object.keys(ATTRIBUTE_LABELS).length + REQUIRED_LABELS.length,
+            missingLabel: missingLabels[0],
+          }}
+        />
       </div>
     </div>
   );

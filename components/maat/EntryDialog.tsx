@@ -21,7 +21,7 @@ export function EntryDialog() {
     >
       <DialogContent
         showCloseButton={false}
-        className="max-h-[90vh] w-full max-w-[calc(100%-2rem)] gap-0 overflow-y-auto rounded-[18px] border-border/60 p-0 shadow-e2 md:max-w-[940px]"
+        className="max-h-[90vh] w-full max-w-[calc(100%-2rem)] gap-0 overflow-y-auto rounded-[16px] border-border/60 p-0 shadow-e2 md:max-w-[1000px]"
       >
         <DialogTitle className="sr-only">Dettaglio capo</DialogTitle>
         <CatalogEntryDetail />

@@ -124,13 +124,14 @@ Auto-relist
 
 La 4ª card di oggi ("Pubblicazione multipiattaforma" manuale, coi chip piattaforme
 predefinite) **non esiste più come card**: è ora letteralmente la tab "Da pubblicare"
-della pagina, e le sue piattaforme-default alimentano il default della barra azione lì
-(vedi sopra) — non serve duplicarla come regola nella sheet.
+della pagina. Le piattaforme predefinite restano una preferenza salvata, ma diventano
+una riga compatta in cima alla sheet Strategie (chip piattaforme, senza switch/soglie:
+non è una regola automatica, è solo il default che pre-seleziona la barra azione della
+tab "Da pubblicare").
 
 ### Data model
 
-Nuovo tipo in `types/maat.ts` (o `lib/publishing-mock.ts`, da decidere in fase di
-implementazione seguendo convenzione file vicini):
+Nuovo tipo in `lib/publishing-strategy.ts`:
 
 ```ts
 type PlatformStrategy = {
@@ -138,7 +139,10 @@ type PlatformStrategy = {
   repricing: { enabled: boolean; discountPct: number; frequencyDays: number; floorPct: number };
   autoRelist: { enabled: boolean; frequencyDays: number };
 };
-type StrategyConfig = Record<PlatformKey, PlatformStrategy>;
+type StrategyConfig = {
+  defaultPublishPlatforms: PlatformKey[];
+  platforms: Record<PlatformKey, PlatformStrategy>;
+};
 ```
 
 Persistenza: stesso pattern `localStorage` già usato da `settings-store.tsx` /

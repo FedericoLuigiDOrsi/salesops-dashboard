@@ -8,6 +8,8 @@ interface PriceMarginCardProps {
   purchasePriceCents: number | null;
   suggestedSalePriceCents: number | null;
   onChange: (purchasePriceCents: number | null, suggestedSalePriceCents: number | null) => void;
+  compact?: boolean;
+  completion?: { current: number; total: number; missingLabel?: string };
 }
 
 function parseEuroInput(raw: string): number | null {
@@ -15,7 +17,13 @@ function parseEuroInput(raw: string): number | null {
   return Number.isFinite(n) && n >= 0 ? Math.round(n * 100) : null;
 }
 
-export function PriceMarginCard({ purchasePriceCents, suggestedSalePriceCents, onChange }: PriceMarginCardProps) {
+export function PriceMarginCard({
+  purchasePriceCents,
+  suggestedSalePriceCents,
+  onChange,
+  compact = false,
+  completion,
+}: PriceMarginCardProps) {
   const [buyRaw, setBuyRaw] = useState(purchasePriceCents != null ? String(purchasePriceCents / 100) : "");
   const [sellRaw, setSellRaw] = useState(suggestedSalePriceCents != null ? String(suggestedSalePriceCents / 100) : "");
 
@@ -26,6 +34,69 @@ export function PriceMarginCard({ purchasePriceCents, suggestedSalePriceCents, o
 
   function commit(nextBuyRaw: string, nextSellRaw: string) {
     onChange(parseEuroInput(nextBuyRaw), parseEuroInput(nextSellRaw));
+  }
+
+  if (compact) {
+    const progress = completion ? Math.round((completion.current / completion.total) * 100) : 0;
+    return (
+      <div className="h-full lg:border-l lg:border-border lg:pl-7">
+        <p className="font-mono text-[10px] font-semibold uppercase tracking-[.14em] text-muted-foreground">Prezzo</p>
+        <label className="mt-2.5 flex w-fit items-baseline gap-1.5 rounded-[8px] border border-transparent transition-colors hover:border-border focus-within:border-primary focus-within:ring-[3px] focus-within:ring-primary/25">
+          <input
+            inputMode="decimal"
+            value={sellRaw}
+            placeholder="—"
+            onChange={(e) => {
+              setSellRaw(e.target.value);
+              commit(buyRaw, e.target.value);
+            }}
+            className="w-[116px] bg-transparent px-1 font-mono text-[30px] font-bold leading-none tracking-tight text-foreground outline-none placeholder:text-muted-foreground/50"
+            aria-label="Prezzo consigliato di vendita"
+          />
+          <span className="pr-1 font-mono text-[17px] font-medium text-muted-foreground">€</span>
+        </label>
+        <div className="mt-2 flex flex-wrap items-center gap-1 text-[11.5px] leading-relaxed text-muted-foreground">
+          <span>Acquisto</span>
+          <label className="inline-flex items-center rounded border border-transparent hover:border-border focus-within:border-primary">
+            <input
+              inputMode="decimal"
+              value={buyRaw}
+              placeholder="—"
+              onChange={(e) => {
+                setBuyRaw(e.target.value);
+                commit(e.target.value, sellRaw);
+              }}
+              className="w-12 bg-transparent px-1 text-right font-mono font-medium text-foreground outline-none"
+              aria-label="Prezzo acquisto"
+            />
+            <span>€</span>
+          </label>
+          <span>· margine</span>
+          <strong className={cn("font-mono font-semibold", margin != null && margin < 0 ? "text-destructive" : "text-success")}>
+            {margin != null ? `${margin >= 0 ? "+" : "−"}${formatEUR(Math.abs(margin))}` : "—"}
+          </strong>
+        </div>
+        {completion && (
+          <>
+            <div className="mt-3.5 flex items-center gap-2.5">
+              <div className="h-0.5 flex-1 overflow-hidden rounded-full bg-muted">
+                <span className="block h-full bg-primary transition-[width]" style={{ width: `${progress}%` }} />
+              </div>
+              <span className="font-mono text-[10.5px] font-medium tracking-[.08em] text-muted-foreground">
+                {completion.current} / {completion.total}
+              </span>
+            </div>
+            <p className="mt-2 text-[11.5px] leading-relaxed text-muted-foreground">
+              {completion.missingLabel ? (
+                <>Manca <strong className="font-semibold text-foreground">{completion.missingLabel}</strong> per confermare</>
+              ) : (
+                <strong className="font-semibold text-success">Scheda completa</strong>
+              )}
+            </p>
+          </>
+        )}
+      </div>
+    );
   }
 
   return (

@@ -17,16 +17,16 @@ interface ClusterField {
 interface AttributeClusterProps {
   name: string;
   fields: ClusterField[];
+  metaField?: { label: string; value: string };
 }
 
-export function AttributeCluster({ name, fields }: AttributeClusterProps) {
+export function AttributeCluster({ name, fields, metaField }: AttributeClusterProps) {
   const missing = fields.filter((f) => f.value === "").length;
 
   return (
-    <div className="rounded-[14px] border border-border bg-card px-4 pb-1">
+    <section className="h-full">
       <div className="flex items-center justify-between py-3">
-        <span className="flex items-center gap-2 font-mono text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-          <span className="size-1.5 rounded-full bg-primary" />
+        <span className="font-mono text-[10px] font-semibold uppercase tracking-[.14em] text-muted-foreground">
           {name}
         </span>
         {missing > 0 && (
@@ -38,7 +38,13 @@ export function AttributeCluster({ name, fields }: AttributeClusterProps) {
       {fields.map((field, i) => (
         <AttributeRow key={field.key} field={field} bordered={i > 0} />
       ))}
-    </div>
+      {metaField && (
+        <div className="flex items-center justify-between gap-3 border-t border-border py-2.5">
+          <span className="text-[12.5px] text-muted-foreground">{metaField.label}</span>
+          <span className="text-right font-mono text-[12.5px] font-medium text-foreground">{metaField.value}</span>
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -96,7 +102,7 @@ function AttributeRow({ field, bordered }: { field: ClusterField; bordered: bool
             onFocus={() => setEditing(true)}
             onBlur={commit}
             onKeyDown={onKeyDown}
-            className="rounded-lg border border-transparent bg-muted px-2.5 py-1 text-right font-mono text-sm font-medium text-foreground outline-none transition-colors hover:border-border focus:border-primary focus:bg-card focus:ring-[3px] focus:ring-primary/25"
+            className="max-w-[62%] rounded-[7px] border border-transparent bg-transparent px-1.5 py-1 text-right font-mono text-[12.5px] font-medium text-foreground outline-none transition-colors hover:border-border hover:bg-muted focus:border-primary focus:bg-card focus:ring-[3px] focus:ring-primary/25"
           >
             {field.value}
           </motion.span>

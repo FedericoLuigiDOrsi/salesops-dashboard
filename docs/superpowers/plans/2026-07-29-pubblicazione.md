@@ -34,7 +34,16 @@ Tailwind · `vitest` for unit tests · `pnpm`.
   `Sheet`, `Dialog`, `Tabs`, `Checkbox`, `Switch`, `Select`, `DropdownMenu`, `Badge`,
   `Button`.
 - Verification gate before any commit that touches TypeScript: `pnpm build` must pass
-  (type-check/lint gate, per `HANDOFF.md` §2).
+  (type-check/lint gate, per `HANDOFF.md` §2). This is not optional and not satisfied
+  by `pnpm vitest run` alone — `vitest` does not type-check unrelated call sites, only
+  `tsc` (via `next build`) catches those. Run `pnpm build` before every commit that
+  touches `.ts`/`.tsx`, not just at the end.
+- `InventoryStatus` (`lib/inventory-mock.ts`) is `"local_draft" | "to_be_reviewed" |
+  "available" | "sold"` (alias of `CatalogEntryStatus`, `types/maat.ts`) — **not**
+  `"bozza"/"catalogo"/"venduto"`. Every task in this plan already uses the correct
+  values; if you see the old vocabulary anywhere, it's stale — check
+  `lib/inventory-filters.ts`'s `STATUS_SEGMENTS` for the authoritative label↔value
+  mapping (`to_be_reviewed`→"Bozze", `available`→"A catalogo", `sold`→"Venduti").
 - Spec of record: `docs/superpowers/specs/2026-07-29-pubblicazione-design.md`.
 
 ## Note di implementazione (scostamento minore dallo spec)
@@ -95,7 +104,7 @@ function makeItem(overrides: Partial<InventoryItem> = {}): InventoryItem {
     category: "Giacche",
     size: "M",
     priceCents: 10000,
-    status: "catalogo",
+    status: "available",
     photoUrl: null,
     platforms: { vinted: null, grailed: null, depop: null },
     ...overrides,
@@ -107,7 +116,7 @@ describe("isReadyToPublish", () => {
     expect(isReadyToPublish(makeItem())).toBe(true);
   });
   it("false per una bozza", () => {
-    expect(isReadyToPublish(makeItem({ status: "bozza" }))).toBe(false);
+    expect(isReadyToPublish(makeItem({ status: "to_be_reviewed" }))).toBe(false);
   });
   it("false se già listato ovunque anche solo su una piattaforma", () => {
     expect(
@@ -143,8 +152,8 @@ describe("isSoldOutEverywhere", () => {
 
 describe("getToPublishItems / getLiveItems / getDraftCount", () => {
   const items = [
-    makeItem({ id: "a", status: "catalogo" }), // ready to publish
-    makeItem({ id: "b", status: "bozza" }), // draft, escluso da entrambe
+    makeItem({ id: "a", status: "available" }), // ready to publish
+    makeItem({ id: "b", status: "to_be_reviewed" }), // draft, escluso da entrambe
     makeItem({ id: "c", platforms: { vinted: "active", grailed: null, depop: null } }), // live
   ];
 
@@ -172,7 +181,7 @@ Expected: FAIL — `Cannot find module './publishing-mock'`
 import type { InventoryItem } from "./inventory-mock";
 
 export function isReadyToPublish(item: InventoryItem): boolean {
-  return item.status === "catalogo" && Object.values(item.platforms).every((v) => v === null);
+  return item.status === "available" && Object.values(item.platforms).every((v) => v === null);
 }
 
 export function isLive(item: InventoryItem): boolean {
@@ -194,7 +203,7 @@ export function getLiveItems(items: InventoryItem[]): InventoryItem[] {
 }
 
 export function getDraftCount(items: InventoryItem[]): number {
-  return items.filter((item) => item.status === "bozza").length;
+  return items.filter((item) => item.status === "to_be_reviewed").length;
 }
 ```
 
@@ -1076,7 +1085,7 @@ export function ToPublishTab({ items, allItems, defaultPlatforms, onPublish }: T
             {draftCount === 1 ? "capo in bozza non ancora pronto" : "capi in bozza non ancora pronti"} per la pubblicazione.
           </span>
           <Button asChild variant="outline" size="sm">
-            <Link href="/inventario?status=bozza">Completali in Inventario</Link>
+            <Link href="/inventario?status=to_be_reviewed">Completali in Inventario</Link>
           </Button>
         </div>
       )}
@@ -1988,13 +1997,13 @@ git commit -m "refactor(inventory): rimuovi AutomazioniDrawer, assorbito da Pubb
 
 **Interfaces:**
 - Consumes: `InventoryItem` (già definito nello stesso file).
-- Produces: 3 nuovi elementi in `inventoryItems` con `status: "catalogo"` e
+- Produces: 3 nuovi elementi in `inventoryItems` con `status: "available"` e
   `platforms` tutti `null`, così la tab "Da pubblicare" non è vuota alla prima
   apertura.
 
 **Perché serve:** verificato sui dati attuali — dei 15 item mock, **nessuno** è
-`status: "catalogo"` con tutte le piattaforme `null`. I 4 item con piattaforme nulle
-(`inv-03`, `inv-05`, `inv-09`, `inv-14`) sono tutti `bozza`. Senza questo seed la tab
+`status: "available"` con tutte le piattaforme `null`. I 4 item con piattaforme nulle
+(`inv-03`, `inv-05`, `inv-09`, `inv-14`) sono tutti `to_be_reviewed`. Senza questo seed la tab
 principale della schermata mostrerebbe solo l'`EmptyState`, rendendo impossibile
 dimostrare o verificare il flusso di pubblicazione.
 
@@ -2013,7 +2022,7 @@ di chiusura dell'array. Le foto riusano file già presenti in `public/product-ph
     category: "Camicie",
     size: "L",
     priceCents: 5500,
-    status: "catalogo",
+    status: "available",
     photoUrl: "/product-photos/CG-1424_AI_FRONT.jpg",
     platforms: { vinted: null, grailed: null, depop: null },
   },
@@ -2025,7 +2034,7 @@ di chiusura dell'array. Le foto riusano file già presenti in `public/product-ph
     category: "Capospalla",
     size: "M",
     priceCents: 24000,
-    status: "catalogo",
+    status: "available",
     photoUrl: "/product-photos/CG-1527_AI_FRONT.jpg",
     platforms: { vinted: null, grailed: null, depop: null },
   },
@@ -2037,7 +2046,7 @@ di chiusura dell'array. Le foto riusano file già presenti in `public/product-ph
     category: "Pantaloni",
     size: "W32",
     priceCents: 3500,
-    status: "catalogo",
+    status: "available",
     photoUrl: "/product-photos/CG-1544_AI_FRONT.jpg",
     platforms: { vinted: null, grailed: null, depop: null },
   },
@@ -2089,7 +2098,7 @@ Run: `pnpm dev`, apri `/pubblicazione`. Verifica:
    Arc'teryx, `inv-18` Dickies (quelli seedati in Task 13). Il contatore nel tab
    header dice "Da pubblicare (3)".
 2. Banner bozze compare con conteggio 4 (`inv-03`, `inv-05`, `inv-09`, `inv-14`) e il link porta a
-   `/inventario?status=bozza` (la route esiste già, il parametro è solo informativo:
+   `/inventario?status=to_be_reviewed` (la route esiste già, il parametro è solo informativo:
    non serve gestirlo lato Inventario in questo piano — se Federico lo vuole
    funzionale, è un task separato, fuori scope).
 3. Seleziona 1+ righe in "Da pubblicare", scegli piattaforme, "Avvia pubblicazione":

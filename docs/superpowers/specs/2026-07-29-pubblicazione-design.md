@@ -52,10 +52,15 @@ non un terzo tab: separa "governo delle regole" da "lavoro operativo riga per ri
 Nessuna nuova entità capo. Si riusano `InventoryItem` e `PlatformListingState` da
 `lib/inventory-mock.ts`:
 
-- **Da pubblicare** = `status === "catalogo"` e `platforms` tutti `null` (mai listato).
+- **Da pubblicare** = `status === "available"` (label italiana "A catalogo") e `platforms`
+  tutti `null` (mai listato). Nota: il vocabolario di `InventoryStatus` è
+  `"local_draft" | "to_be_reviewed" | "available" | "sold"` (alias di `CatalogEntryStatus`,
+  `types/maat.ts`), non più `"bozza"/"catalogo"/"venduto"` — verificare sempre contro
+  `lib/inventory-filters.ts` (`STATUS_SEGMENTS`) per la mappatura label↔valore corrente.
 - **Live** = almeno un valore in `platforms` diverso da `null`.
-- Righe con `status === "bozza"` non compaiono in nessuna delle due tab (non sono
-  pronte): la pagina non le edita, mostra solo un banner con link a Inventario.
+- Righe con `status === "to_be_reviewed"` (label "Bozze") non compaiono in nessuna delle
+  due tab (non sono pronte): la pagina non le edita, mostra solo un banner con link a
+  Inventario.
 
 ## Tab "Da pubblicare"
 

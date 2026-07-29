@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { ChevronUp } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const LogisticsGlobe = dynamic(() => import("./LogisticsGlobe").then((m) => m.LogisticsGlobe), {
   ssr: false,
@@ -9,6 +10,7 @@ const LogisticsGlobe = dynamic(() => import("./LogisticsGlobe").then((m) => m.Lo
 });
 
 const HERO_HEIGHT = 184;
+const FLUO = "#DBE64C";
 
 interface LogisticsHeroStat {
   key: string;
@@ -20,16 +22,18 @@ interface LogisticsHeroStat {
 interface LogisticsHeroProps {
   stats: LogisticsHeroStat[];
   onClose: () => void;
+  /** Click su una città del globo: filtra la board. */
+  onCityClick?: (cityName: string) => void;
 }
 
-export function LogisticsHero({ stats, onClose }: LogisticsHeroProps) {
+export function LogisticsHero({ stats, onClose, onCityClick }: LogisticsHeroProps) {
   return (
     <div
       className="relative flex-none overflow-hidden rounded-2xl bg-surface-dark text-text-on-dark"
       style={{ height: HERO_HEIGHT }}
     >
       <div className="absolute inset-0 z-0">
-        <LogisticsGlobe height={HERO_HEIGHT} />
+        <LogisticsGlobe height={HERO_HEIGHT} mode="hero" onCityClick={onCityClick} className="size-full" />
       </div>
       <div
         className="pointer-events-none absolute inset-0 z-[1]"
@@ -48,18 +52,31 @@ export function LogisticsHero({ stats, onClose }: LogisticsHeroProps) {
             Tracce attive verso i destinatari in Italia ed Europa.
           </div>
         </div>
+        {/* Stessa gerarchia del widget: pastiglia fluo solo sul primo stato azionabile. */}
         <div className="flex gap-6">
-          {stats.map((s) => (
-            <div key={s.key}>
-              <div className="flex items-center gap-1.5">
-                <span className="size-[9px] shrink-0 rounded-[3px]" style={{ background: s.color }} />
-                <span className="font-mono text-[26px] font-bold leading-none">{s.count}</span>
+          {stats.map((s) => {
+            const accent = s.color.toUpperCase() === FLUO;
+            return (
+              <div key={s.key}>
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className={cn("size-[9px] shrink-0 rounded-[3px]", accent ? "bg-primary" : "bg-text-on-dark/25")}
+                  />
+                  <span
+                    className={cn(
+                      "font-mono text-[26px] font-bold leading-none",
+                      !accent && "text-text-on-dark/70"
+                    )}
+                  >
+                    {s.count}
+                  </span>
+                </div>
+                <div className="mt-1.5 font-mono text-[10px] uppercase tracking-[.1em] text-text-on-dark/60">
+                  {s.label}
+                </div>
               </div>
-              <div className="mt-1.5 font-mono text-[10px] uppercase tracking-[.1em] text-text-on-dark/60">
-                {s.label}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
       <button

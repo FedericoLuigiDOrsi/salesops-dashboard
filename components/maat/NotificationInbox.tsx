@@ -1,10 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Check } from "lucide-react";
 import { ActivityModal } from "@/components/maat/notifications/ActivityModal";
 import { NotificationInboxContent } from "@/components/maat/notifications/NotificationInboxContent";
 import { notificationsV2, type OfferNotification } from "@/lib/notifications-mock";
 import { useOverlays } from "@/lib/overlays-store";
+import { useNotifications } from "@/lib/notifications-store";
 
 // Pagina /notifiche: la "sezione intera" per lavorare a tutte le notifiche.
 // Header + il corpo inbox riusabile (stesso di NotificationsPanel). I popup
@@ -17,6 +19,7 @@ function baseOfferId(notificationId: string): string {
 
 export function NotificationInbox() {
   const { offerStatus } = useOverlays();
+  const { unreadCountV2, markAllReadV2 } = useNotifications();
   const [activityOpen, setActivityOpen] = useState(false);
 
   // Offerte con lo stato condiviso applicato — per l'ActivityModal.
@@ -38,13 +41,25 @@ export function NotificationInbox() {
           <p className="font-mono text-[11px] font-semibold uppercase tracking-[.12em] text-muted-foreground/70">Inbox</p>
           <h1 className="text-[28px] font-bold tracking-tight">Notifiche</h1>
         </div>
-        <button
-          type="button"
-          onClick={() => setActivityOpen(true)}
-          className="text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground"
-        >
-          Visualizza tutte
-        </button>
+        <div className="flex items-center gap-4">
+          {unreadCountV2 > 0 && (
+            <button
+              type="button"
+              onClick={markAllReadV2}
+              className="flex items-center gap-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              <Check className="size-3.5" />
+              Segna tutte come lette
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setActivityOpen(true)}
+            className="text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Visualizza tutte
+          </button>
+        </div>
       </div>
 
       <NotificationInboxContent variant="page" />

@@ -212,6 +212,18 @@ export function AppShell({ children }: AppShellProps) {
           </button>
         </header>
 
+        <button
+          type="button"
+          onClick={openNotifications}
+          aria-label="Notifiche"
+          className="fixed top-5 right-6 z-30 hidden size-10 items-center justify-center rounded-[10px] bg-foreground/[.05] text-foreground transition-colors hover:bg-foreground/[.09] md:flex"
+        >
+          <Bell className="size-4.5" />
+          {unreadCount > 0 && (
+            <span className="absolute right-2 top-2 size-2 rounded-full bg-primary ring-2 ring-background" />
+          )}
+        </button>
+
         <main className="min-h-0 flex-1 bg-background pb-[calc(66px+env(safe-area-inset-bottom))] md:pb-0">
           {children}
         </main>

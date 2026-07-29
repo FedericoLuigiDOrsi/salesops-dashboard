@@ -6,6 +6,7 @@ import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { shipments } from "@/lib/logistics-mock";
 import { SHIPMENT_STATUS_LABELS, type ShipmentStatus } from "@/types/maat";
+import { needsAction } from "@/lib/logistics-globe-data";
 
 const LogisticsGlobe = dynamic(
   () => import("@/components/maat/logistics/LogisticsGlobe").then((m) => m.LogisticsGlobe),
@@ -13,13 +14,6 @@ const LogisticsGlobe = dynamic(
 );
 
 const STATUS_ORDER: ShipmentStatus[] = ["da_fare", "fatti", "spediti", "consegnati"];
-
-const KPI_ACCENT: Record<ShipmentStatus, string> = {
-  da_fare: "bg-primary text-primary-foreground",
-  fatti: "bg-[var(--chart-1)] text-text-on-dark",
-  spediti: "bg-white/10 text-text-on-dark",
-  consegnati: "bg-[var(--chart-2)] text-text-on-dark",
-};
 
 /** Card di ingresso alla board Logistica dalla Home: rete spedizioni live + conteggi per stato. */
 export function LogisticaWidget() {
@@ -36,13 +30,13 @@ export function LogisticaWidget() {
     >
       <div
         aria-hidden
-        className="pointer-events-none absolute -right-10 top-1/2 aspect-square w-[56%] max-w-[280px] -translate-y-1/2 opacity-90"
+        className="pointer-events-none absolute -right-10 top-1/2 aspect-square w-[56%] max-w-[280px] -translate-y-1/2"
         style={{
           maskImage: "linear-gradient(90deg, transparent 0%, #000 54%)",
           WebkitMaskImage: "linear-gradient(90deg, transparent 0%, #000 54%)",
         }}
       >
-        <LogisticsGlobe height={280} />
+        <LogisticsGlobe height={280} mode="widget" />
       </div>
 
       <div className="relative max-w-[64%]">
@@ -56,11 +50,28 @@ export function LogisticaWidget() {
         </p>
       </div>
 
-      <div className="relative flex flex-wrap gap-2">
-        {counts.map(({ status, label, count }) => (
-          <div key={status} className={cn("flex min-w-[68px] flex-1 flex-col gap-1 rounded-lg px-3 py-2", KPI_ACCENT[status])}>
-            <span className="font-mono text-[20px] font-semibold leading-none tabular-nums">{count}</span>
-            <span className="font-mono text-[10px] uppercase tracking-[.1em] opacity-70">{label}</span>
+      {/* Riga di KPI senza tessere colorate: numeri mono su una linea di base,
+          divisori hairline, quadratino fluo solo su ciò che richiede azione. */}
+      <div className="relative flex items-end">
+        {counts.map(({ status, label, count }, i) => (
+          <div
+            key={status}
+            className={cn("flex-1", i > 0 && "border-l border-text-on-dark/15 pl-3.5")}
+          >
+            <div className="flex items-center gap-1.5">
+              {status === "da_fare" && <span className="size-[7px] shrink-0 rounded-[2px] bg-primary" />}
+              <span
+                className={cn(
+                  "font-mono text-[25px] font-bold leading-none tracking-tight tabular-nums",
+                  !needsAction(status) && "text-text-on-dark/60"
+                )}
+              >
+                {count}
+              </span>
+            </div>
+            <div className="mt-1.5 font-mono text-[10px] uppercase tracking-[.1em] text-text-on-dark/55">
+              {label}
+            </div>
           </div>
         ))}
       </div>

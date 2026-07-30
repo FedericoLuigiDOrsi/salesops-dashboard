@@ -1,11 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { MoreVertical, RotateCcw, Ban, Percent, Euro, Layers } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import {
@@ -42,6 +42,9 @@ export function LiveTab({ items, onRepublish, onDelist, onBulkPrice }: LiveTabPr
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [republishTarget, setRepublishTarget] = useState<InventoryItem[] | null>(null);
   const [delistTarget, setDelistTarget] = useState<string[] | null>(null);
+  const lastDelistTargetRef = useRef<string[] | null>(null);
+  if (delistTarget !== null) lastDelistTargetRef.current = delistTarget;
+  const delistDisplayTarget = delistTarget ?? lastDelistTargetRef.current;
   const [bulkMode, setBulkMode] = useState<BulkPriceMode>("percent");
   const [bulkValueInput, setBulkValueInput] = useState("-10");
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -285,16 +288,20 @@ export function LiveTab({ items, onRepublish, onDelist, onBulkPrice }: LiveTabPr
       <AlertDialog open={delistTarget !== null} onOpenChange={(open) => { if (!open) setDelistTarget(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Ritirare questi capi dagli annunci?</AlertDialogTitle>
+            <AlertDialogTitle>
+              {delistDisplayTarget && delistDisplayTarget.length === 1
+                ? "Ritirare questo capo dall'annuncio?"
+                : "Ritirare questi capi dagli annunci?"}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              {delistTarget && delistTarget.length === 1
+              {delistDisplayTarget && delistDisplayTarget.length === 1
                 ? "L'annuncio verrà ritirato da tutte le piattaforme su cui è live."
-                : `${delistTarget?.length ?? 0} capi verranno ritirati da tutte le piattaforme su cui sono live.`}
+                : `${delistDisplayTarget?.length ?? 0} capi verranno ritirati da tutte le piattaforme su cui sono live.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Annulla</AlertDialogCancel>
-            <AlertDialogAction className="bg-destructive text-white hover:bg-destructive/90" onClick={confirmDelist}>
+            <AlertDialogAction className={buttonVariants({ variant: "destructive" })} onClick={confirmDelist}>
               Ritira
             </AlertDialogAction>
           </AlertDialogFooter>

@@ -41,7 +41,23 @@ function PublishingViewInner() {
       prev.map((item) => {
         if (!ids.includes(item.id)) return item;
         const nextPlatforms = { ...item.platforms };
-        for (const key of platforms) nextPlatforms[key] = state;
+        for (const key of platforms) {
+          if (nextPlatforms[key] === "sold") continue;
+          nextPlatforms[key] = state;
+        }
+        return { ...item, platforms: nextPlatforms };
+      })
+    );
+  }
+
+  function activatePendingPlatforms(ids: string[], platforms: PlatformKey[]) {
+    setItems((prev) =>
+      prev.map((item) => {
+        if (!ids.includes(item.id)) return item;
+        const nextPlatforms = { ...item.platforms };
+        for (const key of platforms) {
+          if (nextPlatforms[key] === "pending") nextPlatforms[key] = "active";
+        }
         return { ...item, platforms: nextPlatforms };
       })
     );
@@ -49,7 +65,7 @@ function PublishingViewInner() {
 
   function publishItems(ids: string[], platforms: PlatformKey[]) {
     setPlatforms(ids, platforms, "pending");
-    window.setTimeout(() => setPlatforms(ids, platforms, "active"), PUBLISH_DELAY_MS);
+    window.setTimeout(() => activatePendingPlatforms(ids, platforms), PUBLISH_DELAY_MS);
   }
 
   function republishItems(ids: string[], platforms: PlatformKey[], priceCents: number | null) {
@@ -57,7 +73,7 @@ function PublishingViewInner() {
       setItems((prev) => prev.map((item) => (ids.includes(item.id) ? { ...item, priceCents } : item)));
     }
     setPlatforms(ids, platforms, "pending");
-    window.setTimeout(() => setPlatforms(ids, platforms, "active"), PUBLISH_DELAY_MS);
+    window.setTimeout(() => activatePendingPlatforms(ids, platforms), PUBLISH_DELAY_MS);
   }
 
   function delistItems(ids: string[]) {

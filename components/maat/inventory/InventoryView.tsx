@@ -2,11 +2,10 @@
 
 import { useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { Plus, Zap } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatEUR } from "@/lib/utils";
 import { inventoryItems, type InventoryItem } from "@/lib/inventory-mock";
-import { AutomazioniDrawer } from "@/components/maat/inventory/AutomazioniDrawer";
 import type { PlatformKey } from "@/lib/inventory-columns";
 import { PlatformPills } from "@/components/maat/inventory/PlatformPills";
 import { InventoryTable } from "@/components/maat/inventory/InventoryTable";
@@ -35,7 +34,6 @@ export function InventoryView() {
   const [size, setSize] = useState("all");
   const [price, setPrice] = useState<PriceBand>("all");
   const [platform, setPlatform] = useState<PlatformFilter>("all");
-  const [automazioniOpen, setAutomazioniOpen] = useState(false);
 
   const baseFilters = { search, category, size, price, platform };
 
@@ -113,9 +111,6 @@ export function InventoryView() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" className="gap-1.5" onClick={() => setAutomazioniOpen(true)}>
-            <Zap className="size-3.5" /> Automazioni
-          </Button>
           <Button asChild className="hidden gap-1.5 md:inline-flex">
             <Link href="/capi/nuovo/foto/fronte">
               <Plus className="size-3.5" /> Crea capo
@@ -215,8 +210,6 @@ export function InventoryView() {
           ))}
         </div>
       )}
-
-      <AutomazioniDrawer open={automazioniOpen} onOpenChange={setAutomazioniOpen} />
     </div>
   );
 }

@@ -8,6 +8,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { EmptyState } from "@/components/maat/EmptyState";
 import { cn, formatEUR } from "@/lib/utils";
 import { isSoldOutEverywhere } from "@/lib/publishing-mock";
@@ -31,6 +41,7 @@ export function LiveTab({ items, onRepublish, onDelist, onBulkPrice }: LiveTabPr
   const [platformFilter, setPlatformFilter] = useState<"all" | PlatformKey>("all");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [republishTarget, setRepublishTarget] = useState<InventoryItem[] | null>(null);
+  const [delistTarget, setDelistTarget] = useState<string[] | null>(null);
   const [bulkMode, setBulkMode] = useState<BulkPriceMode>("percent");
   const [bulkValueInput, setBulkValueInput] = useState("-10");
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -83,6 +94,17 @@ export function LiveTab({ items, onRepublish, onDelist, onBulkPrice }: LiveTabPr
     if (!canPreview) return;
     onBulkPrice(Array.from(selected), bulkMode, bulkValue);
     setSelected(new Set());
+  }
+
+  function confirmDelist() {
+    if (!delistTarget) return;
+    onDelist(delistTarget);
+    setSelected((prev) => {
+      const next = new Set(prev);
+      delistTarget.forEach((id) => next.delete(id));
+      return next;
+    });
+    setDelistTarget(null);
   }
 
   return (
@@ -175,7 +197,7 @@ export function LiveTab({ items, onRepublish, onDelist, onBulkPrice }: LiveTabPr
                           <DropdownMenuItem onSelect={() => setRepublishTarget([item])}>
                             <RotateCcw className="size-4" /> Ripubblica
                           </DropdownMenuItem>
-                          <DropdownMenuItem variant="destructive" onSelect={() => onDelist([item.id])}>
+                          <DropdownMenuItem variant="destructive" onSelect={() => setDelistTarget([item.id])}>
                             <Ban className="size-4" /> Ritira
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -232,7 +254,7 @@ export function LiveTab({ items, onRepublish, onDelist, onBulkPrice }: LiveTabPr
             <Button size="sm" variant="secondary" onClick={() => setRepublishTarget(selectedItems)}>
               Ripubblica selezionati
             </Button>
-            <Button size="sm" variant="destructive" onClick={() => onDelist(Array.from(selected))}>
+            <Button size="sm" variant="destructive" onClick={() => setDelistTarget(Array.from(selected))}>
               Ritira selezionati
             </Button>
           </div>
@@ -259,6 +281,25 @@ export function LiveTab({ items, onRepublish, onDelist, onBulkPrice }: LiveTabPr
         rows={previewRows}
         onConfirm={applyBulkPrice}
       />
+
+      <AlertDialog open={delistTarget !== null} onOpenChange={(open) => { if (!open) setDelistTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Ritirare questi capi dagli annunci?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {delistTarget && delistTarget.length === 1
+                ? "L'annuncio verrà ritirato da tutte le piattaforme su cui è live."
+                : `${delistTarget?.length ?? 0} capi verranno ritirati da tutte le piattaforme su cui sono live.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annulla</AlertDialogCancel>
+            <AlertDialogAction className="bg-destructive text-white hover:bg-destructive/90" onClick={confirmDelist}>
+              Ritira
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

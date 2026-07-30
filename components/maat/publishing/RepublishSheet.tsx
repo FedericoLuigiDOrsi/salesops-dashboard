@@ -46,7 +46,7 @@ export function RepublishSheet({ open, onOpenChange, items, onConfirm }: Republi
     onConfirm(
       items.map((i) => i.id),
       platforms,
-      isSingle && Number.isFinite(parsed) ? parsed : isSingle ? null : null
+      isSingle && Number.isFinite(parsed) ? parsed : null
     );
     onOpenChange(false);
   }

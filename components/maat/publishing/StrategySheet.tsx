@@ -1,12 +1,11 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Box, Layers, TrendingDown, RefreshCw } from "lucide-react";
+import { Box, TrendingDown, RefreshCw } from "lucide-react";
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
 import { MARKETPLACE_LABELS } from "@/types/maat";
 import { PLATFORM_KEYS, type PlatformKey } from "@/lib/inventory-columns";
 import { usePublishingStrategy } from "@/lib/publishing-strategy-store";

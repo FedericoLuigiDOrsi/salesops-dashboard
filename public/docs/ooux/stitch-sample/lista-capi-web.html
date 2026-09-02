@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MAAT - Catalogo Capi</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-container": "#efedf0",
+                      "on-tertiary-fixed": "#351002",
+                      "error": "#ba1a1a",
+                      "on-secondary": "#ffffff",
+                      "surface-container-low": "#f4f3f6",
+                      "outline-variant": "#c4c6cf",
+                      "on-tertiary": "#ffffff",
+                      "secondary": "#5d6300",
+                      "outline": "#74777f",
+                      "tertiary-fixed": "#ffdbce",
+                      "surface-dim": "#dbd9dd",
+                      "on-primary-fixed-variant": "#2f486a",
+                      "on-tertiary-container": "#b5785f",
+                      "surface-bright": "#faf9fc",
+                      "surface-tint": "#476083",
+                      "on-surface-variant": "#43474e",
+                      "error-container": "#ffdad6",
+                      "on-tertiary-fixed-variant": "#6b3a25",
+                      "on-error": "#ffffff",
+                      "on-secondary-fixed-variant": "#464a00",
+                      "background": "#faf9fc",
+                      "on-error-container": "#93000a",
+                      "surface-container-high": "#e9e7eb",
+                      "primary-container": "#001f3f",
+                      "inverse-surface": "#2f3033",
+                      "on-primary": "#ffffff",
+                      "tertiary-fixed-dim": "#fdb69a",
+                      "surface": "#faf9fc",
+                      "on-primary-container": "#6f88ad",
+                      "secondary-fixed-dim": "#c4cf36",
+                      "on-background": "#1a1c1e",
+                      "surface-container-lowest": "#ffffff",
+                      "inverse-on-surface": "#f2f0f3",
+                      "primary-fixed-dim": "#afc8f0",
+                      "on-secondary-fixed": "#1b1d00",
+                      "inverse-primary": "#afc8f0",
+                      "secondary-container": "#e1ec51",
+                      "on-secondary-container": "#636900",
+                      "on-surface": "#1a1c1e",
+                      "surface-variant": "#e3e2e5",
+                      "surface-container-highest": "#e3e2e5",
+                      "tertiary": "#110200",
+                      "tertiary-container": "#391303",
+                      "primary": "#000613",
+                      "primary-fixed": "#d4e3ff",
+                      "on-primary-fixed": "#001c3a",
+                      "secondary-fixed": "#e1ec51"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "lg": "40px",
+                      "margin": "32px",
+                      "base": "4px",
+                      "xs": "8px",
+                      "gutter": "24px",
+                      "md": "24px",
+                      "xl": "64px",
+                      "sm": "16px"
+              },
+              "fontFamily": {
+                      "display-lg": ["Geist", "sans-serif"],
+                      "data-sm": ["JetBrains Mono", "monospace"],
+                      "title-md": ["Geist", "sans-serif"],
+                      "headline-lg": ["Geist", "sans-serif"],
+                      "body-md": ["Geist", "sans-serif"],
+                      "headline-lg-mobile": ["Geist", "sans-serif"],
+                      "data-lg": ["JetBrains Mono", "monospace"],
+                      "label-caps": ["JetBrains Mono", "monospace"]
+              },
+              "fontSize": {
+                      "display-lg": ["48px", {"lineHeight": "1.1", "letterSpacing": "-0.04em", "fontWeight": "700"}],
+                      "data-sm": ["13px", {"lineHeight": "1.2", "fontWeight": "400"}],
+                      "title-md": ["18px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                      "headline-lg": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                      "body-md": ["15px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                      "headline-lg-mobile": ["24px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                      "data-lg": ["16px", {"lineHeight": "1.4", "fontWeight": "500"}],
+                      "label-caps": ["11px", {"lineHeight": "1", "letterSpacing": "0.1em", "fontWeight": "700"}]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        body {
+            background-color: #F6F7ED;
+        }
+        .canvas-bg { background-color: #F6F7ED; }
+        .surface-border { border-color: rgba(91, 102, 112, 0.2); }
+        .nav-active-bar { background-color: #DBE64C; }
+        .fluo-lime { background-color: #DBE64C; }
+        .fluo-lime-text { color: #DBE64C; }
+        .deep-navy { background-color: #001F3F; }
+        .deep-navy-text { color: #001F3F; }
+        .deep-green { background-color: #00804C; }
+        .steel-grey { background-color: #5B6670; }
+        
+        .card-hover:hover {
+            transform: translateY(-2px);
+            border: 1px solid #DBE64C;
+        }
+    </style>
+</head>
+<body class="font-body-md text-body-md text-on-surface antialiased flex h-screen overflow-hidden">
+<!-- LEFT SIDEBAR -->
+<aside class="w-[280px] h-screen fixed left-0 top-0 deep-navy text-on-primary flex flex-col h-full py-xl border-r border-outline-variant/20 z-50">
+<div class="px-gutter mb-xl flex items-center gap-2">
+<span class="font-display-lg text-display-lg font-bold text-on-primary tracking-tighter">MAAT</span>
+<div class="w-2 h-2 rounded-full fluo-lime mt-4"></div>
+</div>
+<nav class="flex-1 flex flex-col gap-2">
+<a class="flex items-center gap-xs text-secondary font-bold border-l-4 border-secondary pl-4 bg-surface-variant/10 py-3 relative" href="#">
+<div class="absolute left-0 top-0 bottom-0 w-1 nav-active-bar"></div>
+<span class="material-symbols-outlined ml-2" style="font-variation-settings: 'FILL' 1;">checkroom</span>
+<span class="ml-2">Capi</span>
+</a>
+<a class="flex items-center gap-xs text-on-primary/70 font-medium pl-5 py-3 hover:text-secondary hover:bg-surface-variant/5 transition-colors" href="#">
+<span class="material-symbols-outlined ml-2">shopping_cart</span>
+<span class="ml-2">Acquisizione</span>
+</a>
+<a class="flex items-center gap-xs text-on-primary/70 font-medium pl-5 py-3 hover:text-secondary hover:bg-surface-variant/5 transition-colors justify-between pr-4" href="#">
+<div class="flex items-center gap-xs">
+<span class="material-symbols-outlined ml-2">notifications</span>
+<span class="ml-2">Notifiche</span>
+</div>
+<div class="w-2 h-2 rounded-full fluo-lime"></div>
+</a>
+<a class="flex items-center gap-xs text-on-primary/70 font-medium pl-5 py-3 hover:text-secondary hover:bg-surface-variant/5 transition-colors" href="#">
+<span class="material-symbols-outlined ml-2">settings</span>
+<span class="ml-2">Impostazioni</span>
+</a>
+</nav>
+<div class="mt-auto px-gutter border-t border-white/10 pt-4 flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center font-bold">F</div>
+<div>
+<div class="font-title-md text-title-md text-white">Federico D.</div>
+<div class="font-data-sm text-data-sm text-white/70">Seller</div>
+</div>
+</div>
+</aside>
+<!-- MAIN AREA -->
+<main class="ml-[280px] w-[calc(100%-280px)] h-full overflow-y-auto canvas-bg p-margin flex flex-col gap-gutter">
+<!-- TOP BAR -->
+<header class="flex items-center justify-between">
+<h1 class="font-headline-lg text-headline-lg deep-navy-text">Capi</h1>
+<div class="flex items-center gap-4">
+<div class="relative w-80">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-white border border-outline-variant/30 focus:border-primary-container focus:border-2 focus:ring-0 rounded-DEFAULT font-data-sm text-data-sm outline-none transition-all" placeholder="Cerca per brand, tipo, SKU…" type="text"/>
+</div>
+<button class="fluo-lime deep-navy-text font-bold px-6 py-2.5 rounded-full hover:brightness-95 transition-all">
+                    Crea capo
+                </button>
+</div>
+</header>
+<!-- STAT ROW -->
+<section class="grid grid-cols-4 gap-gutter">
+<div class="bg-white p-4 rounded-lg border border-outline-variant/20 relative overflow-hidden">
+<div class="text-outline font-medium mb-1">Totali</div>
+<div class="font-data-lg text-data-lg font-bold deep-navy-text text-2xl">48</div>
+</div>
+<div class="bg-white p-4 rounded-lg border border-outline-variant/20 relative overflow-hidden">
+<div class="absolute left-0 top-0 bottom-0 w-1 fluo-lime"></div>
+<div class="text-outline font-medium mb-1 pl-2">Bozze</div>
+<div class="font-data-lg text-data-lg font-bold deep-navy-text text-2xl pl-2">12</div>
+</div>
+<div class="bg-white p-4 rounded-lg border border-outline-variant/20 relative overflow-hidden">
+<div class="text-outline font-medium mb-1">Confermati</div>
+<div class="font-data-lg text-data-lg font-bold deep-navy-text text-2xl">31</div>
+</div>
+<div class="bg-white p-4 rounded-lg border border-outline-variant/20 relative overflow-hidden">
+<div class="text-outline font-medium mb-1">Locali</div>
+<div class="font-data-lg text-data-lg font-bold deep-navy-text text-2xl">5</div>
+</div>
+</section>
+<!-- FILTER ROW -->
+<section class="flex items-center justify-between mt-4">
+<div class="flex bg-white rounded-lg border border-outline-variant/20 overflow-hidden">
+<button class="px-6 py-2 deep-navy text-white font-medium border-r border-outline-variant/20">Tutti</button>
+<button class="px-6 py-2 hover:bg-surface-variant/50 text-on-surface font-medium border-r border-outline-variant/20 transition-colors">Bozze</button>
+<button class="px-6 py-2 hover:bg-surface-variant/50 text-on-surface font-medium border-r border-outline-variant/20 transition-colors">Confermati</button>
+<button class="px-6 py-2 hover:bg-surface-variant/50 text-on-surface font-medium transition-colors">Locali</button>
+</div>
+<div class="flex items-center gap-2 text-outline">
+<span class="material-symbols-outlined text-sm">sort</span>
+<span class="font-medium">Più recenti</span>
+</div>
+</section>
+<!-- CATALOG GRID -->
+<section class="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-gutter pb-xl mt-4">
+<!-- Card 1 -->
+<div class="bg-white rounded-[14px] border border-outline-variant/20 overflow-hidden flex flex-col card-hover transition-all cursor-pointer">
+<div class="aspect-square w-full relative bg-surface-container-low border-b border-outline-variant/20">
+<img alt="Stone Island Sweatshirt" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida/AP1WRLs8kQRLtM_P0wYwr8xZ5K7d10vbwUpapFOgkxIQ2-yz8zjPfgrvN2VfMEPZLJgNG4Q6cQBuFj3HOuaQgUyZmkh9Y7oJTpes7d9Y34Bx3kCtFuqRWLsG997ahR35pOWPpMW-tfygd6jneQqP_TAjH0bV99eCCCXd6X6yeswhfHRnlorqOQcnzUwrMIy297MUjBAPElfxWAdG9KaXV33j83qnSV7iLBXPaIbYej1GELB8vDgPJXmnD0siqwh1"/>
+<div class="absolute top-3 right-3 fluo-lime deep-navy-text font-label-caps text-label-caps px-2 py-1 rounded-[4px]">BOZZA</div>
+</div>
+<div class="p-4 flex flex-col gap-2 flex-1">
+<div class="font-title-md text-title-md deep-navy-text line-clamp-2">Felpa Stone Island · Felpa girocollo</div>
+<div class="mt-auto pt-2 border-t border-outline-variant/20 flex justify-between items-center text-outline">
+<span class="font-data-sm text-data-sm">Taglia L</span>
+</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-white rounded-[14px] border border-outline-variant/20 overflow-hidden flex flex-col card-hover transition-all cursor-pointer">
+<div class="aspect-square w-full relative bg-surface-container-low border-b border-outline-variant/20">
+<div class="w-full h-full bg-cover bg-center" data-alt="A high contrast, minimalist editorial product shot of Maison Margiela Tabi boots. The boots are black leather, presented on a stark white background with hard, directional lighting creating sharp shadows. The aesthetic is clean, brutalist fashion photography, emphasizing the unique split-toe silhouette. Shot in high resolution, straight-on angle." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuB4F8uV1xUEOQyze3ipMN6EZZw6pk3iOEDo9M3YV5cM0_KL0xfgUjr9jYfvr0bzrNI-xTVkWOZ4ncypOGhVENchzJShytOjfiSvHkQJdEErdJhTUjo3fIpg8MACGyoqfjCcMmXju4vSrQwowsgWNOeX3yEfE3ANI4WgjbHzbs_bc-n0e_1BBqW1adapxAIk0dKDZvKkQeKddMEjkq22rkFeTmBbNC4vHroqPwBwxEGKdo_ThFlfkCcGxmvlvt58A-lRP6PBV-6de81N')"></div>
+<div class="absolute top-3 right-3 fluo-lime deep-navy-text font-label-caps text-label-caps px-2 py-1 rounded-[4px]">BOZZA</div>
+</div>
+<div class="p-4 flex flex-col gap-2 flex-1">
+<div class="font-title-md text-title-md deep-navy-text line-clamp-2">Tabi Maison Margiela · Stivaletto</div>
+<div class="mt-auto pt-2 border-t border-outline-variant/20 flex justify-between items-center text-outline">
+<span class="font-data-sm text-data-sm">Taglia 39</span>
+</div>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="bg-white rounded-[14px] border border-outline-variant/20 overflow-hidden flex flex-col card-hover transition-all cursor-pointer">
+<div class="aspect-square w-full relative bg-surface-container-low border-b border-outline-variant/20">
+<div class="w-full h-full bg-cover bg-center" data-alt="A top-down, flat lay photograph of a vintage Missoni zigzag pattern sweater. The sweater features vibrant multicolored threads on a dark background. It is placed meticulously on a flat, neutral light-grey surface. The lighting is even and flat to showcase the complex knit pattern without deep shadows. Minimalist fashion archival style." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBloYcFnu7kv015PawoeenrSLVkJ3xQbYzPgJqXk0F9n-ARiEF0Wiis6g_RTD0sJF8bO0lk6aTxzlpTP03W7MO3Q9PyEzzUyIh9VMkyJCSAPl0czJsjPjwuRKqSKxXhkylm3xaFO10aZXSm22wLxLQvQtb1m9kufBPxHtz8fv9DmjLKW_0QlzQpjn_ZHfg-IgAQdTsdN93S7g9rhxpbkeSm4JQWMHtH_ZwWvT7atRz02z1si9yiBqr-Rf4XJfEVdcEai5Fr12262ISv')"></div>
+<div class="absolute top-3 right-3 deep-green text-white font-label-caps text-label-caps px-2 py-1 rounded-[4px]">CONFERMATO</div>
+</div>
+<div class="p-4 flex flex-col gap-2 flex-1">
+<div class="font-title-md text-title-md deep-navy-text line-clamp-2">Maglione Missoni · Girocollo zig-zag</div>
+<div class="mt-auto pt-2 border-t border-outline-variant/20 flex justify-between items-center text-outline">
+<span class="font-data-sm text-data-sm">Taglia M</span>
+<span class="font-data-sm text-data-sm deep-navy-text font-bold">B-08</span>
+</div>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="bg-white rounded-[14px] border border-outline-variant/20 overflow-hidden flex flex-col card-hover transition-all cursor-pointer">
+<div class="aspect-square w-full relative bg-surface-container-low border-b border-outline-variant/20">
+<div class="w-full h-full bg-cover bg-center" data-alt="A clean, objective product shot of a vintage Levi's 501 denim trucker jacket. The jacket is medium-wash blue denim, showing subtle signs of authentic wear. It is hung perfectly straight against a pristine white background. Studio lighting highlights the texture of the denim and the metallic hardware. High end vintage catalog aesthetic." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCyuDhm30GNZitMCKtDmVC552lsLFAC1AIW53GGUndwBCiBQxjLE3TH8PJckA5iBsc_hNZETX8ejetDrI25bwmw7B2q1DGO1eiRvnZOkMRb_tYH3EnkOBBhwaqb8czdt_ATUkOT4yaIVLZVP9o8VxQTJM7ZXAUGkR3vQ25OB4Ox-lHY3bkVgv-7k1o4IoHes-MsVtWKFFhAv_CZy-u_mNx4ljdJW43yKaEZn0S_gkecPUEdLVQ6ujPUAlvPz29Ue30sm7B5QFZv76D7')"></div>
+<div class="absolute top-3 right-3 steel-grey text-white font-label-caps text-label-caps px-2 py-1 rounded-[4px] flex items-center gap-1">
+<span class="material-symbols-outlined text-[10px]">cloud_off</span>
+                        LOCALE
+                    </div>
+</div>
+<div class="p-4 flex flex-col gap-2 flex-1">
+<div class="font-title-md text-title-md deep-navy-text line-clamp-2">Giacca Levi's 501 · Denim trucker</div>
+<div class="mt-auto pt-2 border-t border-outline-variant/20 flex justify-between items-center text-outline">
+<span class="font-data-sm text-data-sm">Taglia M</span>
+</div>
+</div>
+</div>
+<!-- Card 5 -->
+<div class="bg-white rounded-[14px] border border-outline-variant/20 overflow-hidden flex flex-col card-hover transition-all cursor-pointer">
+<div class="aspect-square w-full relative bg-surface-container-low border-b border-outline-variant/20">
+<div class="w-full h-full bg-cover bg-center" data-alt="A classic beige Burberry trench coat photographed in a stark, minimalist studio setting. The coat is fully buttoned and styled symmetrically. The background is an off-white #F6F7ED canvas color. Sharp, clinical lighting emphasizes the structure, belt details, and the iconic plaid lining visible at the open collar. Editorial precision." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAw9vMQc1kM2dLuzfyWVHggHgjv5k4Y5UGLnlMx24Faw3zLTcaH_IPAS5-6jNOzKWOoP7nsSfsklNfMMqcg2kW_sgxvwQe6YWKXXP4zRqJ21CnmmiwIER7gyyF_ZU85gdeIuUOjXvEK9trNQ3PU9XcnRk3tuVCOsz0wMhuGNPlRbij0HHI9zKMzgCABhwmwyofQ4TnJ-QeYuO55pdkeyIyb2h-kkCM3KhMP5ywI5VcUta0jgbiKuxheG5aedQTmLKBzhpueuVwomL2x')"></div>
+<div class="absolute top-3 right-3 deep-green text-white font-label-caps text-label-caps px-2 py-1 rounded-[4px]">CONFERMATO</div>
+</div>
+<div class="p-4 flex flex-col gap-2 flex-1">
+<div class="font-title-md text-title-md deep-navy-text line-clamp-2">Cappotto Burberry · Trench</div>
+<div class="mt-auto pt-2 border-t border-outline-variant/20 flex justify-between items-center text-outline">
+<span class="font-data-sm text-data-sm">Taglia 50</span>
+<span class="font-data-sm text-data-sm deep-navy-text font-bold">B-07</span>
+</div>
+</div>
+</div>
+<!-- Card 6 -->
+<div class="bg-white rounded-[14px] border border-outline-variant/20 overflow-hidden flex flex-col card-hover transition-all cursor-pointer">
+<div class="aspect-square w-full relative bg-surface-container-low border-b border-outline-variant/20">
+<div class="w-full h-full bg-cover bg-center" data-alt="A highly detailed close-up flat lay of a vintage Versace silk shirt featuring an ornate gold and black baroque print. The fabric is smooth and slightly reflective, capturing the studio light perfectly. Placed against a stark, dark navy #001F3F background for maximum contrast. The aesthetic is luxurious yet brutalist in its objective presentation." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD5Hqmrc45r613fzaxg-QEU9pRYuxWjYoQcZJejmLdST0_9oBe2S85I-J0oHM4wrtx6khnZu97Y-qYd-_Zg6YkLRWI4GqEfH9Dz4iGg9Ncvulz3VduY320wqPXpBZIkFUu1BZafrUaGeim4UQgki-fFsv2AfnjksjPFu5LM1ixONhLxZrLuFcMChi5fwqeH6aElwV-U__iKfsbYEXYN6Cshp5Rum7Nb_qjhXqOYUB8_OQvi80-CP9DSZohGM89ucV6o4lZGds088Jp_')"></div>
+<div class="absolute top-3 right-3 fluo-lime deep-navy-text font-label-caps text-label-caps px-2 py-1 rounded-[4px]">BOZZA</div>
+</div>
+<div class="p-4 flex flex-col gap-2 flex-1">
+<div class="font-title-md text-title-md deep-navy-text line-clamp-2">Camicia Versace Vintage · Seta stampata</div>
+<div class="mt-auto pt-2 border-t border-outline-variant/20 flex justify-between items-center text-outline">
+<span class="font-data-sm text-data-sm">Taglia L</span>
+</div>
+</div>
+</div>
+<!-- Card 7 -->
+<div class="bg-white rounded-[14px] border border-outline-variant/20 overflow-hidden flex flex-col card-hover transition-all cursor-pointer">
+<div class="aspect-square w-full relative bg-surface-container-low border-b border-outline-variant/20">
+<div class="w-full h-full bg-cover bg-center" data-alt="A sage green Alpha Industries MA-1 bomber jacket, shot straight on in a clean, high-key studio environment. The jacket is slightly puffed to show volume. The bright orange inner lining is visible at the collar. The lighting is crisp and even, eliminating soft shadows to maintain a strict, technical catalog appearance." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCOjyzdSvGhEWOwNplUJ70VtreuXu9FTmYYGi7N8LUFCLGwKugaIxVkYGdSujhFTWjNV4cRvxnboNESYbKYWl2uJVyOG0eFS3UUpmmclBppmHOmsqbeexJ-2Psi8QXoR86Nv2kK1XMlOes4jGgeQrfFUo1GYia-WN18hRCEsq6AdfoOrQvXUBL98lT1CElWbKAxsc13Kj16kJxtlpF0gD8MX59oqUvZUXjv1MAb5taOTPHoEfTWlH7v8G_yPf1dQts3D65Wi-fuiZsy')"></div>
+<div class="absolute top-3 right-3 deep-green text-white font-label-caps text-label-caps px-2 py-1 rounded-[4px]">CONFERMATO</div>
+</div>
+<div class="p-4 flex flex-col gap-2 flex-1">
+<div class="font-title-md text-title-md deep-navy-text line-clamp-2">Bomber Alpha Industries · MA-1</div>
+<div class="mt-auto pt-2 border-t border-outline-variant/20 flex justify-between items-center text-outline">
+<span class="font-data-sm text-data-sm">Taglia XL</span>
+<span class="font-data-sm text-data-sm deep-navy-text font-bold">B-06</span>
+</div>
+</div>
+</div>
+<!-- Card 8 -->
+<div class="bg-white rounded-[14px] border border-outline-variant/20 overflow-hidden flex flex-col card-hover transition-all cursor-pointer">
+<div class="aspect-square w-full relative bg-surface-container-low border-b border-outline-variant/20">
+<div class="w-full h-full bg-cover bg-center" data-alt="A sleek black Prada pleated midi skirt photographed against a stark white background. The pleats are perfectly arranged and sharp, emphasizing the geometric structure of the garment. Hard, directional light creates high contrast shadows in the folds, highlighting the minimalist, utilitarian aesthetic of 90s Prada design." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAfRrgDVzH2iL0oaeZYm5ZaHwTSuc3T9ssaVdEfpdNV7ZN-fC2CJgdCPflk77lcDyxkP_CXAhD5_iRnqN83L-0al4YewLnJHB6D4lUntBzwa0I_3-cxPU4sI0fHL0nUUhc2qJPvxG14iL30THC9nN-5bMVeD6t3A3vnEuIfyxBvIHCElW8LmyA-Bv23rRL_qqPHaVK5B7Z0Ey5qmeaARxMfC1UWbHWkQWqQ-7vnd4OR_-eOnaBwY1HGBKFy2YZYnTKYitOlqXxqG8NA')"></div>
+<div class="absolute top-3 right-3 fluo-lime deep-navy-text font-label-caps text-label-caps px-2 py-1 rounded-[4px]">BOZZA</div>
+</div>
+<div class="p-4 flex flex-col gap-2 flex-1">
+<div class="font-title-md text-title-md deep-navy-text line-clamp-2">Gonna Prada · Plissé</div>
+<div class="mt-auto pt-2 border-t border-outline-variant/20 flex justify-between items-center text-outline">
+<span class="font-data-sm text-data-sm">Taglia 42</span>
+</div>
+</div>
+</div>
+</section>
+</main>
+</body></html>

@@ -1,0 +1,101 @@
+{
+  "$meta": {
+    "name": "MAAT Design Tokens",
+    "version": "1.0",
+    "palette": "MP076",
+    "description": "Fonte unica dei token MAAT/Photo-to-Catalog. Due livelli: primitive (raw) + semantic (ruolo). I componenti consumano SOLO i semantic. Genera CSS variables / Tailwind config / theme RN.",
+    "doc": "DESIGN.md"
+  },
+
+  "primitive": {
+    "color": {
+      "canvas":    "#F6F7ED",
+      "white":     "#FFFFFF",
+      "navy-900":  "#001F3F",
+      "steel-600": "#5B6670",
+      "steel-400": "#9AA0A6",
+      "fluo":      "#DBE64C",
+      "fluo-700":  "#C8D43B",
+      "green-700": "#00804C",
+      "green-400": "#74C365",
+      "blue-700":  "#1E488F",
+      "red-500":   "#E5484D"
+    },
+    "font": {
+      "sans": "'Geist', system-ui, -apple-system, sans-serif",
+      "mono": "'JetBrains Mono', ui-monospace, monospace"
+    },
+    "fontWeight": { "regular": 400, "medium": 500, "semibold": 600, "bold": 700, "black": 800 },
+    "space": { "1": "4px", "2": "8px", "3": "12px", "4": "16px", "5": "24px", "6": "32px", "7": "48px", "8": "64px" },
+    "radius": { "sm": "8px", "slot": "10px", "card": "14px", "pill": "999px" },
+    "shadow": {
+      "e0": "none",
+      "e1": "0 1px 2px rgba(0,31,63,.04), 0 6px 20px rgba(0,31,63,.06)",
+      "e2": "0 2px 6px rgba(0,31,63,.08), 0 16px 40px rgba(0,31,63,.10)"
+    },
+    "duration": { "fast": "120ms", "base": "180ms", "slow": "400ms" },
+    "easing": { "standard": "cubic-bezier(.22,1,.36,1)", "spring": "stiffness:100; damping:20" },
+    "breakpoint": { "sm": "480px", "md": "768px", "lg": "1024px", "xl": "1400px" },
+    "z": { "base": 0, "sticky": 100, "dropdown": 200, "banner": 300, "modal": 400, "toast": 500 }
+  },
+
+  "semantic": {
+    "bg":             { "$value": "{primitive.color.canvas}",    "css": "--bg" },
+    "surface":        { "$value": "{primitive.color.white}",     "css": "--surface" },
+    "surface-dark":   { "$value": "{primitive.color.navy-900}",  "css": "--surface-dark" },
+    "text-primary":   { "$value": "{primitive.color.navy-900}",  "css": "--text-primary" },
+    "text-secondary": { "$value": "{primitive.color.steel-600}", "css": "--text-secondary" },
+    "text-tertiary":  { "$value": "{primitive.color.steel-400}", "css": "--text-tertiary" },
+    "text-on-dark":   { "$value": "{primitive.color.canvas}",    "css": "--text-on-dark" },
+    "border":         { "$value": "rgba(0,31,63,.10)",           "css": "--border" },
+
+    "accent":         { "$value": "{primitive.color.fluo}",      "css": "--accent", "note": "azione/attenzione, fill piatto" },
+    "accent-press":   { "$value": "{primitive.color.fluo-700}",  "css": "--accent-press" },
+    "on-accent":      { "$value": "{primitive.color.navy-900}",  "css": "--on-accent", "note": "testo su fluo (mai bianco)" },
+
+    "status-locale":     { "$value": "{primitive.color.steel-600}", "css": "--status-locale" },
+    "status-bozza":      { "$value": "{primitive.color.fluo}",      "css": "--status-bozza" },
+    "status-confermato": { "$value": "{primitive.color.green-700}", "css": "--status-confermato" },
+
+    "success": { "$value": "{primitive.color.green-700}", "css": "--success" },
+    "danger":  { "$value": "{primitive.color.red-500}",   "css": "--danger" },
+    "info":    { "$value": "{primitive.color.blue-700}",  "css": "--info" },
+
+    "focus-ring": { "$value": "0 0 0 3px rgba(219,230,76,.45)", "css": "--focus-ring" }
+  },
+
+  "type": {
+    "display":   { "font": "sans", "size": "clamp(34px,5vw,52px)", "weight": 800, "tracking": "-.03em", "leading": "1.02" },
+    "title-lg":  { "font": "sans", "size": "28px", "weight": 700, "tracking": "-.02em", "leading": "1.1" },
+    "title":     { "font": "sans", "size": "22px", "weight": 600, "tracking": "-.02em", "leading": "1.2" },
+    "subtitle":  { "font": "sans", "size": "17px", "weight": 600, "tracking": "-.01em", "leading": "1.3" },
+    "body":      { "font": "sans", "size": "15px", "weight": 400, "tracking": "0", "leading": "1.5" },
+    "body-sm":   { "font": "sans", "size": "13px", "weight": 400, "tracking": "0", "leading": "1.5" },
+    "label":     { "font": "sans", "size": "13px", "weight": 500, "tracking": "0", "leading": "1.4" },
+    "caption":   { "font": "sans", "size": "12px", "weight": 400, "tracking": "0", "leading": "1.4" },
+    "overline":  { "font": "mono", "size": "12px", "weight": 600, "tracking": ".12em", "transform": "uppercase" },
+    "data":      { "font": "mono", "size": "inherit", "weight": 500, "tracking": "0", "note": "SKU, misure, conteggi, timestamp" }
+  },
+
+  "component": {
+    "button": {
+      "primary":   { "bg": "{semantic.accent}", "text": "{semantic.on-accent}", "hover": "{semantic.accent-press}", "radius": "{primitive.radius.pill}" },
+      "ghost":     { "bg": "transparent", "text": "{semantic.text-primary}", "border": "{semantic.text-primary}" },
+      "danger":    { "bg": "transparent", "text": "{semantic.danger}" },
+      "disabled":  { "bg": "#E7E8DF", "text": "{semantic.text-tertiary}" }
+    },
+    "statusBadge": {
+      "bozza":      { "bg": "{semantic.status-bozza}", "text": "{semantic.on-accent}" },
+      "confermato": { "bg": "rgba(0,128,76,.12)", "text": "{semantic.status-confermato}" },
+      "locale":     { "bg": "rgba(91,102,112,.14)", "text": "{semantic.status-locale}" },
+      "rejected":   { "bg": "rgba(229,72,77,.12)", "text": "{semantic.danger}" }
+    },
+    "photoSlot": {
+      "empty":     { "border": "1.5px dashed #C7CDB8", "bg": "#FBFBF5" },
+      "loading":   { "shimmer": "linear-gradient(100deg,#ECEDE3 30%,#F5F6EC 50%,#ECEDE3 70%)" },
+      "validated": { "mark": "{semantic.success}" },
+      "rejected":  { "border": "2px {semantic.danger}" },
+      "required":  { "dot": "{semantic.accent}" }
+    }
+  }
+}

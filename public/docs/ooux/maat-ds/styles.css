@@ -1,0 +1,6 @@
+/* MAAT Design System — render closure.
+   Claude Design fornisce ai design generati SOLO la chiusura @import di questo file.
+   Tutto il CSS dei componenti deve essere raggiungibile da qui. */
+@import url('./fonts.css');
+@import url('./tokens.css');
+@import url('./components.css');

@@ -1,0 +1,103 @@
+<!-- SCRATCH / PROTOTIPO — animazione step demo onboarding MAAT (non committare, cancellabile) -->
+<!DOCTYPE html><html lang="it"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="./styles.css">
+<style>
+  body{padding:40px;display:flex;gap:40px;align-items:flex-start;flex-wrap:wrap;
+       background:radial-gradient(120% 90% at 15% -10%,rgba(219,230,76,.10),transparent 55%),var(--bg)}
+  .lab{font-family:var(--mono);font-size:11px;color:var(--ink-2);letter-spacing:.04em;margin-bottom:10px;text-transform:uppercase}
+
+  /* ============================================================
+     ANIMAZIONE DEMO — "l'AI legge il capo e crea i campi" (loop)
+     Timeline unica T=5000ms condivisa da tutti gli elementi.
+     Stagger via --i (0,1,2) su animation-delay. Solo transform/opacity/paint.
+     ============================================================ */
+
+  /* — osserva: banda di scansione che spazza il capo (moto lineare = scanner) — */
+  .oillo.demo-scan{overflow:hidden}
+  .oillo.demo-scan .oscan{position:absolute;inset:0;z-index:1;pointer-events:none;opacity:0;
+    background:linear-gradient(to bottom,
+      transparent 42%,
+      rgba(0,31,63,.06) 45%,
+      rgba(255,255,255,.65) 47.5%,
+      var(--fluo) 49%,
+      rgba(255,255,255,.65) 50.5%,
+      rgba(0,31,63,.06) 53%,
+      transparent 56%);
+    animation:maat-scan 5000ms linear infinite}
+
+  /* — crea i campi: valori che si materializzano in sequenza — */
+  .attr.seq .ar .v{animation:maat-field 5000ms cubic-bezier(.22,1,.36,1) infinite both;
+    animation-delay:calc(var(--i) * 300ms)}
+  .attr.seq .ar.check{animation:maat-stripe 5000ms cubic-bezier(.22,1,.36,1) infinite both;
+    animation-delay:calc(var(--i) * 300ms)}
+
+  @keyframes maat-scan{
+    0%{transform:translateY(-60%);opacity:0}
+    2%{opacity:1}
+    16%{transform:translateY(60%);opacity:1}
+    19%{transform:translateY(65%);opacity:0}
+    100%{transform:translateY(-60%);opacity:0}}
+
+  @keyframes maat-field{
+    0%,20%{opacity:0;transform:translateY(7px)}
+    27%{opacity:1;transform:translateY(0)}
+    80%{opacity:1;transform:translateY(0)}
+    87%,100%{opacity:0;transform:translateY(7px)}}
+
+  @keyframes maat-stripe{
+    0%,22%{box-shadow:inset 0 0 0 rgba(219,230,76,0)}
+    27%{box-shadow:inset 3px 0 0 var(--fluo)}
+    80%{box-shadow:inset 3px 0 0 var(--fluo)}
+    87%,100%{box-shadow:inset 0 0 0 rgba(219,230,76,0)}}
+
+  @media (prefers-reduced-motion:reduce){
+    .oillo.demo-scan .oscan{animation:none;opacity:0}
+    .attr.seq .ar .v{animation:none;opacity:1;transform:none}
+    .attr.seq .ar.check{animation:none;box-shadow:inset 3px 0 0 var(--fluo)}
+  }
+</style>
+</head>
+<body>
+
+  <!-- Prototipo 1: telefono demo a dimensione reale (come nel mockup) -->
+  <div>
+    <div class="lab">demo — dimensione reale nel telefono</div>
+    <div class="phone"><div class="pnotch"></div><div class="pscreen">
+      <div class="obar"><i class="done"></i><i class="done"></i><i class="cur"></i><i></i></div>
+      <div class="oblbl">Step 3 di 4</div>
+      <div class="obh1">Guardalo<br>lavorare</div>
+      <div class="oillo demo-scan">
+        <img src="assets/onboarding/illo-2-scan.png" alt="Un bomber vintage letto dall'AI che estrae gli attributi">
+        <i class="oscan"></i>
+        <div class="oai"><span class="pulse"></span>Estrazione AI</div>
+      </div>
+      <div class="attr seq">
+        <div class="ar check" style="--i:0"><span class="k">Brand</span><span class="v">Carhartt WIP<span class="tag">AI</span></span></div>
+        <div class="ar check" style="--i:1"><span class="k">Categoria</span><span class="v">Bomber<span class="tag">AI</span></span></div>
+        <div class="ar" style="--i:2"><span class="k">Prezzo</span><span class="v mono">€ 68</span></div>
+      </div>
+      <div class="ofoot">
+        <button class="btn btn-primary obtn">Connetti Vinted per pubblicare</button>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- Prototipo 2: solo la scena (oillo) ingrandita, per giudicare scan + card -->
+  <div>
+    <div class="lab">scena ingrandita — scan + card campi</div>
+    <div style="width:420px">
+      <div class="oillo demo-scan" style="min-height:280px;border-radius:16px">
+        <img src="assets/onboarding/illo-2-scan.png" alt="">
+        <i class="oscan"></i>
+        <div class="otag">Demo</div>
+        <div class="oai"><span class="pulse"></span>Estrazione AI</div>
+      </div>
+      <div class="attr seq" style="margin-top:12px;max-width:none">
+        <div class="ar check" style="--i:0"><span class="k">Brand</span><span class="v">Carhartt WIP<span class="tag">AI</span></span></div>
+        <div class="ar check" style="--i:1"><span class="k">Categoria</span><span class="v">Bomber<span class="tag">AI</span></span></div>
+        <div class="ar" style="--i:2"><span class="k">Prezzo</span><span class="v mono">€ 68</span></div>
+      </div>
+    </div>
+  </div>
+
+</body></html>

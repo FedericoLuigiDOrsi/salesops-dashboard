@@ -1,0 +1,37 @@
+<!-- @dsCard group="Pattern" name="Stat, Banner, Toast, Accordion, Progress, Modal, Skeleton" -->
+<!DOCTYPE html><html lang="it"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="./styles.css"></head>
+<body><div class="stage">
+  <div class="sub">StatTile — stat row Lista capi</div>
+  <div class="demo"><div class="row">
+    <div class="stat"><div class="num">48</div><div class="lab">Totali</div></div>
+    <div class="stat attn"><div class="num">12</div><div class="lab">Bozze</div></div>
+    <div class="stat"><div class="num">31</div><div class="lab">Confermati</div></div>
+    <div class="stat"><div class="num">05</div><div class="lab">Locali</div></div>
+  </div></div>
+  <div class="sub">Banner — warning · offline</div>
+  <div class="demo" style="display:flex;flex-direction:column;gap:12px">
+    <div class="banner banner-warn"><span class="bi">!</span>Stai modificando un capo già a listino. Le modifiche aggiornano l'annuncio di vendita.</div>
+    <div class="banner banner-info"><span class="bi">&#8623;</span>Sei offline. I capi vengono salvati in locale e sincronizzati appena torna la rete.</div>
+  </div>
+  <div class="sub">Toast</div>
+  <div class="demo" style="display:flex;flex-direction:column;gap:12px;align-items:flex-start">
+    <div class="toast"><span class="tk ok">&#10003;</span>Capo confermato · <span class="sku">SKU B-09</span> generato</div>
+    <div class="toast"><span class="tk loc">&#8623;</span>Salvato in locale · sync al ritorno della rete</div>
+  </div>
+  <div class="sub">Accordion · Progress / Sequence</div>
+  <div class="demo" style="display:flex;flex-direction:column;gap:22px">
+    <div class="acc"><div class="ah">Misure<span class="chev">&#9662;</span></div><div class="ab"><div class="mr"><span>Larghezza</span><span class="mv">54 cm</span></div><div class="mr"><span>Lunghezza</span><span class="mv">71 cm</span></div><div class="mr"><span>Manica</span><span class="mv">63 cm</span></div></div></div>
+    <div class="seq"><span class="d done"></span><span class="d done"></span><span class="d cur"></span><span class="d"></span><span class="d"></span><span class="d"></span><span class="lbl">3 / 6 · Brand</span></div>
+    <div class="proc"><div class="pt"><span>Elaborazione AI…</span><span class="mono">~8s</span></div><div class="bar"><i></i></div></div>
+  </div>
+  <div class="sub">Modal di conferma · Skeleton</div>
+  <div class="demo" style="display:flex;gap:32px;flex-wrap:wrap;align-items:flex-start">
+    <div class="modal">
+      <h4>Eliminare questo capo?</h4>
+      <p>Felpa Stone Island verrà rimossa definitivamente, insieme alle sue foto e notifiche. L'azione non è reversibile.</p>
+      <div class="acts"><button class="btn btn-ghost">Annulla</button><button class="btn btn-danger">Elimina</button></div>
+    </div>
+    <div class="skel"><div class="sp sh"></div><div class="sb"><div class="l sh" style="width:70%"></div><div class="l sh" style="width:45%"></div></div></div>
+  </div>
+</div></body></html>

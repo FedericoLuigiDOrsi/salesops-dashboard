@@ -1,0 +1,94 @@
+<!-- EXPORT — logica animazione "l'AI legge → crea i campi", portabile e riusabile.
+     Copia il blocco <style id="ai-scan-fields"> nel tuo progetto e mappa 3 hook (vedi in fondo).
+     Apri servito da maat-ds: http://localhost:5610/maat-ds/_anim-export.html -->
+<!DOCTYPE html><html lang="it"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style id="ai-scan-fields">
+/* =============================================================
+   AI SCAN → FIELDS  ·  animazione riusabile (CSS puro, loop)
+   Dipendenze: nessuna. Solo transform/opacity/box-shadow.
+   Personalizzi tutto da queste variabili:
+   ============================================================= */
+:root{
+  --ai-period:5000ms;                 /* durata del giro completo */
+  --ai-stagger:300ms;                 /* ritardo tra un campo e il successivo */
+  --ai-accent:#DBE64C;                /* colore-azione (scan + stripe) */
+  --ai-ease:cubic-bezier(.22,1,.36,1);
+}
+
+/* HOOK 1 — contenitore illustrazione: ci passa sopra la banda di scansione */
+[data-ai-scan]{position:relative;overflow:hidden}
+[data-ai-scan] > .ai-beam{
+  position:absolute;inset:0;z-index:1;pointer-events:none;opacity:0;
+  background:linear-gradient(to bottom,
+    transparent 42%, rgba(0,0,0,.06) 45%, rgba(255,255,255,.65) 47.5%,
+    var(--ai-accent) 49%, rgba(255,255,255,.65) 50.5%, rgba(0,0,0,.06) 53%, transparent 56%);
+  animation:ai-scan var(--ai-period) linear infinite}
+
+/* HOOK 2 — card dei campi: ogni .ai-val si materializza in sequenza (--i = ordine) */
+[data-ai-seq] .ai-val{
+  animation:ai-field var(--ai-period) var(--ai-ease) infinite both;
+  animation-delay:calc(var(--i) * var(--ai-stagger))}
+/* HOOK 3 (opzionale) — righe "confermate": stripe d'accento che si accende con il valore */
+[data-ai-seq] [data-ai-check]{
+  animation:ai-stripe var(--ai-period) var(--ai-ease) infinite both;
+  animation-delay:calc(var(--i) * var(--ai-stagger))}
+
+@keyframes ai-scan{
+  0%{transform:translateY(-60%);opacity:0}
+  2%{opacity:1}
+  16%{transform:translateY(60%);opacity:1}
+  19%{transform:translateY(65%);opacity:0}
+  100%{transform:translateY(-60%);opacity:0}}
+@keyframes ai-field{
+  0%,20%{opacity:0;transform:translateY(7px)}
+  27%{opacity:1;transform:translateY(0)}
+  80%{opacity:1;transform:translateY(0)}
+  87%,100%{opacity:0;transform:translateY(7px)}}
+@keyframes ai-stripe{
+  0%,22%{box-shadow:inset 0 0 0 transparent}
+  27%{box-shadow:inset 3px 0 0 var(--ai-accent)}
+  80%{box-shadow:inset 3px 0 0 var(--ai-accent)}
+  87%,100%{box-shadow:inset 0 0 0 transparent}}
+
+/* Accessibilità: niente moto, stato finale già visibile */
+@media (prefers-reduced-motion:reduce){
+  [data-ai-scan] > .ai-beam{animation:none;opacity:0}
+  [data-ai-seq] .ai-val{animation:none;opacity:1;transform:none}
+  [data-ai-seq] [data-ai-check]{animation:none;box-shadow:inset 3px 0 0 var(--ai-accent)}
+}
+</style>
+
+<style>
+/* --- stile SOLO della demo qui sotto, non fa parte dell'export --- */
+body{margin:0;padding:40px;font-family:system-ui,-apple-system,sans-serif;background:#F6F7ED;color:#001F3F;display:flex;gap:40px;flex-wrap:wrap}
+.demo{width:320px}
+.lab{font:600 11px/1 ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase;color:#5B6670;margin-bottom:10px}
+.illo{min-height:180px;border-radius:14px;background:rgba(0,31,63,.03);border:1px solid rgba(0,31,63,.10)}
+.illo img{width:100%;height:100%;object-fit:cover;display:block;border-radius:14px}
+.card{margin-top:12px;border:1px solid rgba(0,31,63,.10);border-radius:12px;overflow:hidden;background:#fff}
+.row{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid rgba(0,31,63,.10)}
+.row:last-child{border-bottom:0}
+.row .k{font-size:13px;color:#5B6670}
+.row .ai-val{font:600 13px/1 ui-monospace,monospace;display:flex;align-items:center;gap:8px}
+.row .tag{font:600 9px/1 ui-monospace,monospace;text-transform:uppercase;letter-spacing:.06em;background:#DBE64C;color:#001F3F;padding:3px 6px;border-radius:4px}
+</style>
+</head>
+<body>
+
+  <div class="demo">
+    <div class="lab">Export in azione</div>
+    <!-- HOOK 1: data-ai-scan sul contenitore + <span class="ai-beam"> come primo/ultimo figlio -->
+    <!-- placeholder: nel progetto reale sostituisci con la foto/illustrazione del capo -->
+    <div class="illo" data-ai-scan>
+      <span class="ai-beam"></span>
+    </div>
+    <!-- HOOK 2: data-ai-seq sulla card · --i = ordine · .ai-val = ciò che si materializza
+         HOOK 3: data-ai-check sulle righe che devono accendere la stripe -->
+    <div class="card" data-ai-seq>
+      <div class="row" data-ai-check style="--i:0"><span class="k">Brand</span><span class="ai-val">Carhartt WIP<span class="tag">AI</span></span></div>
+      <div class="row" data-ai-check style="--i:1"><span class="k">Categoria</span><span class="ai-val">Bomber<span class="tag">AI</span></span></div>
+      <div class="row"               style="--i:2"><span class="k">Prezzo</span><span class="ai-val">€ 68</span></div>
+    </div>
+  </div>
+
+</body></html>

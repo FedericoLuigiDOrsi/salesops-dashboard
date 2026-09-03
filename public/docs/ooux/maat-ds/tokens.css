@@ -1,0 +1,39 @@
+/* ============================================================
+   MAAT DESIGN SYSTEM — TOKEN CONTRACT (single source of truth)
+   Palette MP076 · web-first · high-contrast editorial
+   Sync target: Claude Design (/design-sync)
+   ============================================================ */
+:root{
+  /* — Neutrals — */
+  --bg:#F6F7ED;            /* Praxeti White — canvas */
+  --surface:#FFFFFF;        /* Pure Surface — cards */
+  --ink:#001F3F;            /* Midnight Mirage — near-black (NEVER #000) */
+  --ink-2:#5B6670;          /* Muted Steel — secondary text */
+  --ink-3:#9AA0A6;          /* tertiary / placeholder */
+  --hairline:rgba(0,31,63,.10);
+
+  /* — Accent (signature, flat, never glowing) — */
+  --fluo:#DBE64C;           /* First Colors of Spring — action / attention */
+  --fluo-press:#C8D43B;
+  --on-fluo:#001F3F;        /* text on fluo */
+
+  /* — Semantic — */
+  --green:#00804C;          /* Picture Book Green — Confermato/validated */
+  --green-soft:#74C365;     /* Mantis — success soft */
+  --blue:#1E488F;           /* Nuit Blanche — info/link (rare) */
+  --red:#E5484D;            /* Signal Red — rejected/error only */
+
+  /* — Shape & depth — */
+  --r-pill:999px;
+  --r-card:14px;
+  --r-slot:10px;
+  --shadow:0 1px 2px rgba(0,31,63,.04), 0 6px 20px rgba(0,31,63,.06);
+  --shadow-lift:0 2px 6px rgba(0,31,63,.08), 0 16px 40px rgba(0,31,63,.10);
+
+  /* — Type — */
+  --font:'Geist', system-ui, -apple-system, sans-serif;
+  --mono:'JetBrains Mono', ui-monospace, monospace;
+
+  /* — Space (4px base) — */
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px; --s7:48px; --s8:64px;
+}

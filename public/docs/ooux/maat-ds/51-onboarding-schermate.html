@@ -1,0 +1,1352 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MAAT · Mockup nuove schermate onboarding</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ── Token MP076 (specchio di mobile/src/theme.ts) ─────────────────────── */
+  :root {
+    --bg: #F6F7ED;            /* canvas warm-white */
+    --surface: #FFFFFF;
+    --surface-dark: #001F3F;  /* near-black */
+    --secondary: #ECEDE3;
+    --text: #001F3F;
+    --text-2: #5B6670;
+    --text-3: #9AA0A6;
+    --on-accent: #001F3F;
+    --accent: #DBE64C;        /* fluo — solo azione/attenzione */
+    --accent-pressed: #C8D43B;
+    --border: rgba(0,31,63,.10);
+    --border-strong: rgba(0,31,63,.18);
+    --success: #00804C;
+    --danger: #E5484D;
+    --accent-soft: rgba(219,230,76,.14);
+    --success-soft: rgba(0,128,76,.12);
+    --danger-soft: rgba(229,72,77,.10);
+    --accent-ink: #6E6E00; /* testo/pill sullo stato "verifica" — il fluo pieno non è leggibile come testo */
+    --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--surface-dark);
+    --sans: 'Geist', -apple-system, system-ui, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --r-sm: 8px; --r-slot: 10px; --r-card: 14px; --r-pill: 999px;
+    --e1: 0 6px 14px rgba(0,31,63,.08);
+    --e2: 0 12px 28px rgba(0,31,63,.12);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  /* Focus-visible unico per tutti gli interattivi (tastiera/switch-control) */
+  button:focus-visible, [role="button"]:focus-visible, [tabindex]:focus-visible, a:focus-visible {
+    outline: none; box-shadow: var(--focus-ring); border-radius: inherit;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .skel, .work-dot, .sdot, .brand-dot { animation: none !important; }
+  }
+  body {
+    background: #E7E8DD;
+    font-family: var(--sans);
+    color: var(--text);
+    padding: 40px 24px 80px;
+  }
+  .board { display: flex; gap: 40px; flex-wrap: wrap; justify-content: center; align-items: flex-start; }
+  .frame-wrap { display: flex; flex-direction: column; gap: 12px; align-items: center; }
+  .frame-label { font-family: var(--mono); font-size: 11px; letter-spacing: 1.4px; text-transform: uppercase; color: var(--text-2); }
+
+  /* Phone frame 390×844 */
+  .phone {
+    width: 390px; height: 844px; background: var(--bg);
+    border-radius: 40px; border: 1px solid var(--border-strong);
+    box-shadow: var(--e2); overflow: hidden;
+    display: flex; flex-direction: column; padding: 54px 20px 28px;
+    position: relative;
+  }
+  .notch { position: absolute; top: 18px; left: 50%; transform: translateX(-50%); width: 110px; height: 24px; background: var(--surface-dark); border-radius: var(--r-pill); }
+
+  /* ── Topbar ── */
+  .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+  .brand { display: flex; align-items: center; gap: 8px; }
+  .brand-dot { width: 8px; height: 8px; border-radius: 999px; background: var(--accent); }
+  .brand-txt { font-family: var(--mono); font-weight: 600; font-size: 14px; letter-spacing: 1.5px; }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .avatar { width: 30px; height: 30px; border-radius: 999px; background: var(--accent); display: grid; place-items: center; font-family: var(--mono); font-weight: 600; font-size: 11px; color: var(--on-accent); }
+
+  /* ── Testo ── */
+  .eyebrow { font-family: var(--mono); font-weight: 600; font-size: 11px; letter-spacing: 1.4px; text-transform: uppercase; color: var(--text-2); }
+  h1 { font-weight: 700; font-size: 26px; letter-spacing: -.5px; margin-top: 8px; line-height: 1.18; }
+  .muted { font-size: 13px; color: var(--text-2); line-height: 1.45; }
+  .mono { font-family: var(--mono); }
+
+  /* ── Choice card (tile grande verticale — variante della ChoiceCard del kit) ── */
+  .choice {
+    display: flex; align-items: center; gap: 16px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card);
+    padding: 22px 18px; min-height: 88px; box-shadow: var(--e1); cursor: pointer;
+  }
+  .choice:active { background: var(--secondary); transform: translateY(1px); }
+  .choice-icon { width: 56px; height: 56px; border-radius: var(--r-slot); background: var(--secondary); display: grid; place-items: center; flex: none; }
+  .choice-icon.rec { background: var(--accent); }
+  .choice-title { font-weight: 600; font-size: 17px; display: flex; align-items: center; gap: 8px; }
+  .choice-desc { font-size: 13px; color: var(--text-2); line-height: 1.4; margin-top: 3px; }
+  .rec-badge { background: var(--accent); border-radius: 999px; padding: 2px 7px; font-family: var(--mono); font-weight: 600; font-size: 9px; letter-spacing: .8px; color: var(--on-accent); }
+  .chev { color: var(--text-3); flex: none; }
+
+  /* ── Requisiti set foto ── */
+  .req-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card); padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+  .req-row { display: flex; align-items: center; justify-content: space-between; }
+  .req-title { font-family: var(--mono); font-weight: 600; font-size: 11px; letter-spacing: 1.4px; text-transform: uppercase; color: var(--text-2); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border); background: var(--surface); border-radius: 999px; padding: 5px 10px; font-weight: 500; font-size: 12px; }
+  .chip .star { color: var(--danger); font-weight: 700; }
+  .chip.opt { color: var(--text-2); background: var(--secondary); border-color: transparent; }
+
+  /* ── Bottoni ── */
+  .btn { height: 52px; border-radius: 999px; display: grid; place-items: center; font-weight: 600; font-size: 16px; padding: 0 24px; cursor: pointer; border: none; font-family: var(--sans); transition: transform .12s ease, background .12s ease, filter .12s ease; }
+  .btn:active { transform: translateY(1px); }
+  .btn-ghost { background: var(--surface); border: 1px solid var(--border-strong); color: var(--text); }
+  .btn-ghost:active { background: var(--secondary); }
+  .btn-ghost.danger { color: var(--danger); }
+  .btn-primary { background: var(--accent); color: var(--on-accent); }
+  .btn-primary:active { background: var(--accent-pressed); }
+  .btn-sm { height: 44px; font-size: 15px; }
+
+  @keyframes pulse { 50% { opacity: .3; } }
+
+  /* ── Tip rotante dal Second Brain (vive dentro .tip-float) ── */
+  .tip-eyebrow { font-family: var(--mono); font-weight: 600; font-size: 10px; letter-spacing: 1.4px; text-transform: uppercase; color: var(--text-2); }
+  .tip-cat { font-family: var(--mono); font-weight: 600; font-size: 9px; letter-spacing: .8px; border-radius: 999px; padding: 3px 8px; }
+  /* Categorie decorative: nessuna usa fluo/success/danger — quei colori restano riservati agli stati (azione/verifica/errore) */
+  .tip-cat.vintage     { background: rgba(122,86,56,.14); color: #7A5638; }
+  .tip-cat.piattaforma { background: rgba(15,110,104,.12); color: #0F6E68; }
+  .tip-cat.mercato     { background: rgba(91,102,112,.12); color: var(--text-2); }
+  .tip-cat.pop         { background: rgba(30,72,143,.10); color: #1E488F; }
+  .tip-cat.maat        { background: var(--surface-dark); color: #F6F7ED; }
+  .tip-text { font-size: 15px; line-height: 1.5; color: var(--text); flex: 1; transition: opacity .35s ease; }
+  .tip-text.fading { opacity: 0; }
+
+  /* Finestra flottante dei consigli (esperimento B2): galleggia sopra lo skeleton */
+  /* In-flow (non assoluto): "flotta" solo nello stile — bordo+ombra elevata — mai sovrapposto ad altro contenuto */
+  .tip-float { background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--r-card); box-shadow: var(--e2); padding: 13px 15px 15px; display: flex; flex-direction: column; gap: 9px; margin-top: 18px; }
+  .text-link { font-family: var(--sans); font-weight: 600; font-size: 13px; color: var(--text-2); cursor: pointer; padding: 10px; display: inline-block; }
+  .text-link.danger { color: var(--danger); }
+  .text-link:active { opacity: .6; }
+  .tip-float-bar { display: flex; align-items: center; justify-content: space-between; }
+
+  .spacer { flex: 1; }
+  .foot-note { text-align: center; font-size: 12px; color: var(--text-2); margin-top: 14px; }
+
+  /* ══ VARIANTE B — attesa produttiva ══════════════════════════════════════ */
+  /* Barra di elaborazione DETERMINATA (tra foto e scheda): % aggregata + tempo stimato */
+  .proc-bar { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card); padding: 14px 14px 16px; margin: 20px 0 4px; display: flex; flex-direction: column; gap: 10px; box-shadow: var(--e1); }
+  .proc-bar-top { display: flex; align-items: center; justify-content: space-between; }
+  .proc-bar-title { display: flex; align-items: center; gap: 8px; }
+  .proc-bar-title .work-dot { width: 6px; height: 6px; border-radius: 999px; background: var(--accent); animation: pulse 1.2s ease-in-out infinite; }
+  .proc-bar-title span { font-family: var(--mono); font-weight: 600; font-size: 11px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text-2); }
+  .pbar { height: 8px; border-radius: 999px; background: rgba(0,31,63,.08); overflow: hidden; }
+  .pbar .fill { height: 100%; border-radius: 999px; background: var(--accent); transition: width .4s ease; }
+  .proc-bar-meta { display: flex; align-items: center; justify-content: space-between; }
+
+  /* Sezione */
+  .sec-head { display: flex; align-items: center; justify-content: space-between; margin: 22px 0 12px; }
+  .sec-title { font-family: var(--mono); font-weight: 600; font-size: 11px; letter-spacing: 1.4px; text-transform: uppercase; color: var(--text-2); }
+
+  /* Skeleton shimmer per i campi in preparazione */
+  .skel { background: linear-gradient(90deg, #ECEDE3 25%, #F4F5EC 37%, #ECEDE3 63%); background-size: 400% 100%; animation: shimmer 1.5s ease infinite; border-radius: 6px; }
+  @keyframes shimmer { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
+  .skel-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card); padding: 14px 14px; display: flex; flex-direction: column; gap: 9px; margin-bottom: 10px; }
+
+  /* ══ VARIANTE C — check AI con confidence ════════════════════════════════ */
+  .conf-filter { display: flex; gap: 8px; margin: 6px 0 18px; }
+  .conf-chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border-strong); background: var(--surface); border-radius: 999px; padding: 11px 15px; min-height: 40px; font-weight: 500; font-size: 12px; cursor: pointer; }
+  .conf-chip:active { background: var(--secondary); }
+  .conf-chip.on { background: var(--surface-dark); color: var(--text-on-dark, #F6F7ED); border-color: var(--surface-dark); }
+  .conf-chip.on:active { filter: brightness(1.2); }
+  .conf-chip .n { font-family: var(--mono); font-weight: 600; }
+
+  /* cursor+active: rinforza "tocca per correggere" su OGNI campo, non solo dove c'è la matita visibile */
+  .field { border: 1px solid var(--border); background: var(--surface); border-radius: var(--r-card); padding: 9px 13px 10px 15px; margin-bottom: 8px; position: relative; overflow: hidden; cursor: pointer; }
+  .field:active { background: var(--secondary); }
+  .field.media:active { background: rgba(219,230,76,.24); }
+  .field.bassa:active { background: rgba(229,72,77,.16); }
+  .field .rail { position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: transparent; }
+  .field.media { background: var(--accent-soft); }
+  .field.media .rail { background: var(--accent); }
+  .field.bassa { background: var(--danger-soft); }
+  .field.bassa .rail { background: var(--danger); }
+  .field-label { font-family: var(--mono); font-weight: 600; font-size: 10px; letter-spacing: 1.1px; text-transform: uppercase; color: var(--text-2); }
+  .field-body { display: flex; align-items: center; gap: 10px; margin-top: 2px; }
+  .field-val { font-size: 16px; font-weight: 500; color: var(--text); flex: 1; }
+  .field-val.empty { color: var(--text-3); font-weight: 400; font-style: italic; }
+
+  /* Confidence: alta = discreta (check + % smorzato); media/bassa = pill che attira l'occhio */
+  .conf { display: inline-flex; align-items: center; gap: 5px; flex: none; }
+  .conf-dot { width: 7px; height: 7px; border-radius: 999px; }
+  .conf.alta .conf-dot { background: var(--success); }
+  .conf.media .conf-dot { background: var(--accent); }
+  .conf.bassa .conf-dot { background: var(--danger); }
+  .conf-pct { font-family: var(--mono); font-weight: 600; font-size: 12px; }
+  .conf.alta .conf-pct { color: var(--text-2); font-weight: 500; }
+  .conf.media .conf-pct, .conf.bassa .conf-pct { color: var(--text); }
+  .conf-tag { font-family: var(--mono); font-weight: 600; font-size: 9px; letter-spacing: .5px; text-transform: uppercase; padding: 2px 7px; border-radius: 999px; }
+  .conf.media .conf-tag { color: var(--accent-ink); background: rgba(219,230,76,.30); }
+  .conf.bassa .conf-tag { color: var(--danger); background: rgba(229,72,77,.14); }
+  /* pencil di modifica: chiarisce che il valore è editabile */
+  .field-edit { flex: none; opacity: .55; }
+
+  /* ══ Schermata intermedia — Etichettatura sequenziale ════════════════════ */
+  .assign-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card); padding: 14px; box-shadow: var(--e1); }
+  .assign-top { display: flex; gap: 14px; }
+  .assign-left { width: 44%; display: flex; flex-direction: column; gap: 8px; }
+  .assign-right { flex: 1; display: flex; flex-direction: column; gap: 7px; }
+  .hero-photo { width: 100%; aspect-ratio: 3/4; border-radius: var(--r-slot); background: var(--secondary); border: 2px solid var(--accent); display: grid; place-items: center; position: relative; }
+  .hero-photo svg { opacity: .35; }
+  .hero-count { position: absolute; top: 6px; left: 6px; font-family: var(--mono); font-weight: 600; font-size: 10px; letter-spacing: .5px; background: var(--surface-dark); color: #F6F7ED; padding: 3px 8px; border-radius: 999px; }
+  .queue { display: flex; gap: 6px; }
+  .qthumb { width: 40px; height: 40px; border-radius: 8px; background: var(--secondary); border: 1px solid var(--border); flex: none; display: grid; place-items: center; position: relative; }
+  .qthumb svg { opacity: .35; }
+  .qthumb.on { border: 2px solid var(--accent); }
+  .qthumb.done::after { content: ""; position: absolute; inset: 0; background: rgba(0,128,76,.14); border-radius: 7px; }
+  .qthumb .qcheck { position: absolute; top: -4px; right: -4px; width: 14px; height: 14px; border-radius: 999px; background: var(--success); display: grid; place-items: center; z-index: 1; }
+
+  .assign-q { font-weight: 600; font-size: 14px; margin-bottom: 1px; }
+  .label-list { display: flex; flex-direction: column; gap: 6px; }
+  .label-opt { display: flex; align-items: center; gap: 6px; padding: 9px 11px; border: 1px solid var(--border); border-radius: var(--r-slot); background: var(--surface); font-family: var(--sans); font-weight: 500; font-size: 13px; color: var(--text); cursor: pointer; text-align: left; }
+  .label-opt:active { background: var(--secondary); }
+  .label-opt.done { opacity: .42; }
+  .label-opt .req { color: var(--danger); font-weight: 700; }
+  .label-opt .aim { margin-left: auto; }
+  .label-opt .done-check { margin-left: auto; }
+  .assign-hint { display: flex; align-items: center; gap: 6px; margin-top: 10px; }
+  .assign-hint .work-dot { width: 6px; height: 6px; border-radius: 999px; background: var(--accent); flex: none; }
+  .assign-hint span { font-size: 12px; color: var(--text-2); line-height: 1.4; }
+
+  /* Phone che cresce per schermate lunghe (scroll reale nell'app) */
+  .phone.tall { height: auto; min-height: 844px; padding-bottom: 30px; }
+
+  /* ══ Riga di stato elaborazione (spiega cosa sta facendo l'AI) ═══════════ */
+  .proc-status { display: flex; align-items: center; gap: 7px; margin-top: 13px; }
+  .proc-status .sdot { width: 5px; height: 5px; border-radius: 999px; background: var(--accent); animation: pulse 1.2s ease-in-out infinite; flex: none; }
+  .proc-status span { font-size: 13px; color: var(--text-2); transition: opacity .35s ease; }
+  .proc-status span.fading { opacity: 0; }
+
+  /* Bottone nascondi la finestra flottante (al posto dei pallini mac) */
+  .tip-float-x { width: 36px; height: 36px; border-radius: 999px; border: 1px solid var(--border-strong); background: var(--surface); display: grid; place-items: center; cursor: pointer; flex: none; }
+  .tip-float-x:active { background: var(--secondary); }
+
+  /* ══ ArUco toggle (schermata 1) ══════════════════════════════════════════ */
+  /* Piatto (solo hairline, niente ombra): è un'opzione secondaria, non deve pesare quanto le scelte primarie */
+  .aruco-toggle { display: flex; align-items: center; gap: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-card); padding: 14px; }
+  .aruco-ico { width: 40px; height: 40px; border-radius: var(--r-slot); background: var(--secondary); display: grid; place-items: center; flex: none; }
+  .switch { width: 46px; height: 28px; border-radius: 999px; background: var(--accent); position: relative; flex: none; }
+  .switch::after { content: ""; position: absolute; top: 3px; left: 21px; width: 22px; height: 22px; border-radius: 999px; background: #fff; box-shadow: var(--e1); }
+  .switch.off { background: rgba(0,31,63,.14); }
+  .switch.off::after { left: 3px; }
+
+  /* ══ C — explainer slim + dismiss + legenda inline ═══════════════════════ */
+  .explain-slim { display: flex; align-items: flex-start; gap: 9px; background: var(--secondary); border-radius: var(--r-sm); padding: 10px 12px; }
+  .explain-slim svg { flex: none; margin-top: 1px; }
+  .explain-slim p { font-size: 12px; line-height: 1.4; color: var(--text-2); flex: 1; }
+  .explain-slim b { color: var(--text); font-weight: 600; }
+  .explain-dismiss { font-family: var(--mono); font-size: 10px; letter-spacing: .5px; text-transform: uppercase; color: var(--text-2); white-space: nowrap; cursor: pointer; align-self: stretch; display: flex; align-items: center; padding: 0 4px; min-height: 40px; }
+  .explain-dismiss:active { color: var(--text); }
+  .legend-inline { display: flex; gap: 14px; margin: 10px 2px 0; flex-wrap: wrap; }
+  .legend-inline span { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-2); }
+  .legend-inline i { width: 7px; height: 7px; border-radius: 999px; flex: none; }
+
+  /* Banner "foto modificate → rielabora" — versione alleggerita: icona non piena, bordo sottile (il fluo pieno resta solo sulla CTA Conferma) */
+  .reproc-banner { display: flex; align-items: center; gap: 11px; background: var(--accent-soft); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: var(--r-card); padding: 12px 13px; }
+  .reproc-banner .rp-ico { width: 30px; height: 30px; border-radius: 999px; background: var(--surface); border: 1px solid var(--border-strong); display: grid; place-items: center; flex: none; }
+  .reproc-banner .txt { flex: 1; font-size: 12px; color: var(--text); line-height: 1.4; }
+
+  /* Sezioni attributi + griglia 2-col per spezzare la monotonia */
+  .attr-sec { font-family: var(--mono); font-weight: 600; font-size: 10px; letter-spacing: 1.4px; text-transform: uppercase; color: var(--text-2); margin: 20px 2px 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  .field-grid { display: flex; gap: 8px; margin-bottom: 8px; }
+  .field-grid > .field { flex: 1; margin-bottom: 0; min-width: 0; }
+
+  /* Campo a bassa confidence: valore come input + suggerimenti AI */
+  .field-input { margin-top: 6px; background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--r-sm); padding: 9px 11px; font-size: 15px; color: var(--text-2); font-style: italic; }
+  .suggest-row { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; align-items: center; }
+  .suggest-lead { font-family: var(--mono); font-size: 10px; letter-spacing: .5px; text-transform: uppercase; color: var(--text-2); }
+  .suggest-chip { font-size: 12px; font-weight: 500; border: 1px solid var(--border-strong); border-radius: 999px; padding: 9px 13px; min-height: 40px; display: inline-flex; align-items: center; background: var(--surface); cursor: pointer; }
+  .suggest-chip:active { background: var(--secondary); }
+
+  /* ══ Blocco MISURE ═══════════════════════════════════════════════════════ */
+  .meas-card { border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); padding: 16px 15px; box-shadow: var(--e1); }
+  .meas-head { display: flex; align-items: center; justify-content: space-between; }
+  .meas-tabs { display: flex; gap: 7px; margin: 14px 0 6px; }
+  .meas-tab { font-family: var(--sans); font-weight: 600; font-size: 13px; border: 1px solid var(--border); background: var(--surface); border-radius: 999px; padding: 11px 16px; min-height: 40px; cursor: pointer; color: var(--text); }
+  .meas-tab.on { background: var(--surface-dark); border-color: var(--surface-dark); color: #F6F7ED; }
+  .meas-tab:active { background: var(--secondary); }
+  .meas-tab.on:active { filter: brightness(1.2); }
+  .meas-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 2px; border-bottom: 1px solid var(--border); }
+  .meas-row:last-of-type { border-bottom: none; }
+  .meas-label { font-size: 14px; color: var(--text); }
+  .meas-val { display: flex; align-items: baseline; gap: 4px; }
+  .meas-val .n { font-family: var(--mono); font-weight: 600; font-size: 16px; color: var(--text); }
+  .meas-val .u { font-family: var(--mono); font-size: 11px; color: var(--text-3); }
+  .meas-val .medit { align-self: center; margin-left: 8px; opacity: .5; }
+
+  .meas-photo { position: relative; border-radius: var(--r-slot); overflow: hidden; margin-top: 14px; background: #7A5638; }
+  .meas-photo .cap { position: absolute; left: 0; right: 0; bottom: 0; text-align: center; font-size: 11px; color: #fff; background: rgba(0,31,63,.5); padding: 6px; font-weight: 500; }
+
+  /* Azioni finali */
+  .actions { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+  .actions-row { display: flex; gap: 10px; }
+  .actions-row .btn { flex: 1; }
+  .btn-dark { background: var(--surface-dark); color: #F6F7ED; }
+  .btn-dark:active { filter: brightness(1.22); }
+
+  /* ══ 1B redesign — card quadrate per tag (niente righe mezze vuote) ═══════ */
+  .tag-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .tag-card { border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); padding: 10px; box-shadow: var(--e1); }
+  .tag-card.missing { border-color: rgba(229,72,77,.45); background: var(--danger-soft); box-shadow: none; }
+  .tag-card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; gap: 6px; }
+  .tag-card-name { font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 6px; min-width: 0; }
+  .tag-card-name .dot { width: 6px; height: 6px; border-radius: 999px; flex: none; }
+  .tag-card-name .dot.g { background: var(--success); }
+  .tag-card-name .dot.r { background: var(--danger); }
+  .tag-card-name .dot.n { background: var(--text-3); }
+  .tag-card-name .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tag-card-count { font-family: var(--mono); font-size: 10px; color: var(--text-2); flex: none; }
+  .tag-photo { position: relative; width: 100%; aspect-ratio: 1/1; border-radius: var(--r-slot); background: var(--secondary); border: 1px solid var(--border); display: grid; place-items: center; overflow: hidden; }
+  .tag-photo > svg { opacity: .3; }
+  .tag-actions { position: absolute; right: 5px; bottom: 5px; display: flex; gap: 10px; }
+  .tag-act { width: 36px; height: 36px; border-radius: 9px; background: rgba(246,247,237,.96); border: 1px solid var(--border-strong); display: grid; place-items: center; box-shadow: var(--e1); cursor: pointer; }
+  .tag-act:active { background: var(--secondary); }
+  .tag-badge { position: absolute; left: 6px; bottom: 6px; font-family: var(--mono); font-size: 10px; font-weight: 600; background: var(--surface-dark); color: #F6F7ED; padding: 2px 7px; border-radius: 999px; }
+  .tag-empty { width: 100%; aspect-ratio: 1/1; border-radius: var(--r-slot); border: 1.5px dashed var(--border-strong); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; cursor: pointer; }
+  .tag-empty.req { border-color: rgba(229,72,77,.5); }
+  .tag-empty span { font-family: var(--mono); font-size: 10px; letter-spacing: .4px; text-transform: uppercase; color: var(--text-2); }
+  .tag-empty.req span { color: var(--danger); }
+
+  /* ══ Timeout R-08 come finestra flottante (stile B2) ═════════════════════ */
+  .timeout-float { position: absolute; left: 18px; right: 18px; bottom: 96px; background: var(--surface); border: 1px solid var(--border-strong); border-radius: var(--r-card); box-shadow: var(--e2); padding: 14px 15px 15px; display: flex; flex-direction: column; gap: 10px; z-index: 6; }
+  .timeout-float-bar { display: flex; align-items: center; justify-content: space-between; }
+  .timeout-float-bar .t { font-weight: 600; font-size: 14px; }
+
+  /* Cerchio di conferma — hero success con alone sobrio */
+  .confirm-check { width: 96px; height: 96px; border-radius: 999px; background: var(--success); display: grid; place-items: center; margin: 0 auto; box-shadow: 0 0 0 8px var(--success-soft); }
+
+  /* ══ Animazioni success (Conferma + Bozza salvata) ═══════════════════════ */
+  /* Ciclo lento (4.5s): il segno "pop" all'inizio poi tiene — così è visibile anche scrollando dopo il load */
+  @keyframes popLoop {
+    0% { transform: scale(.4); opacity: 0 }
+    10% { transform: scale(1.08); opacity: 1 }
+    16% { transform: scale(.97) }
+    22% { transform: scale(1) }
+    100% { transform: scale(1); opacity: 1 }
+  }
+  @keyframes ringLoop {
+    0% { transform: scale(.85); opacity: 0 }
+    5% { opacity: .5 }
+    26% { transform: scale(1.85); opacity: 0 }
+    100% { transform: scale(1.85); opacity: 0 }
+  }
+  @keyframes drawLoop {
+    0%, 7% { stroke-dashoffset: 30 }
+    24% { stroke-dashoffset: 0 }
+    100% { stroke-dashoffset: 0 }
+  }
+  @keyframes riseIn { 0% { transform: translateY(10px); opacity: 0 } 100% { transform: translateY(0); opacity: 1 } }
+  /* Errore: pop + shake orizzontale (segnale "qualcosa non va") poi tiene */
+  @keyframes errPop {
+    0%   { transform: translateX(0) scale(.4); opacity: 0 }
+    10%  { transform: translateX(0) scale(1.08); opacity: 1 }
+    16%  { transform: translateX(0) scale(.98) }
+    22%  { transform: translateX(0) scale(1) }
+    27%  { transform: translateX(-5px) scale(1) }
+    32%  { transform: translateX(5px) scale(1) }
+    37%  { transform: translateX(-4px) scale(1) }
+    42%  { transform: translateX(3px) scale(1) }
+    47%  { transform: translateX(0) scale(1) }
+    100% { transform: translateX(0) scale(1); opacity: 1 }
+  }
+
+  .success-body { animation: riseIn .55s ease both; }
+  /* Conferma: pop + alone che si espande + spunta che si disegna (celebrativo ma sobrio) */
+  .confirm-check { position: relative; animation: popLoop 4.5s cubic-bezier(.2,.85,.3,1) infinite; }
+  .confirm-check::after { content: ""; position: absolute; inset: -6px; border-radius: 999px; border: 2px solid var(--success); animation: ringLoop 4.5s ease-out infinite; }
+  .confirm-check svg polyline { stroke-dasharray: 30; stroke-dashoffset: 30; animation: drawLoop 4.5s ease infinite; }
+  /* Bozza: solo pop + spunta (più calmo, niente alone — è un salvataggio non una pubblicazione) */
+  .draft-check { position: relative; animation: popLoop 4.5s cubic-bezier(.2,.85,.3,.95) infinite; }
+  .draft-check svg polyline { stroke-dasharray: 30; stroke-dashoffset: 30; animation: drawLoop 4.5s ease infinite; }
+  /* Errore: pop + shake + le due linee della X che si disegnano */
+  .error-check { position: relative; animation: errPop 4.5s cubic-bezier(.2,.85,.3,1) infinite; }
+  .error-check svg line { stroke-dasharray: 24; stroke-dashoffset: 24; animation: drawLoop 4.5s ease infinite; }
+  @media (prefers-reduced-motion: reduce) { .success-body, .confirm-check, .confirm-check::after, .confirm-check svg polyline, .draft-check, .draft-check svg polyline, .error-check, .error-check svg line { animation: none; stroke-dashoffset: 0; } }
+
+  /* Segmented Nuovo/Bozze/Catalogo (specchio di ui.tsx) */
+  .segmented { display: flex; background: rgba(0,31,63,.05); border-radius: 999px; padding: 3px; gap: 2px; }
+  .segment { flex: 1; text-align: center; padding: 12px 0; min-height: 40px; border-radius: 999px; font-family: var(--sans); font-weight: 500; font-size: 14px; color: var(--text-2); cursor: pointer; }
+  .segment.on { background: var(--surface); color: var(--text); font-weight: 600; box-shadow: var(--e1); }
+  .segment:active { opacity: .7; }
+
+  /* ══ Kanban / tracking bozze in elaborazione (background) ═════════════════ */
+  .klist { display: flex; flex-direction: column; gap: 10px; }
+  .kcard { border: 1px solid var(--border); border-radius: var(--r-card); background: var(--surface); padding: 12px; display: flex; gap: 12px; align-items: center; box-shadow: var(--e1); }
+  .kthumb { width: 52px; height: 64px; border-radius: 8px; background: var(--secondary); border: 1px solid var(--border); display: grid; place-items: center; flex: none; }
+  .kthumb svg { opacity: .35; }
+  .kbody { flex: 1; min-width: 0; }
+  .ktitle { font-weight: 600; font-size: 15px; }
+  .ksku { font-family: var(--mono); font-size: 11px; color: var(--text-2); }
+  .kmini { height: 5px; border-radius: 999px; background: rgba(0,31,63,.08); overflow: hidden; margin-top: 9px; }
+  .kmini .f { height: 100%; background: var(--accent); border-radius: 999px; }
+  .kstate { font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: .5px; text-transform: uppercase; padding: 4px 9px; border-radius: 999px; flex: none; align-self: flex-start; }
+  .kstate.proc { background: var(--accent-soft); color: var(--accent-ink); }
+  .kstate.ready { background: var(--success-soft); color: var(--success); }
+  .kstate.error { background: var(--danger-soft); color: var(--danger); }
+  .kcard.tappable { cursor: pointer; }
+  .kcard.tappable:active { background: var(--secondary); }
+  /* Empty state (zero bozze) — stesso linguaggio tratteggiato di .tag-empty */
+  .kempty { border-radius: var(--r-card); border: 1.5px dashed var(--border-strong); padding: 40px 24px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
+  .kempty-ico { width: 52px; height: 52px; border-radius: 999px; background: var(--secondary); display: grid; place-items: center; }
+  .knew { display: flex; align-items: center; justify-content: center; gap: 8px; border: 1.5px dashed var(--border-strong); border-radius: var(--r-card); padding: 16px; font-weight: 600; color: var(--text); cursor: pointer; }
+
+  svg { display: block; }
+</style>
+</head>
+<body>
+<div class="board">
+
+<!-- ═══════════ SCHERMATA 1 — Scelta tipo caricamento ═══════════ -->
+  <div class="frame-wrap">
+    <div class="frame-label">1 · Scelta tipo caricamento</div>
+    <div class="phone tall">
+      <div class="notch"></div>
+      <div class="topbar" style="margin-bottom:20px">
+        <div class="brand"><span class="brand-dot"></span><span class="brand-txt">MAAT</span></div>
+        <div class="topbar-right">
+          <div class="avatar">FE</div>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5B6670" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </div>
+      </div>
+
+      <div class="eyebrow">Scelta · Step 1/6</div>
+      <h1>Come vuoi aggiungere le foto?</h1>
+      <p class="muted" style="margin-top:10px">
+        Servono almeno <span class="mono" style="color:var(--text)">5</span> foto
+        (max <span class="mono" style="color:var(--text)">15</span>) per far leggere il capo all&rsquo;AI.
+      </p>
+
+      <div style="display:flex; flex-direction:column; gap:14px; margin-top:28px">
+        <div class="choice">
+          <div class="choice-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#001F3F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          </div>
+          <div style="flex:1">
+            <div class="choice-title">Scatta ora <span class="rec-badge">CONSIGLIATO</span></div>
+            <div class="choice-desc">Fotografa il capo slot per slot, con la fotocamera guidata.</div>
+          </div>
+          <svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+
+        <div class="choice">
+          <div class="choice-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#001F3F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          </div>
+          <div style="flex:1">
+            <div class="choice-title">Carica dalla galleria</div>
+            <div class="choice-desc">Seleziona pi&ugrave; foto in blocco, poi assegnale agli slot.</div>
+          </div>
+          <svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </div>
+      </div>
+
+      <div class="aruco-toggle" style="margin-top:16px">
+        <div class="aruco-ico">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#001F3F" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M20 20v.01M17 20h.01M20 14h.01"/></svg>
+        </div>
+        <div style="flex:1">
+          <div style="font-weight:600; font-size:15px">Misure automatiche (ArUco)</div>
+          <div class="muted" style="font-size:12px; margin-top:2px">Aggiungi una foto col marker: l&rsquo;AI calcola le misure. Opzionale.</div>
+        </div>
+        <div class="switch off"></div>
+      </div>
+
+      <div class="req-card" style="margin-top:16px">
+        <div class="req-row">
+          <span class="req-title">Set foto richiesto</span>
+          <span class="mono" style="font-size:12px; color:var(--text-2)">min 5 · max 15</span>
+        </div>
+        <div class="chips">
+          <span class="chip">Fronte <span class="star">*</span></span>
+          <span class="chip">Retro <span class="star">*</span></span>
+          <span class="chip">Etichetta brand <span class="star">*</span></span>
+          <span class="chip opt">Taglia</span>
+          <span class="chip opt">Materiale</span>
+          <span class="chip opt">Difetti</span>
+          <span class="chip opt">Aggiuntive</span>
+          <span class="chip opt">ArUco</span>
+        </div>
+        <p class="muted" style="font-size:12px"><span class="star" style="color:var(--danger)">*</span> obbligatorie per elaborare. Potrai comunque combinare scatti e galleria in acquisizione.</p>
+      </div>
+
+      <div class="spacer"></div>
+      <button class="btn btn-ghost">Annulla</button>
+    </div>
+  </div>
+
+  <!-- ═══════════ SCHERMATA 2 — Acquisizione foto ═══════════ -->
+  <div class="frame-wrap">
+    <div class="frame-label">2 · Acquisizione foto — aggiungi il set (5–15)</div>
+    <div class="phone tall">
+      <div class="notch"></div>
+      <div class="topbar" style="margin-bottom:20px">
+        <div class="brand"><span class="brand-dot"></span><span class="brand-txt">MAAT</span></div>
+        <div class="topbar-right"><div class="avatar">FE</div></div>
+      </div>
+
+      <div class="eyebrow">Acquisizione · Step 2/6</div>
+      <h1>Aggiungi le foto</h1>
+      <p class="muted" style="margin-top:8px">Scatta o scegli dalla galleria le foto grezze del capo. Le <b>etichetterai al passo successivo</b>: qui pensa solo a raccoglierle.</p>
+
+      <div style="display:flex; gap:10px; margin-top:22px">
+        <button class="btn btn-primary" style="flex:1; display:flex; align-items:center; justify-content:center; gap:8px">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#001F3F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          Scatta
+        </button>
+        <button class="btn btn-ghost" style="flex:1; display:flex; align-items:center; justify-content:center; gap:8px">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#001F3F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          Galleria
+        </button>
+      </div>
+
+      <div class="explain-slim" style="align-items:center; margin-top:14px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5B6670" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M20 20v.01M17 20h.01M20 14h.01"/></svg>
+        <p><b>ArUco attivo.</b> Una foto col marker accanto al capo per le misure automatiche.</p>
+        <span class="suggest-chip" style="white-space:nowrap">＋ Foto ArUco</span>
+      </div>
+
+      <div class="sec-head" style="margin-top:24px; margin-bottom:10px">
+        <span class="sec-title">Foto aggiunte</span>
+        <span class="mono" style="font-size:12px; color:var(--text-2)">3 / 15 · min 5</span>
+      </div>
+      <div class="pbar"><div class="fill" style="width:60%"></div></div>
+      <p class="muted" style="font-size:12px; margin-top:6px">Ancora <span class="mono" style="color:var(--text)">2</span> foto per raggiungere il minimo.</p>
+
+      <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:14px">
+        <div class="tag-photo">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#5B6670" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          <div class="tag-actions">
+            <span class="tag-act" title="Rimuovi"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#E5484D" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>
+          </div>
+        </div>
+        <div class="tag-photo">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#5B6670" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          <div class="tag-actions">
+            <span class="tag-act" title="Rimuovi"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#E5484D" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>
+          </div>
+        </div>
+        <div class="tag-photo">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#5B6670" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          <div class="tag-actions">
+            <span class="tag-act" title="Rimuovi"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#E5484D" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>
+          </div>
+        </div>
+        <div class="tag-empty">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9AA0A6" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <span>Aggiungi</span>
+        </div>
+        <div class="tag-empty">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9AA0A6" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </div>
+        <div class="tag-empty">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9AA0A6" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </div>
+      </div>
+
+      <div class="spacer"></div>
+      <p class="foot-note">L&rsquo;etichettatura di ogni foto arriva al passo successivo.</p>
+      <button class="btn btn-dark" style="opacity:.4; margin-top:8px">Continua · servono ancora 2 foto</button>
+    </div>
+  </div>
+
+<!-- ═══════════ SCHERMATA 1b — Etichettatura sequenziale (tra 1 e elaborazione) ═══════════ -->
+  <div class="frame-wrap">
+    <div class="frame-label">3 · Etichettatura foto</div>
+    <div class="phone tall">
+      <div class="notch"></div>
+      <div class="topbar" style="margin-bottom:20px">
+        <div class="brand"><span class="brand-dot"></span><span class="brand-txt">MAAT</span></div>
+        <div class="topbar-right"><div class="avatar">FE</div></div>
+      </div>
+
+      <div class="eyebrow">Etichettatura · Step 3/6</div>
+      <h1>Che foto &egrave; questa?</h1>
+      <p class="muted" style="margin-top:8px">Assegna un&rsquo;etichetta a ogni foto: aiuta l&rsquo;AI a leggere meglio il capo. Puoi correggere qualsiasi assegnazione qui sotto.</p>
+
+      <div class="assign-card" style="margin-top:16px">
+        <div class="assign-top">
+          <div class="assign-left">
+            <div class="hero-photo">
+              <span class="hero-count">6 / 7</span>
+              <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#5B6670" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            </div>
+            <div class="queue">
+              <div class="qthumb done"><span class="qcheck"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5B6670" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/></svg></div>
+              <div class="qthumb done"><span class="qcheck"><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5B6670" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/></svg></div>
+              <div class="qthumb on"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5B6670" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="2"/></svg></div>
+            </div>
+          </div>
+
+          <div class="assign-right">
+            <div class="assign-q">Etichetta:</div>
+            <div class="label-list">
+              <button class="label-opt done">Fronte <span class="done-check"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#00804C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span></button>
+              <button class="label-opt done">Retro <span class="done-check"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#00804C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span></button>
+              <button class="label-opt">Etichetta brand <span class="req">*</span></button>
+              <button class="label-opt">Taglia</button>
+              <button class="label-opt">Materiale <span class="aim">🎯</span></button>
+              <button class="label-opt">Difetti <span class="aim">🎯</span></button>
+              <button class="label-opt done">ArUco <span class="aim">📐</span> <span class="done-check"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#00804C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span></button>
+              <button class="label-opt">Aggiuntive</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="assign-hint">
+          <span class="work-dot"></span>
+          <span>Scegli un&rsquo;etichetta &rarr; si passa alla prossima. <span class="mono" style="font-size:11px">🎯</span> = l&rsquo;AI controlla mirato quella foto &middot; <span class="mono" style="font-size:11px">📐</span> = usata per calcolare le misure.</span>
+        </div>
+      </div>
+
+      <div class="sec-head">
+        <span class="sec-title">Assegnate per tag · correggi qui</span>
+        <span class="mono" style="font-size:11px; color:var(--text-2)">5/7 etichettate</span>
+      </div>
+
+      <div class="tag-grid">
+        <!-- Fronte — assegnato -->
+        <div class="tag-card">
+          <div class="tag-card-head">
+            <span class="tag-card-name"><span class="dot g"></span><span class="nm">Fronte</span></span>
+            <span class="tag-card-count">1/1</span>
+          </div>
+          <div class="tag-photo">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#5B6670" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <div class="tag-actions">
+              <span class="tag-act" title="Sostituisci"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#001F3F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></span>
+              <span class="tag-act" title="Rimuovi"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#E5484D" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Retro — assegnato -->
+        <div class="tag-card">
+          <div class="tag-card-head">
+            <span class="tag-card-name"><span class="dot g"></span><span class="nm">Retro</span></span>
+            <span class="tag-card-count">1/1</span>
+          </div>
+          <div class="tag-photo">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#5B6670" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <div class="tag-actions">
+              <span class="tag-act" title="Sostituisci"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#001F3F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></span>
+              <span class="tag-act" title="Rimuovi"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#E5484D" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Etichetta brand — MANCANTE (obbligo) -->
+        <div class="tag-card missing">
+          <div class="tag-card-head">
+            <span class="tag-card-name"><span class="dot r"></span><span class="nm">Etichetta brand</span></span>
+            <span class="tag-card-count" style="color:var(--danger)">0/1</span>
+          </div>
+          <div class="tag-empty req">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E5484D" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>Aggiungi</span>
+          </div>
+        </div>
+
+        <!-- ArUco — assegnato -->
+        <div class="tag-card">
+          <div class="tag-card-head">
+            <span class="tag-card-name"><span class="dot g"></span><span class="nm">ArUco 📐</span></span>
+            <span class="tag-card-count">1/1</span>
+          </div>
+          <div class="tag-photo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#5B6670" stroke-width="1.6"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/></svg>
+            <div class="tag-actions">
+              <span class="tag-act" title="Sostituisci"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#001F3F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></span>
+              <span class="tag-act" title="Rimuovi"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#E5484D" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Aggiuntive — multi, 2 foto -->
+        <div class="tag-card">
+          <div class="tag-card-head">
+            <span class="tag-card-name"><span class="dot g"></span><span class="nm">Aggiuntive</span></span>
+            <span class="tag-card-count">2</span>
+          </div>
+          <div class="tag-photo">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#5B6670" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <span class="tag-badge">+1</span>
+            <div class="tag-actions">
+              <span class="tag-act" title="Aggiungi"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#001F3F" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Difetti — multi, opzionale, vuoto -->
+        <div class="tag-card">
+          <div class="tag-card-head">
+            <span class="tag-card-name"><span class="dot n"></span><span class="nm">Difetti 🎯</span></span>
+            <span class="tag-card-count">opz.</span>
+          </div>
+          <div class="tag-empty">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9AA0A6" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>Aggiungi</span>
+          </div>
+        </div>
+      </div>
+
+      <p class="muted" style="font-size:12px; margin-top:12px">Ogni tag &egrave; una card: <b>⟳</b> sostituisci &middot; <b>✕</b> rimuovi &middot; <b>+</b> aggiungi (slot multipli: Materiale, Difetti, Aggiuntive).</p>
+
+      <div class="spacer"></div>
+      <button class="btn btn-primary" style="opacity:.4; margin-top:16px">Elabora con l&rsquo;AI · manca brand</button>
+    </div>
+  </div>
+
+<!-- ═══════════ VARIANTE B2 — Elaborazione + consigli in finestra flottante ═══════════ -->
+  <div class="frame-wrap">
+    <div class="frame-label" >4 · Elaborazione AI</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="topbar" style="margin-bottom:20px">
+        <div class="brand"><span class="brand-dot"></span><span class="brand-txt">MAAT</span></div>
+        <div class="topbar-right"><div class="avatar">FE</div></div>
+      </div>
+
+      <div class="eyebrow">Elaborazione · Step 4/6</div>
+      <h1>Sto preparando la scheda</h1>
+
+      <div class="proc-bar" style="margin-top:18px">
+        <div class="proc-bar-top">
+          <div class="proc-bar-title"><span class="work-dot"></span><span>Elaborazione AI</span></div>
+          <span class="mono" style="font-size:14px; font-weight:600">65%</span>
+        </div>
+        <div class="pbar"><div class="fill" style="width:65%"></div></div>
+        <div class="proc-bar-meta">
+          <span class="muted" style="font-size:12px">Estrazione attributi</span>
+          <span class="mono" style="font-size:12px; color:var(--text-2)">~10s rimanenti</span>
+        </div>
+      </div>
+
+      <div class="proc-status" data-status="1"><span class="sdot"></span><span>Leggo l&rsquo;etichetta brand&hellip;</span></div>
+
+      <div class="sec-head" style="margin-top:20px">
+        <span class="sec-title">Scheda in preparazione</span>
+      </div>
+      <div class="skel-card">
+        <div class="skel" style="width:38%; height:9px"></div>
+        <div class="skel" style="width:70%; height:15px"></div>
+      </div>
+      <div class="skel-card">
+        <div class="skel" style="width:30%; height:9px"></div>
+        <div class="skel" style="width:55%; height:15px"></div>
+      </div>
+      <div class="skel-card">
+        <div class="skel" style="width:44%; height:9px"></div>
+        <div class="skel" style="width:62%; height:15px"></div>
+      </div>
+
+      <div class="spacer"></div>
+
+      <!-- In-flow (non più absolute): non può mai sovrapporsi ai bottoni sotto. Resta "flottante" solo nello stile (bordo+ombra elevata). -->
+      <div class="tip-float" data-tips="mix">
+        <div class="tip-float-bar">
+          <span class="tip-eyebrow">Mentre aspetti</span>
+          <div style="display:flex; align-items:center; gap:8px">
+            <span class="tip-cat piattaforma">PIATTAFORMA</span>
+            <span class="tip-float-x" title="Nascondi"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5B6670" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>
+          </div>
+        </div>
+        <p class="tip-text">La foto di copertina conta pi&ugrave; di titolo, prezzo e reputazione: &egrave; il moltiplicatore n.1 del CTR su Vinted.</p>
+      </div>
+
+      <!-- Blocco azioni "esci dall'attesa": ghost (azione opzionale, non un CTA pesante) + nota + annulla, ritmo uniforme -->
+      <div style="margin-top:20px; display:flex; flex-direction:column; align-items:center; gap:8px">
+        <button class="btn btn-ghost btn-sm" style="width:100%">Continua in background</button>
+        <p class="muted" style="text-align:center; font-size:12px; max-width:300px">Puoi caricare un nuovo capo: lo ritrovi in <b>Bozze</b> quando &egrave; pronto.</p>
+        <span class="text-link danger">Annulla elaborazione</span>
+      </div>
+    </div>
+  </div>
+
+<!-- ═══════════ VARIANTE B2-timeout — R-08 come finestra flottante (stile B2) ═══════════ -->
+  <div class="frame-wrap">
+    <div class="frame-label" >4 · Elaborazione — timeout (R-08)</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="topbar" style="margin-bottom:20px">
+        <div class="brand"><span class="brand-dot"></span><span class="brand-txt">MAAT</span></div>
+        <div class="topbar-right"><div class="avatar">FE</div></div>
+      </div>
+
+      <div class="eyebrow">Elaborazione · Step 4/6</div>
+      <h1>Sto preparando la scheda</h1>
+
+      <div class="proc-bar" style="margin-top:18px">
+        <div class="proc-bar-top">
+          <div class="proc-bar-title"><span class="work-dot"></span><span>Elaborazione AI</span></div>
+          <span class="mono" style="font-size:14px; font-weight:600">88%</span>
+        </div>
+        <div class="pbar"><div class="fill" style="width:88%"></div></div>
+        <div class="proc-bar-meta">
+          <span class="muted" style="font-size:12px">Compilazione scheda</span>
+          <span class="mono" style="font-size:12px; color:var(--text-2)">quasi pronta</span>
+        </div>
+      </div>
+
+      <div class="proc-status" data-status="1"><span class="sdot"></span><span>Compilo la scheda&hellip;</span></div>
+
+      <div class="sec-head" style="margin-top:18px">
+        <span class="sec-title">Scheda in preparazione</span>
+      </div>
+      <div class="skel-card"><div class="skel" style="width:38%; height:9px"></div><div class="skel" style="width:70%; height:15px"></div></div>
+      <div class="skel-card"><div class="skel" style="width:30%; height:9px"></div><div class="skel" style="width:55%; height:15px"></div></div>
+      <div class="skel-card"><div class="skel" style="width:44%; height:9px"></div><div class="skel" style="width:62%; height:15px"></div></div>
+
+      <div class="spacer"></div>
+      <button class="btn btn-ghost btn-sm" style="width:100%">Continua in background</button>
+
+      <!-- Timeout R-08 come finestra flottante, stesso linguaggio della tip-float -->
+      <div class="timeout-float">
+        <div class="timeout-float-bar">
+          <span class="t">Sta durando pi&ugrave; del previsto</span>
+          <span class="tip-float-x" title="Nascondi"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5B6670" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>
+        </div>
+        <p class="muted" style="font-size:12px">Il server sta ancora lavorando. Attendi, oppure continua in background: le foto restano salvate.</p>
+        <div style="display:flex; gap:10px">
+          <button class="btn btn-primary btn-sm" style="flex:1">Attendi</button>
+          <button class="btn btn-ghost btn-sm" style="flex:1">In background</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<!-- ═══════════ VARIANTE B2-errore — Elaborazione fallita (stato mancante segnalato dalla review) ═══════════ -->
+  <div class="frame-wrap">
+    <div class="frame-label" style="color:#E5484D">4 · Elaborazione — errore</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="topbar" style="margin-bottom:20px">
+        <div class="brand"><span class="brand-dot"></span><span class="brand-txt">MAAT</span></div>
+        <div class="topbar-right"><div class="avatar">FE</div></div>
+      </div>
+
+      <div class="spacer"></div>
+
+      <div class="success-body" style="text-align:center">
+        <div class="error-check" style="width:96px; height:96px; border-radius:999px; background:var(--danger); display:grid; place-items:center; margin:0 auto; box-shadow:0 0 0 8px var(--danger-soft)">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </div>
+        <div class="eyebrow" style="margin-top:24px">Elaborazione &middot; Step 4/6</div>
+        <h1 style="margin-top:8px">Non sono riuscito a leggere il capo</h1>
+        <p class="muted" style="margin-top:12px; max-width:280px; margin-left:auto; margin-right:auto">Puoi riprovare, oppure salvare la bozza e compilare i campi a mano quando vuoi. Le foto restano al sicuro.</p>
+      </div>
+
+      <div class="spacer"></div>
+
+      <div class="actions">
+        <button class="btn btn-primary">Riprova</button>
+        <button class="btn btn-ghost">Salva bozza</button>
+      </div>
+    </div>
+  </div>
+
+<!-- ═══════════ VARIANTE C — Rivedi il capo (attributi + misure) ═══════════ -->
+  <div class="frame-wrap">
+    <div class="frame-label" >5 · Rivedi il capo — attributi + misure</div>
+    <div class="phone tall">
+      <div class="notch"></div>
+      <div class="topbar" style="margin-bottom:20px">
+        <div class="brand"><span class="brand-dot"></span><span class="brand-txt">MAAT</span></div>
+        <div class="topbar-right"><div class="avatar">FE</div></div>
+      </div>
+
+      <div class="eyebrow">Rivedi · Step 5/6</div>
+      <h1>Rivedi il capo</h1>
+
+      <!-- Explainer + legenda unificati (un solo blocco didattico, un solo dismiss) -->
+      <div class="explain-slim" style="margin-top:14px; flex-direction:column; align-items:stretch; gap:10px">
+        <div style="display:flex; align-items:flex-start; gap:9px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5B6670" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-top:2px; flex:none"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          <p style="flex:1">Tocca un campo per correggerlo. La <b>%</b> &egrave; quanto l&rsquo;AI &egrave; sicura del valore:</p>
+          <span class="explain-dismiss">Non mostrare&nbsp;pi&ugrave;</span>
+        </div>
+        <div class="legend-inline" style="margin:0 0 0 23px">
+          <span><i style="background:var(--success)"></i>Alta 80&ndash;100</span>
+          <span><i style="background:var(--accent)"></i>Verifica 50&ndash;79</span>
+          <span><i style="background:var(--danger)"></i>Controlla &lt;50</span>
+        </div>
+      </div>
+
+      <div class="conf-filter">
+        <span class="conf-chip on">Tutti <span class="n">11</span></span>
+        <span class="conf-chip">Da verificare <span class="n" style="color:var(--accent-ink)">3</span></span>
+      </div>
+
+      <!-- Banner: foto modificate → rielabora (compare solo se hai cambiato le foto; spostato dopo il filtro, appena prima dei dati che riguarda) -->
+      <div class="reproc-banner" style="margin-bottom:16px">
+        <span class="rp-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#001F3F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></span>
+        <span class="txt"><b>Hai cambiato le foto.</b> Rielabora per aggiornare gli attributi.</span>
+        <button class="btn btn-dark btn-sm" style="padding:0 16px; font-size:13px">Rielabora</button>
+      </div>
+
+      <!-- ── IDENTITÀ ── -->
+      <div class="attr-sec">Identit&agrave;</div>
+      <div class="field">
+        <div class="rail"></div>
+        <div class="field-label">Brand</div>
+        <div class="field-body">
+          <span class="field-val">Stone Island</span>
+          <span class="conf alta"><span class="conf-dot"></span><span class="conf-pct">94%</span></span>
+          <span class="field-edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5B6670" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></span>
+        </div>
+      </div>
+      <!-- Codice prodotto — manuale, opzionale: identificativo TUO, distinto dallo SKU MAAT (nessuna confidence: non è AI-estratto) -->
+      <div class="field">
+        <div class="field-label">Codice prodotto <span style="font-weight:400; text-transform:none; letter-spacing:0; color:var(--text-3)">&middot; tuo riferimento, diverso dallo SKU</span></div>
+        <div class="field-body">
+          <span class="field-val" style="font-family:var(--mono)">REF-2024-088</span>
+          <span class="mono" style="font-size:9px; font-weight:600; letter-spacing:.5px; text-transform:uppercase; color:var(--text-2); background:var(--secondary); padding:3px 8px; border-radius:999px; flex:none">Manuale &middot; opz.</span>
+          <span class="field-edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5B6670" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></span>
+        </div>
+      </div>
+      <div class="field-grid">
+        <div class="field">
+          <div class="rail"></div>
+          <div class="field-label">Tipo capo</div>
+          <div class="field-body">
+            <span class="field-val">T-shirt</span>
+            <span class="conf alta"><span class="conf-dot"></span><span class="conf-pct">91%</span></span>
+            <span class="field-edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5B6670" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></span>
+          </div>
+        </div>
+        <div class="field">
+          <div class="rail"></div>
+          <div class="field-label">Colore</div>
+          <div class="field-body">
+            <span class="field-val">Bianco sporco</span>
+            <span class="conf alta"><span class="conf-dot"></span><span class="conf-pct">88%</span></span>
+            <span class="field-edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5B6670" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── TAGLIA & MATERIALE ── -->
+      <div class="attr-sec">Taglia &amp; materiale</div>
+      <div class="field-grid">
+        <div class="field media">
+          <div class="rail"></div>
+          <div class="field-label">Taglia</div>
+          <div class="field-body">
+            <span class="field-val">L</span>
+            <span class="conf media"><span class="conf-dot"></span><span class="conf-pct">61%</span><span class="conf-tag">Verifica</span></span>
+            <span class="field-edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5B6670" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></span>
+          </div>
+        </div>
+        <div class="field">
+          <div class="rail"></div>
+          <div class="field-label">Genere</div>
+          <div class="field-body">
+            <span class="field-val">Unisex</span>
+            <span class="conf alta"><span class="conf-dot"></span><span class="conf-pct">85%</span></span>
+            <span class="field-edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5B6670" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></span>
+          </div>
+        </div>
+      </div>
+      <!-- Materiale: bassa confidence → trattamento prominente con input + suggerimenti AI -->
+      <div class="field bassa">
+        <div class="rail"></div>
+        <div class="field-body" style="margin-top:0">
+          <span class="field-label">Materiale</span>
+          <span class="conf bassa" style="margin-left:auto"><span class="conf-dot"></span><span class="conf-pct">42%</span><span class="conf-tag">Controlla</span></span>
+        </div>
+        <div class="field-input">Es. Cotone, Denim, Lana&hellip;</div>
+        <div class="suggest-row">
+          <span class="suggest-lead">AI propone</span>
+          <span class="suggest-chip">Cotone</span>
+          <span class="suggest-chip">Misto cotone</span>
+        </div>
+      </div>
+
+      <!-- ── CONDIZIONE ── -->
+      <div class="attr-sec">Condizione &amp; stile</div>
+      <div class="field-grid">
+        <div class="field media">
+          <div class="rail"></div>
+          <div class="field-label">Condizioni</div>
+          <div class="field-body">
+            <span class="field-val">Buone</span>
+            <span class="conf media"><span class="conf-dot"></span><span class="conf-pct">57%</span><span class="conf-tag">Verifica</span></span>
+            <span class="field-edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5B6670" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></span>
+          </div>
+        </div>
+        <div class="field">
+          <div class="rail"></div>
+          <div class="field-label">Difetti</div>
+          <div class="field-body">
+            <span class="field-val">Assenti</span>
+            <span class="conf alta"><span class="conf-dot"></span><span class="conf-pct">80%</span></span>
+            <span class="field-edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5B6670" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></span>
+          </div>
+        </div>
+      </div>
+      <div class="field-grid">
+        <div class="field">
+          <div class="rail"></div>
+          <div class="field-label">Stile</div>
+          <div class="field-body">
+            <span class="field-val">Casual</span>
+            <span class="conf alta"><span class="conf-dot"></span><span class="conf-pct">83%</span></span>
+            <span class="field-edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5B6670" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></span>
+          </div>
+        </div>
+        <div class="field">
+          <div class="rail"></div>
+          <div class="field-label">Stagionalit&agrave;</div>
+          <div class="field-body">
+            <span class="field-val">Primavera/Estate</span>
+            <span class="conf alta"><span class="conf-dot"></span><span class="conf-pct">86%</span></span>
+            <span class="field-edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5B6670" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── MISURE ── -->
+      <div class="attr-sec">Misure &middot; da foto ArUco</div>
+      <div class="meas-card">
+        <div class="meas-head">
+          <div class="muted" style="font-size:12px; flex:1">La confidence dipende dalla posizione dei punti sul marker ArUco: trascinali per affinare la misura.</div>
+          <span class="conf media" style="align-self:flex-start; flex:none"><span class="conf-dot"></span><span class="conf-pct">74%</span><span class="conf-tag">Verifica</span></span>
+        </div>
+
+        <!-- Tab categoria prodotto -->
+        <div class="meas-tabs">
+          <span class="meas-tab on">Top</span>
+          <span class="meas-tab">Bottom</span>
+          <span class="meas-tab">Gonna</span>
+          <span class="meas-tab">Abito</span>
+        </div>
+
+        <!-- Set misure Top (valori dallo screen MVP) -->
+        <div class="meas-row"><span class="meas-label">Spalle</span><span class="meas-val"><span class="n">58.7</span><span class="u">cm</span><span class="medit"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#5B6670" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></span></span></div>
+        <div class="meas-row"><span class="meas-label">Lunghezza totale</span><span class="meas-val"><span class="n">71.5</span><span class="u">cm</span><span class="medit"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#5B6670" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></span></span></div>
+        <div class="meas-row"><span class="meas-label">Lunghezza manica</span><span class="meas-val"><span class="n">19.9</span><span class="u">cm</span><span class="medit"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#5B6670" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></span></span></div>
+        <div class="meas-row"><span class="meas-label">Larghezza manica</span><span class="meas-val"><span class="n">17.1</span><span class="u">cm</span><span class="medit"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#5B6670" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></span></span></div>
+        <div class="meas-row"><span class="meas-label">Larghezza torace</span><span class="meas-val"><span class="n">60.8</span><span class="u">cm</span><span class="medit"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#5B6670" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></span></span></div>
+        <div class="meas-row"><span class="meas-label">Larghezza vita</span><span class="meas-val"><span class="n">66.3</span><span class="u">cm</span><span class="medit"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#5B6670" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></span></span></div>
+
+        <!-- Foto con puntatori editabili: linee neutre (near-black), punti in famiglia fluo (uno per misura) — trascinali per migliorare la confidence -->
+        <div class="meas-photo">
+          <svg viewBox="0 0 300 400" width="100%" style="display:block">
+            <!-- t-shirt -->
+            <path d="M120,90 L95,90 L50,140 L78,175 L108,150 L108,330 L192,330 L192,150 L222,175 L250,140 L205,90 L180,90 C170,108 130,108 120,90 Z" fill="#EDEAE3"/>
+            <!-- linee misura: tutte neutre (near-black semi-opaco) — il colore non porta significato di stato qui -->
+            <g stroke="rgba(0,31,63,.4)" stroke-width="2" font-family="'JetBrains Mono',monospace" font-size="9" font-weight="600">
+              <line x1="108" y1="118" x2="192" y2="118"/>
+              <line x1="150" y1="96" x2="150" y2="328"/>
+              <line x1="108" y1="210" x2="192" y2="210"/>
+              <line x1="100" y1="322" x2="200" y2="322"/>
+              <line x1="205" y1="112" x2="240" y2="158"/>
+              <line x1="240" y1="158" x2="228" y2="182"/>
+            </g>
+            <!-- etichette: near-black con alone chiaro (leggibili su qualunque sfondo foto) -->
+            <g font-family="'JetBrains Mono',monospace" font-size="9" font-weight="600" fill="#001F3F" text-anchor="middle" style="paint-order:stroke; stroke:#F6F7ED; stroke-width:4px; stroke-linejoin:round">
+              <text x="150" y="112">Spalle 58.7</text>
+              <text x="150" y="205">Torace 60.8</text>
+              <text x="150" y="317">Vita 66.3</text>
+            </g>
+            <!-- puntatori trascinabili: un tint fluo per misura (famiglia unica, mai success/danger) -->
+            <g stroke-width="2">
+              <circle cx="108" cy="118" r="5.5" fill="#DBE64C" stroke="#001F3F" stroke-width="1.2"/><circle cx="192" cy="118" r="5.5" fill="#DBE64C" stroke="#001F3F" stroke-width="1.2"/>
+              <circle cx="150" cy="96" r="5.5" fill="#C8D43B" stroke="#001F3F" stroke-width="1.2"/><circle cx="150" cy="328" r="5.5" fill="#C8D43B" stroke="#001F3F" stroke-width="1.2"/>
+              <circle cx="108" cy="210" r="5.5" fill="#EEDD65" stroke="#001F3F" stroke-width="1.2"/><circle cx="192" cy="210" r="5.5" fill="#EEDD65" stroke="#001F3F" stroke-width="1.2"/>
+              <circle cx="100" cy="322" r="5.5" fill="#B8C93A" stroke="#001F3F" stroke-width="1.2"/><circle cx="200" cy="322" r="5.5" fill="#B8C93A" stroke="#001F3F" stroke-width="1.2"/>
+              <circle cx="205" cy="112" r="5.5" fill="#F0E38A" stroke="#001F3F" stroke-width="1.2"/><circle cx="240" cy="158" r="5.5" fill="#F0E38A" stroke="#001F3F" stroke-width="1.2"/>
+              <circle cx="228" cy="182" r="5.5" fill="#A9BA2E" stroke="#001F3F" stroke-width="1.2"/>
+            </g>
+            <!-- marker ArUco -->
+            <g transform="translate(125,348)">
+              <rect x="0" y="0" width="50" height="50" fill="#fff"/>
+              <rect x="6" y="6" width="38" height="38" fill="#001F3F"/>
+              <rect x="12" y="12" width="9" height="9" fill="#fff"/><rect x="29" y="12" width="9" height="9" fill="#fff"/>
+              <rect x="20" y="22" width="10" height="10" fill="#fff"/><rect x="12" y="30" width="9" height="9" fill="#fff"/>
+            </g>
+          </svg>
+          <div class="cap">Trascina i punti fluo per correggere &middot; il calcolo usa il riferimento ArUco</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" style="margin-top:12px; width:100%">Correggi sull&rsquo;immagine</button>
+      </div>
+
+      <!-- ── AZIONI ── -->
+      <div class="actions">
+        <button class="btn btn-primary">Conferma a Catalogo</button>
+        <div class="actions-row">
+          <button class="btn btn-dark btn-sm">Rielabora</button>
+          <button class="btn btn-ghost btn-sm">Salva bozza</button>
+        </div>
+        <button class="btn btn-ghost danger btn-sm">Elimina bozza</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SCHERMATA 6 — Conferma a catalogo ═══════════ -->
+  <div class="frame-wrap">
+    <div class="frame-label">6 · Conferma — capo a catalogo</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="topbar" style="margin-bottom:20px">
+        <div class="brand"><span class="brand-dot"></span><span class="brand-txt">MAAT</span></div>
+        <div class="topbar-right"><div class="avatar">FE</div></div>
+      </div>
+
+      <div class="spacer"></div>
+
+      <div class="success-body" style="text-align:center">
+        <div class="eyebrow" style="display:block">Conferma · Step 6/6</div>
+
+        <div class="confirm-check" style="margin-top:24px">
+          <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+
+        <h1 style="margin-top:24px">Capo confermato</h1>
+
+        <span class="mono" style="display:inline-flex; align-items:center; gap:8px; background:var(--secondary); border-radius:999px; padding:6px 14px; font-weight:600; font-size:14px; letter-spacing:1px; color:var(--text); margin-top:16px">
+          <span style="color:var(--text-2); font-size:10px; font-weight:600; letter-spacing:1.2px">SKU</span>MP-0042
+        </span>
+
+        <p class="muted" style="margin-top:12px; padding:0 24px">&Egrave; nel Catalogo, pronto per la vendita.</p>
+      </div>
+
+      <div class="spacer"></div>
+
+      <div class="actions">
+        <button class="btn btn-primary">Nuovo capo</button>
+        <button class="btn btn-ghost">Vai al Catalogo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ TERMINALE — Bozza salvata ═══════════ -->
+  <div class="frame-wrap">
+    <div class="frame-label" >Terminale · Bozza salvata</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="topbar" style="margin-bottom:20px">
+        <div class="brand"><span class="brand-dot"></span><span class="brand-txt">MAAT</span></div>
+        <div class="topbar-right"><div class="avatar">FE</div></div>
+      </div>
+
+      <div class="spacer"></div>
+
+      <div class="success-body" style="text-align:center">
+        <div class="draft-check" style="width:96px; height:96px; border-radius:999px; background:var(--accent-soft); border:1px solid var(--accent); display:grid; place-items:center; margin:0 auto">
+          <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#001F3F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+
+        <div class="eyebrow" style="margin-top:24px">Bozza &middot; non pubblicata</div>
+        <h1 style="margin-top:8px">Bozza salvata</h1>
+        <div class="mono" style="margin-top:12px; font-size:13px; color:var(--text-2); letter-spacing:.4px">MP-0043 &middot; 7 foto</div>
+        <p class="muted" style="margin-top:12px; max-width:280px; margin-left:auto; margin-right:auto">La ritrovi in <b style="color:var(--text)">Bozze</b> quando vuoi &mdash; potrai rielaborarla con l&rsquo;AI.</p>
+      </div>
+
+      <div class="spacer"></div>
+
+      <button class="btn btn-primary">Nuovo capo</button>
+      <button class="btn btn-ghost" style="margin-top:12px">Vai alle Bozze</button>
+    </div>
+  </div>
+
+<!-- ═══════════ SCHERMATA D — Bozze / tracking elaborazioni (kanban) ═══════════ -->
+  <div class="frame-wrap">
+    <div class="frame-label" >Ramo · Bozze (tracking background)</div>
+    <div class="phone tall">
+      <div class="notch"></div>
+      <div class="topbar" style="margin-bottom:20px">
+        <div class="brand"><span class="brand-dot"></span><span class="brand-txt">MAAT</span></div>
+        <div class="topbar-right"><div class="avatar">FE</div></div>
+      </div>
+
+      <!-- Segmented Nuovo / Bozze / Catalogo (il "kanban" del prodotto) -->
+      <div class="segmented" style="margin-bottom:22px">
+        <div class="segment">Nuovo</div>
+        <div class="segment on">Bozze</div>
+        <div class="segment">Catalogo</div>
+      </div>
+
+      <div class="eyebrow">Bozze · 3</div>
+      <h1 style="margin-bottom:4px">Le tue bozze</h1>
+      <p class="muted" style="margin-bottom:16px">Le elaborazioni in background compaiono qui e si aggiornano da sole.</p>
+
+      <div class="klist">
+        <!-- In elaborazione (background) -->
+        <div class="kcard">
+          <div class="kthumb"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5B6670" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
+          <div class="kbody">
+            <div class="ktitle">Capo in elaborazione</div>
+            <div class="ksku">MP-0•••• · 7 foto</div>
+            <div class="kmini"><div class="f" style="width:65%"></div></div>
+          </div>
+          <span class="kstate proc">AI 65%</span>
+        </div>
+
+        <!-- Elaborazione fallita — tap per riprovare (stato mancante segnalato dalla review) -->
+        <div class="kcard tappable">
+          <div class="kthumb"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5B6670" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
+          <div class="kbody">
+            <div class="ktitle">Carhartt &middot; Felpa</div>
+            <div class="ksku">MP-0039 &middot; 6 foto</div>
+          </div>
+          <span class="kstate error">Errore &middot; riprova</span>
+        </div>
+
+        <!-- Pronta da controllare -->
+        <div class="kcard">
+          <div class="kthumb"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5B6670" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>
+          <div class="kbody">
+            <div class="ktitle">Stone Island · T-shirt</div>
+            <div class="ksku">MP-0042 · 7 foto</div>
+          </div>
+          <span class="kstate ready">Da rivedere</span>
+        </div>
+
+        <!-- Nuovo articolo mentre le altre elaborano -->
+        <div class="knew">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#001F3F" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nuovo articolo
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ RAMO — Bozze, empty state (zero bozze) ═══════════ -->
+  <div class="frame-wrap">
+    <div class="frame-label">Ramo · Bozze — vuoto (primo utilizzo)</div>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="topbar" style="margin-bottom:20px">
+        <div class="brand"><span class="brand-dot"></span><span class="brand-txt">MAAT</span></div>
+        <div class="topbar-right"><div class="avatar">FE</div></div>
+      </div>
+
+      <div class="segmented" style="margin-bottom:22px">
+        <div class="segment">Nuovo</div>
+        <div class="segment on">Bozze</div>
+        <div class="segment">Catalogo</div>
+      </div>
+
+      <div class="eyebrow">Bozze · 0</div>
+      <h1 style="margin-bottom:4px">Le tue bozze</h1>
+      <p class="muted" style="margin-bottom:16px">Le elaborazioni in background compariranno qui.</p>
+
+      <div class="kempty">
+        <div class="kempty-ico">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9AA0A6" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        </div>
+        <div style="font-weight:600; font-size:15px">Ancora nessuna bozza</div>
+        <p class="muted" style="max-width:220px">Carica il tuo primo capo: lo ritroverai qui mentre l&rsquo;AI lo elabora.</p>
+        <button class="btn btn-primary btn-sm" style="margin-top:8px">Nuovo capo</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// Tip rotanti — campione dai contenuti reali del Second Brain (Topics/dirtytag + Reference/research).
+// Nell'app vivranno in mobile/src/waitingTips.ts (statici, zero rete).
+const TIPS = {
+  a: [ // schermata 2 — mix di tutte le categorie
+    { cat: 'vintage', label: 'VINTAGE', text: 'La fodera arancione del bomber MA-1 è reversibile: serviva ai piloti come segnale per i soccorsi aerei.' },
+    { cat: 'tip',     label: 'TIP',     text: 'La foto di copertina conta più di titolo, prezzo e reputazione: è il moltiplicatore n.1 del CTR su Vinted.' },
+    { cat: 'pop',     label: 'POP',     text: 'Un bomber Raf Simons indossato da Kanye West schizzò a 47.000$ nel giro di 24–48 ore.' },
+    { cat: 'vintage', label: 'VINTAGE', text: 'Sulle t-shirt USA la "single stitch" all\'orlo è un indizio di produzione pre-1998.' },
+    { cat: 'mercato', label: 'MERCATO', text: 'Nel 2025 il 62% della Gen Z ha comprato almeno un capo second-hand.' },
+    { cat: 'tip',     label: 'TIP',     text: 'Un Levi\'s vintage a £4 fece 2 visualizzazioni; a £14 fu venduto in un\'ora: troppo basso sembra sospetto.' },
+    { cat: 'vintage', label: 'VINTAGE', text: '"Deadstock" = mai indossato, spesso col cartellino: può valere 5–10 volte lo stesso capo usato.' },
+    { cat: 'pop',     label: 'POP',     text: 'Il ciclo nostalgia della moda era di ~20 anni; TikTok e Instagram l\'hanno compresso a 5–10.' },
+  ],
+  b: [ // variante 2b — più TIP pratici (l'utente è già in attesa lunga)
+    { cat: 'piattaforma', label: 'PIATTAFORMA', text: 'Il titolo su Vinted ha 140 caratteri: sfruttali tutti con Tipo + Marca + Colore + Materiale + Decade + Taglia.' },
+    { cat: 'piattaforma', label: 'PIATTAFORMA', text: 'Su Vinted la finestra d\'oro è la sera 19–22, e la domenica è la giornata di traffico più alta.' },
+    { cat: 'vintage', label: 'VINTAGE', text: 'Carhartt nasce nel 1889 a Detroit come tuta da lavoro per ferrovieri: workwear puro, moda zero.' },
+    { cat: 'piattaforma', label: 'PIATTAFORMA', text: 'La stessa felpa può valere €40 su Vinted e €88 su Grailed: è solo questione di piattaforma giusta.' },
+    { cat: 'mercato', label: 'MERCATO', text: 'Nel 2025 Vinted ha mosso 10,8 miliardi di euro di merce: è il marketplace più grande d\'Europa.' },
+  ],
+  // Set usato dalle schermate B1/B2 — 3 famiglie alternate: cultura pop/vintage · piattaforme · MAAT (funzionalità app).
+  mix: [
+    { cat: 'vintage',     label: 'VINTAGE',     text: 'Il badge Stone Island sta sul braccio sinistro: nato come segnale «if you know you know» tra i football casuals.' },
+    { cat: 'piattaforma', label: 'PIATTAFORMA', text: 'La foto di copertina conta più di titolo, prezzo e reputazione: è il moltiplicatore n.1 del CTR su Vinted.' },
+    { cat: 'maat',        label: 'MAAT',        text: 'Etichetta una foto come «Difetti» e l\'AI la ispeziona mirata, a caccia di imperfezioni da segnalare.' },
+    { cat: 'pop',         label: 'POP',         text: 'Un bomber Raf Simons indossato da Kanye West schizzò a 47.000$ nel giro di 24–48 ore.' },
+    { cat: 'piattaforma', label: 'PIATTAFORMA', text: 'Prezzare €47 invece di €50 funziona: il «left-digit effect» fa percepire il capo più conveniente.' },
+    { cat: 'maat',        label: 'MAAT',        text: 'Puoi salvare una bozza anche con una sola foto e completarla con l\'AI quando vuoi.' },
+    { cat: 'vintage',     label: 'VINTAGE',     text: 'Stone Island fu fondata da Massimo Osti a Bologna nel 1982; il nome è ispirato a Joseph Conrad.' },
+    { cat: 'piattaforma', label: 'PIATTAFORMA', text: 'Non scrivere «rotto» o «macchia» come etichetta: riformula sempre il difetto, non nasconderlo.' },
+    { cat: 'maat',        label: 'MAAT',        text: 'Aggiungi o togli foto a una bozza e rielabora l\'AI: la scheda si ricompila sulle foto correnti.' },
+    { cat: 'mercato',     label: 'MERCATO',     text: 'Il mercato second-hand globale è stimato a 393 miliardi di dollari entro il 2030.' },
+    { cat: 'vintage',     label: 'VINTAGE',     text: 'La fodera arancione del bomber MA-1 è reversibile: serviva ai piloti come segnale per i soccorsi aerei.' },
+    { cat: 'piattaforma', label: 'PIATTAFORMA', text: 'Rispondere ai messaggi entro 1–2 ore aumenta la conversione di circa il 30%.' },
+    { cat: 'maat',        label: 'MAAT',        text: 'Ogni capo tiene fino a 15 foto: fronte, retro, etichette, difetti ed extra — tutte ordinate per SKU.' },
+    { cat: 'pop',         label: 'POP',         text: 'Il ciclo nostalgia della moda era di ~20 anni; TikTok e Instagram l\'hanno compresso a 5–10.' },
+    { cat: 'piattaforma', label: 'PIATTAFORMA', text: 'Crosslisting sì, ma imposta sempre «1 disponibile»: eviti la doppia vendita nei minuti di sincronizzazione.' },
+    { cat: 'maat',        label: 'MAAT',        text: 'Quando confermi un capo entra nel Catalogo, pronto per la vendita.' },
+  ],
+};
+const ROTATE_MS = 8500; // leggermente più lungo: tempo di leggere senza fretta
+const REDUCE_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// Ordine mescolato per dare la percezione di "consigli infiniti" (nessun tracker sequenziale).
+const shuffle = (arr) => { const a = arr.slice(); for (let k = a.length - 1; k > 0; k--) { const j = Math.floor((k + 1) * ((k * 7 + 3) % 11) / 11); [a[k], a[j]] = [a[j], a[k]]; } return a; };
+
+document.querySelectorAll('.tip-float').forEach((card) => {
+  const tips = shuffle(TIPS[card.dataset.tips] || []);
+  const textEl = card.querySelector('.tip-text');
+  const catEl = card.querySelector('.tip-cat');
+  let i = 0;
+  const render = () => {
+    const t = tips[i];
+    textEl.textContent = t.text;
+    catEl.textContent = t.label;
+    catEl.className = 'tip-cat ' + t.cat;
+  };
+  render();
+  if (REDUCE_MOTION) return; // niente rotazione automatica: il testo resta fermo e leggibile
+  setInterval(() => {
+    textEl.classList.add('fading');
+    setTimeout(() => {
+      i = (i + 1) % tips.length;
+      render();
+      textEl.classList.remove('fading');
+    }, 350);
+  }, ROTATE_MS);
+});
+
+// Frasi di stato elaborazione — spiegano cosa sta facendo l'AI, evolvono col loading.
+const STATUS = [
+  'Leggo l’etichetta brand…',
+  'Riconosco il tipo di capo…',
+  'Deduco taglia e colore…',
+  'Analizzo la foto difetti…',
+  'Calcolo le misure dal marker ArUco…',
+  'Compilo la scheda…',
+];
+document.querySelectorAll('.proc-status').forEach((row) => {
+  const span = row.querySelector('span:last-child');
+  if (REDUCE_MOTION) return; // testo di stato fermo sul primo valore
+  let k = 0;
+  setInterval(() => {
+    span.classList.add('fading');
+    setTimeout(() => {
+      k = (k + 1) % STATUS.length;
+      span.textContent = STATUS[k];
+      span.classList.remove('fading');
+    }, 350);
+  }, 2600);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,369 @@
+<!-- ⚠️ CAMPIONE STALE (flag 2026-07-02): usa una terza palette (pesca/crema/menta, Inter+JetBrains Mono) diversa sia da
+     sage+oro (25/06) sia da MP076 (07-design-anchor-p2c.md, corrente). Probabile scarto pre-25/06. Non usare come
+     riferimento visivo — l'anchor corrente è dedalo-os/projects/maat/technical/ooux/07-design-anchor-p2c.md. -->
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-width=1.0" name="viewport"/>
+<title>MAAT - Dettaglio capo</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-primary": "#ffffff",
+                      "tertiary-fixed": "#ffddb5",
+                      "secondary-container": "#beedd4",
+                      "primary": "#984220",
+                      "on-tertiary": "#ffffff",
+                      "surface": "#fff8f4",
+                      "error-container": "#ffdad6",
+                      "primary-container": "#b75a36",
+                      "surface-container-high": "#f0e6df",
+                      "on-error": "#ffffff",
+                      "on-primary-fixed": "#380d00",
+                      "primary-fixed-dim": "#ffb59b",
+                      "primary-fixed": "#ffdbcf",
+                      "on-error-container": "#93000a",
+                      "on-tertiary-container": "#fffbff",
+                      "surface-tint": "#9b4422",
+                      "on-secondary-fixed-variant": "#244f3d",
+                      "outline": "#89726b",
+                      "inverse-surface": "#34302b",
+                      "on-primary-fixed-variant": "#7c2e0d",
+                      "inverse-on-surface": "#f9efe8",
+                      "surface-container-highest": "#eae1da",
+                      "outline-variant": "#dcc1b8",
+                      "secondary": "#3c6753",
+                      "on-primary-container": "#fffbff",
+                      "on-tertiary-fixed-variant": "#643f00",
+                      "on-background": "#1f1b17",
+                      "surface-container": "#f6ece5",
+                      "tertiary-fixed-dim": "#f9bb68",
+                      "on-tertiary-fixed": "#2a1800",
+                      "surface-container-lowest": "#ffffff",
+                      "surface-dim": "#e2d8d1",
+                      "secondary-fixed": "#beedd4",
+                      "background": "#fff8f4",
+                      "surface-container-low": "#fcf2eb",
+                      "on-surface": "#1f1b17",
+                      "tertiary-container": "#9d6a1e",
+                      "surface-bright": "#fff8f4",
+                      "on-secondary": "#ffffff",
+                      "surface-variant": "#eae1da",
+                      "on-secondary-fixed": "#002115",
+                      "on-surface-variant": "#55433c",
+                      "inverse-primary": "#ffb59b",
+                      "secondary-fixed-dim": "#a3d1b9",
+                      "on-secondary-container": "#426d59",
+                      "tertiary": "#805202",
+                      "error": "#ba1a1a"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "xl": "48px",
+                      "xs": "4px",
+                      "margin-desktop": "32px",
+                      "base": "4px",
+                      "sm": "8px",
+                      "lg": "24px",
+                      "margin-mobile": "16px",
+                      "md": "16px",
+                      "gutter": "16px"
+              },
+              "fontFamily": {
+                      "headline-lg-mobile": [
+                              "Inter"
+                      ],
+                      "data-md": [
+                              "JetBrains Mono"
+                      ],
+                      "headline-md": [
+                              "Inter"
+                      ],
+                      "data-lg": [
+                              "JetBrains Mono"
+                      ],
+                      "headline-lg": [
+                              "Inter"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "body-sm": [
+                              "Inter"
+                      ],
+                      "label-caps": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "headline-lg-mobile": [
+                              "24px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "data-md": [
+                              "13px",
+                              {
+                                      "lineHeight": "1.4",
+                                      "letterSpacing": "0.02em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-md": [
+                              "20px",
+                              {
+                                      "lineHeight": "1.4",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "data-lg": [
+                              "16px",
+                              {
+                                      "lineHeight": "1.4",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "1.2",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "1.5",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-sm": [
+                              "14px",
+                              {
+                                      "lineHeight": "1.5",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-caps": [
+                              "11px",
+                              {
+                                      "lineHeight": "1",
+                                      "letterSpacing": "0.08em",
+                                      "fontWeight": "700"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        body {
+            background-color: #FAFAF8;
+        }
+        .hairline-border {
+            border: 1px solid #E8E3DA;
+        }
+        .card-radius {
+            border-radius: 10px;
+        }
+        .dashed-border-custom {
+            border: 1px dashed #D8D2C8;
+        }
+      </style>
+</head>
+<body class="font-body-md text-on-surface antialiased bg-[#FAFAF8] min-h-screen pb-32">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-[#FAFAF8] border-b hairline-border shadow-[0px_4px_12px_rgba(28,24,20,0.05)]">
+<div class="flex items-center justify-between px-md h-16 w-full">
+<button class="p-2 text-on-surface hover:bg-surface-container-high transition-colors active:scale-95 duration-150 rounded-full">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<span class="font-headline-md text-headline-md text-primary font-bold tracking-tight">MAAT</span>
+<button class="p-2 text-on-surface hover:bg-surface-container-high transition-colors active:scale-95 duration-150 rounded-full">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+<!-- Sticky Header Title Block -->
+<div class="px-md pb-md pt-sm flex gap-md items-center bg-[#FAFAF8]">
+<img class="w-[48px] h-[48px] rounded-lg object-cover hairline-border" data-alt="A detailed, studio-quality front view photograph of a vintage, olive green, crewneck Stone Island sweatshirt from the 90s, laid flat on a clean, light, textured background, bright, even, light-mode aesthetic lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAmXS_jXS2m4D4Cc9I-Fb5kO7JxeX2bnoBVsoIxkMPKux9wJit4j8mltww0CGPfYOJZdmNk2QXvAYbrVAvbc8sAGED1EyPPCxJi0DwanK2zLETSE0egMeC-0PC1cUxjI2fvccPezwnIXcAF71Yo0gwZn53Bniwdf9oy_3fSCCPf49sw9hpggIpD5Kg12btANit1mmXLrPwcrvdTmVde4LuTNfvwz24834tUVpWxZKCxn-niQWIrJjWbaGhuMxG3vSGDwJMnNxZkyihh"/>
+<div class="flex-1 flex flex-col justify-center">
+<div class="flex items-center gap-sm mb-xs">
+<span class="bg-primary-fixed text-on-primary-fixed px-2 py-0.5 rounded-full font-label-caps text-label-caps">Bozza</span>
+<h1 class="font-headline-md text-headline-md leading-tight text-on-surface truncate">Felpa Stone Island</h1>
+</div>
+<div class="flex items-center justify-between">
+<p class="font-body-sm text-body-sm text-on-surface-variant truncate">Felpa girocollo · Anni '90</p>
+<span class="font-data-md text-data-md text-outline">SKU-992A</span>
+</div>
+</div>
+</div>
+</header>
+<main class="pt-[140px] px-md flex flex-col gap-lg">
+<!-- SECTION "Foto" -->
+<section class="flex flex-col gap-sm">
+<h2 class="font-label-caps text-label-caps text-on-surface-variant">Foto</h2>
+<div class="grid grid-cols-3 gap-sm">
+<!-- Fronte -->
+<div class="flex flex-col gap-xs items-center">
+<div class="relative w-full aspect-square rounded-[10px] hairline-border bg-white overflow-hidden shadow-[0px_4px_12px_rgba(28,24,20,0.05)]">
+<img class="w-full h-full object-cover" data-alt="A detailed, studio-quality front view photograph of a vintage, olive green, crewneck Stone Island sweatshirt from the 90s, laid flat on a clean, light, textured background, bright, even, light-mode aesthetic lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAmXS_jXS2m4D4Cc9I-Fb5kO7JxeX2bnoBVsoIxkMPKux9wJit4j8mltww0CGPfYOJZdmNk2QXvAYbrVAvbc8sAGED1EyPPCxJi0DwanK2zLETSE0egMeC-0PC1cUxjI2fvccPezwnIXcAF71Yo0gwZn53Bniwdf9oy_3fSCCPf49sw9hpggIpD5Kg12btANit1mmXLrPwcrvdTmVde4LuTNfvwz24834tUVpWxZKCxn-niQWIrJjWbaGhuMxG3vSGDwJMnNxZkyihh"/>
+<div class="absolute top-1 right-1 bg-secondary text-white rounded-full w-5 h-5 flex items-center justify-center">
+<span class="material-symbols-outlined text-[14px]">check</span>
+</div>
+</div>
+<span class="font-label-caps text-[10px] text-on-surface-variant flex items-center gap-[2px]">Fronte<span class="text-error">•</span></span>
+</div>
+<!-- Retro -->
+<div class="flex flex-col gap-xs items-center">
+<div class="relative w-full aspect-square rounded-[10px] hairline-border bg-white overflow-hidden shadow-[0px_4px_12px_rgba(28,24,20,0.05)]">
+<img class="w-full h-full object-cover" data-alt="A detailed, studio-quality back view photograph of a vintage, olive green, crewneck Stone Island sweatshirt from the 90s, laid flat on a clean, light, textured background, showing the distinctive patch placeholder, bright, even, light-mode aesthetic lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAbbl3fW6sQr6NtGLfOyznKAHIldkrfkpx6j7WcjieUlhcx_6KUkcLC7UIV00dgZ9CSEYGbHWoBF6VZrPUaL3FTWAFipmtDySWfqPOCCC8NksORdg_jvsnr77AVl0JZS4yZBZmCVGTwzXixArMfEUQ6jPUkHL1b3aJnckh2M37NKbhG7BoIadLwp7sfK74KLyzgeoNvKsp4y9atQXLvVtqiprXGWN-d25biis2bLPbEwcNK7Vyf5bkpG_rFsQ_J5kSkhF_XnhGLystW"/>
+<div class="absolute top-1 right-1 bg-secondary text-white rounded-full w-5 h-5 flex items-center justify-center">
+<span class="material-symbols-outlined text-[14px]">check</span>
+</div>
+</div>
+<span class="font-label-caps text-[10px] text-on-surface-variant flex items-center gap-[2px]">Retro<span class="text-error">•</span></span>
+</div>
+<!-- Brand -->
+<div class="flex flex-col gap-xs items-center">
+<button class="w-full aspect-square rounded-[10px] dashed-border-custom bg-surface flex flex-col items-center justify-center gap-1 hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-outline text-[24px]">photo_camera</span>
+<span class="font-label-caps text-[10px] text-outline">Scatta foto</span>
+</button>
+<span class="font-label-caps text-[10px] text-on-surface-variant flex items-center gap-[2px]">Brand<span class="text-error">•</span></span>
+</div>
+<!-- Taglia -->
+<div class="flex flex-col gap-xs items-center">
+<div class="relative w-full aspect-square rounded-[10px] hairline-border bg-white overflow-hidden shadow-[0px_4px_12px_rgba(28,24,20,0.05)]">
+<img class="w-full h-full object-cover" data-alt="A detailed, macro studio photograph focusing strictly on the size tag of a vintage garment, clearly showing 'SIZE LARGE MADE IN USA' on a crisp, light background, bright, even, light-mode aesthetic lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBj-3KrbDt_MkTFl4XsZ5WYGyWlqcoZX29sjqtPLnxI09O63C6uUANIy84SGnReqZCXD032AabjNavtLqt34kEaPwLy83zoACJfpWykAS_kYZ8DtrlowseN3j7GkMlRJjKmShIjMlZVankWHl0ATWC1OoRIby39fthcLyz0AmAfR-YLnKOjeK2czwzhSe8Wicdk7v0I5CmWigOp8C3AAFytpA-YVDV3z09OdhFEBrSs33XcCM9YxBbjf9BBrH6fatdGD4bIwIcC7KPU"/>
+</div>
+<span class="font-label-caps text-[10px] text-on-surface-variant">Taglia</span>
+</div>
+<!-- Materiale -->
+<div class="flex flex-col gap-xs items-center">
+<button class="w-full aspect-square rounded-[10px] dashed-border-custom bg-surface flex flex-col items-center justify-center gap-1 hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-outline text-[24px]">photo_camera</span>
+<span class="font-label-caps text-[10px] text-outline">Scatta foto</span>
+</button>
+<span class="font-label-caps text-[10px] text-on-surface-variant">Materiale</span>
+</div>
+<!-- Extra -->
+<div class="flex flex-col gap-xs items-center">
+<button class="w-full aspect-square rounded-[10px] dashed-border-custom bg-surface flex flex-col items-center justify-center gap-1 hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-outline text-[24px]">add</span>
+</button>
+<span class="font-label-caps text-[10px] text-on-surface-variant">Extra</span>
+</div>
+</div>
+</section>
+<!-- SECTION "Attributi" -->
+<section class="flex flex-col gap-sm">
+<h2 class="font-label-caps text-label-caps text-on-surface-variant">Attributi</h2>
+<div class="bg-white rounded-[10px] hairline-border shadow-[0px_4px_12px_rgba(28,24,20,0.05)] flex flex-col overflow-hidden">
+<!-- Attribute Row -->
+<div class="flex items-center justify-between px-md py-sm border-b hairline-border last:border-b-0 hover:bg-[#FAFAF8] transition-colors group">
+<span class="font-body-sm text-body-sm text-on-surface-variant w-1/3">Brand</span>
+<span class="font-data-md text-data-md text-on-surface flex-1 text-right truncate">Stone Island</span>
+<button class="ml-sm p-1 text-outline opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-[18px]">edit</span></button>
+</div>
+<div class="flex items-center justify-between px-md py-sm border-b hairline-border last:border-b-0 hover:bg-[#FAFAF8] transition-colors group">
+<span class="font-body-sm text-body-sm text-on-surface-variant w-1/3">Genere</span>
+<span class="font-data-md text-data-md text-on-surface flex-1 text-right truncate">Uomo</span>
+<button class="ml-sm p-1 text-outline opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-[18px]">edit</span></button>
+</div>
+<div class="flex items-center justify-between px-md py-sm border-b hairline-border last:border-b-0 hover:bg-[#FAFAF8] transition-colors group">
+<span class="font-body-sm text-body-sm text-on-surface-variant w-1/3">Colore</span>
+<span class="font-data-md text-data-md text-on-surface flex-1 text-right truncate">Verde militare</span>
+<button class="ml-sm p-1 text-outline opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-[18px]">edit</span></button>
+</div>
+<div class="flex items-center justify-between px-md py-sm border-b hairline-border last:border-b-0 hover:bg-[#FAFAF8] transition-colors group">
+<span class="font-body-sm text-body-sm text-on-surface-variant w-1/3">Taglia</span>
+<span class="font-data-md text-data-md text-on-surface flex-1 text-right truncate">L</span>
+<button class="ml-sm p-1 text-outline opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-[18px]">edit</span></button>
+</div>
+<div class="flex items-center justify-between px-md py-sm border-b hairline-border last:border-b-0 hover:bg-[#FAFAF8] transition-colors group">
+<span class="font-body-sm text-body-sm text-on-surface-variant w-1/3">Materiale</span>
+<span class="font-data-md text-data-md text-on-surface flex-1 text-right truncate">Cotone</span>
+<button class="ml-sm p-1 text-outline opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-[18px]">edit</span></button>
+</div>
+<!-- Highlighted Attribute Row -->
+<div class="flex items-center justify-between px-md py-sm border-b hairline-border last:border-b-0 hover:bg-[#FAFAF8] transition-colors group relative overflow-hidden bg-surface-container-low">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>
+<div class="flex flex-col w-1/3">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Periodo</span>
+<span class="text-[10px] font-label-caps text-primary mt-1">da verificare</span>
+</div>
+<span class="font-data-md text-data-md text-on-surface flex-1 text-right truncate">Anni '90</span>
+<button class="ml-sm p-1 text-outline opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-[18px]">edit</span></button>
+</div>
+<div class="flex items-center justify-between px-md py-sm border-b hairline-border last:border-b-0 hover:bg-[#FAFAF8] transition-colors group">
+<span class="font-body-sm text-body-sm text-on-surface-variant w-1/3">Tipo capo</span>
+<span class="font-data-md text-data-md text-on-surface flex-1 text-right truncate">Felpa girocollo</span>
+<button class="ml-sm p-1 text-outline opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-[18px]">edit</span></button>
+</div>
+<div class="flex items-center justify-between px-md py-sm border-b hairline-border last:border-b-0 hover:bg-[#FAFAF8] transition-colors group">
+<span class="font-body-sm text-body-sm text-on-surface-variant w-1/3">Fit</span>
+<span class="font-data-md text-data-md text-on-surface flex-1 text-right truncate">Regular</span>
+<button class="ml-sm p-1 text-outline opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-[18px]">edit</span></button>
+</div>
+<div class="flex items-center justify-between px-md py-sm border-b hairline-border last:border-b-0 hover:bg-[#FAFAF8] transition-colors group">
+<span class="font-body-sm text-body-sm text-on-surface-variant w-1/3">Stile</span>
+<span class="font-data-md text-data-md text-on-surface flex-1 text-right truncate">Sportswear</span>
+<button class="ml-sm p-1 text-outline opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-[18px]">edit</span></button>
+</div>
+<div class="flex items-center justify-between px-md py-sm border-b hairline-border last:border-b-0 hover:bg-[#FAFAF8] transition-colors group">
+<span class="font-body-sm text-body-sm text-on-surface-variant w-1/3">Rarità</span>
+<span class="font-data-md text-data-md text-on-surface flex-1 text-right truncate">Comune</span>
+<button class="ml-sm p-1 text-outline opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-[18px]">edit</span></button>
+</div>
+<div class="flex items-center justify-between px-md py-sm border-b hairline-border last:border-b-0 hover:bg-[#FAFAF8] transition-colors group">
+<span class="font-body-sm text-body-sm text-on-surface-variant w-1/3">Stagionalità</span>
+<span class="font-data-md text-data-md text-on-surface flex-1 text-right truncate">Autunno/Inverno</span>
+<button class="ml-sm p-1 text-outline opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-[18px]">edit</span></button>
+</div>
+<!-- Highlighted Attribute Row -->
+<div class="flex items-center justify-between px-md py-sm border-b hairline-border last:border-b-0 hover:bg-[#FAFAF8] transition-colors group relative overflow-hidden bg-surface-container-low">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>
+<div class="flex flex-col w-1/3">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Difetti</span>
+<span class="text-[10px] font-label-caps text-primary mt-1">da verificare</span>
+</div>
+<span class="font-data-md text-data-md text-on-surface flex-1 text-right truncate whitespace-normal">Lieve usura ai polsini</span>
+<button class="ml-sm p-1 text-outline opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-[18px]">edit</span></button>
+</div>
+</div>
+</section>
+<!-- SECTION "Misure" -->
+<section class="flex flex-col gap-sm">
+<div class="bg-white rounded-[10px] hairline-border shadow-[0px_4px_12px_rgba(28,24,20,0.05)] px-md py-sm flex items-center justify-between cursor-pointer hover:bg-[#FAFAF8] transition-colors">
+<span class="font-headline-md text-[16px] text-on-surface font-semibold">Misure</span>
+<span class="material-symbols-outlined text-on-surface-variant">expand_more</span>
+</div>
+</section>
+</main>
+<!-- Sticky Bottom Bar -->
+<div class="fixed bottom-0 left-0 w-full z-50 bg-[#FAFAF8]/95 backdrop-blur-sm border-t hairline-border shadow-[0_-4px_12px_rgba(28,24,20,0.02)] px-md py-md flex flex-col gap-sm">
+<p class="font-body-sm text-body-sm text-on-surface-variant text-center">Manca la foto obbligatoria: Brand</p>
+<button class="w-full bg-surface-variant text-outline rounded-full py-3 font-headline-md text-[16px] font-bold cursor-not-allowed" disabled="">
+            Conferma capo
+        </button>
+</div>
+</body></html>

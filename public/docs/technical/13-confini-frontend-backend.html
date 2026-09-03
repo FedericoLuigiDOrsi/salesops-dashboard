@@ -1,0 +1,731 @@
+<title>MAAT Confini</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F6F7ED; --surface:#FFFFFF; --surface-2:#ECEEE0;
+    --text-primary:#001F3F; --text-secondary:#5B6670; --text-tertiary:#9AA0A6;
+    --border:rgba(0,31,63,.12); --border-strong:rgba(0,31,63,.22);
+    --accent:#DBE64C; --accent-press:#C8D43B; --on-accent:#001220;
+    --success:#00804C; --info:#1E488F; --danger:#C6323A;
+    --shadow-1:0 1px 2px rgba(0,31,63,.05), 0 6px 20px rgba(0,31,63,.07);
+    --shadow-2:0 4px 10px rgba(0,31,63,.08), 0 20px 48px rgba(0,31,63,.12);
+    --rail-bg:#001426; --rail-bg-2:#052243; --rail-text:#F3F5EC;
+    --rail-text-dim:rgba(243,245,236,.60); --rail-border:rgba(243,245,236,.12);
+    --font-ui:'Manrope',-apple-system,'Helvetica Neue',Arial,sans-serif;
+    --font-mono:'JetBrains Mono','SFMono-Regular',Consolas,monospace;
+    --r-sm:8px; --r-md:10px; --r-lg:14px; --r-pill:999px;
+    --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px; --s7:48px; --s8:64px;
+    --ease:cubic-bezier(.22,1,.36,1);
+    --rail-w:280px;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#050F1B; --surface:#0B2036; --surface-2:#112B45;
+      --text-primary:#F3F5EC; --text-secondary:rgba(243,245,236,.70); --text-tertiary:rgba(243,245,236,.44);
+      --border:rgba(243,245,236,.14); --border-strong:rgba(243,245,236,.26);
+      --accent:#DBE64C; --accent-press:#EAF27A; --on-accent:#001220;
+      --success:#4CD298; --info:#7CA6FF; --danger:#FF8B8F;
+      --shadow-1:0 1px 2px rgba(0,0,0,.30), 0 6px 20px rgba(0,0,0,.35);
+      --shadow-2:0 4px 12px rgba(0,0,0,.35), 0 24px 56px rgba(0,0,0,.45);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#050F1B; --surface:#0B2036; --surface-2:#112B45;
+    --text-primary:#F3F5EC; --text-secondary:rgba(243,245,236,.70); --text-tertiary:rgba(243,245,236,.44);
+    --border:rgba(243,245,236,.14); --border-strong:rgba(243,245,236,.26);
+    --accent:#DBE64C; --accent-press:#EAF27A; --on-accent:#001220;
+    --success:#4CD298; --info:#7CA6FF; --danger:#FF8B8F;
+    --shadow-1:0 1px 2px rgba(0,0,0,.30), 0 6px 20px rgba(0,0,0,.35);
+    --shadow-2:0 4px 12px rgba(0,0,0,.35), 0 24px 56px rgba(0,0,0,.45);
+    color-scheme: dark;
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0; background:var(--bg); color:var(--text-primary);
+    font-family:var(--font-ui); font-size:15px; line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .skip-link{position:absolute; left:-999px; top:0; background:var(--accent); color:var(--on-accent); padding:var(--s2) var(--s4); z-index:100;}
+  .skip-link:focus{left:var(--s3); top:var(--s3);}
+
+  h1,h2,h3,h4{font-family:var(--font-ui); font-weight:800; letter-spacing:-.01em; text-wrap:balance; margin:0;}
+  p{margin:0 0 var(--s4); max-width:66ch;}
+  a{color:inherit;}
+  code, .mono{font-family:var(--font-mono); font-variant-numeric:tabular-nums;}
+
+  /* ---------- layout shell ---------- */
+  .shell{display:flex; min-height:100vh;}
+  .rail{
+    width:var(--rail-w); flex:0 0 var(--rail-w); background:var(--rail-bg);
+    background-image: radial-gradient(120% 140% at 0% 0%, var(--rail-bg-2), var(--rail-bg) 60%);
+    color:var(--rail-text); position:sticky; top:0; height:100vh; overflow-y:auto;
+    padding:var(--s5) var(--s4) var(--s6); display:flex; flex-direction:column; gap:var(--s5);
+  }
+  .rail-brand{display:flex; flex-direction:column; gap:var(--s1); padding:0 var(--s2);}
+  .rail-eyebrow{font-family:var(--font-mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--accent);}
+  .rail-title{font-size:20px; font-weight:800; color:var(--rail-text); letter-spacing:-.01em;}
+  .rail-sub{font-size:12.5px; color:var(--rail-text-dim); line-height:1.5;}
+  .rail nav{display:flex; flex-direction:column; gap:2px;}
+  .rail-link{
+    display:flex; align-items:baseline; gap:var(--s3); padding:7px var(--s2); border-radius:var(--r-sm);
+    text-decoration:none; color:var(--rail-text-dim); font-size:13.2px; transition:background .16s var(--ease), color .16s var(--ease);
+  }
+  .rail-link .n{font-family:var(--font-mono); font-size:11px; color:var(--rail-text-dim); flex:0 0 20px;}
+  .rail-link:hover{background:rgba(243,245,236,.06); color:var(--rail-text);}
+  .rail-link.active{background:rgba(219,230,76,.13); color:var(--rail-text);}
+  .rail-link.active .n{color:var(--accent);}
+  .rail-foot{margin-top:auto; padding:var(--s3) var(--s2) 0; border-top:1px solid var(--rail-border); font-size:11.5px; color:var(--rail-text-dim);}
+  .rail-foot .mono{color:var(--accent);}
+
+  .main{flex:1 1 auto; min-width:0;}
+  .content{max-width:980px; margin:0 auto; padding:var(--s7) var(--s6) var(--s8);}
+  @media (max-width:900px){ .content{padding:var(--s5) var(--s4) var(--s7);} }
+
+  /* mobile rail -> top strip */
+  .rail-toggle{display:none;}
+  @media (max-width:860px){
+    .shell{flex-direction:column;}
+    .rail{
+      position:sticky; top:0; height:auto; width:100%; flex:0 0 auto;
+      flex-direction:row; align-items:center; gap:var(--s4); padding:var(--s3) var(--s4);
+      overflow-x:auto; overflow-y:hidden; z-index:20;
+    }
+    .rail-brand{flex-direction:row; align-items:center; gap:var(--s3); white-space:nowrap;}
+    .rail-sub{display:none;}
+    .rail nav{flex-direction:row; gap:2px; white-space:nowrap;}
+    .rail-link{padding:6px 10px;}
+    .rail-foot{display:none;}
+  }
+
+  /* ---------- hero ---------- */
+  .hero{padding-bottom:var(--s6); border-bottom:1px solid var(--border); margin-bottom:var(--s6);}
+  .hero-eyebrow{font-family:var(--font-mono); font-size:11.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-secondary); margin-bottom:var(--s3);}
+  .hero h1{font-size:clamp(28px,4vw,40px); margin-bottom:var(--s3);}
+  .hero .lede{font-size:16.5px; color:var(--text-secondary); max-width:62ch;}
+  .meta-row{display:flex; flex-wrap:wrap; gap:var(--s2); margin-top:var(--s5);}
+  .meta-chip{
+    font-family:var(--font-mono); font-size:11.5px; color:var(--text-secondary);
+    border:1px solid var(--border); border-radius:var(--r-pill); padding:5px 12px;
+    display:flex; gap:6px; align-items:center;
+  }
+  .meta-chip b{color:var(--text-primary); font-weight:600;}
+
+  .stat-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:var(--s3); margin-top:var(--s5);}
+  @media (max-width:700px){ .stat-grid{grid-template-columns:repeat(2,1fr);} }
+  .stat{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg);
+    padding:var(--s4); box-shadow:var(--shadow-1);
+  }
+  .stat .num{font-family:var(--font-mono); font-size:26px; font-weight:600; color:var(--text-primary); line-height:1;}
+  .stat .lbl{font-size:12px; color:var(--text-secondary); margin-top:6px; line-height:1.35;}
+
+  /* ---------- framing card (intro quote) ---------- */
+  .framing{
+    background:color-mix(in srgb, var(--accent) 5%, var(--surface)); border:1px solid var(--border);
+    border-radius:var(--r-md); padding:var(--s5); margin:var(--s6) 0; box-shadow:var(--shadow-1);
+  }
+  .framing .callout-label{color:var(--accent-press);}
+  .framing p{margin-bottom:var(--s3); color:var(--text-secondary); font-size:14.5px;}
+  .framing p:last-child{margin-bottom:0;}
+  .framing strong{color:var(--text-primary);}
+
+  .legend{display:flex; flex-wrap:wrap; gap:var(--s3); margin:var(--s5) 0 var(--s6); padding:var(--s4); background:var(--surface-2); border-radius:var(--r-md);}
+  .legend-item{display:flex; align-items:center; gap:7px; font-size:12.5px; color:var(--text-secondary);}
+
+  /* ---------- sections ---------- */
+  section.doc-section{padding-top:var(--s7); scroll-margin-top:var(--s5);}
+  section.doc-section:first-of-type{padding-top:0;}
+  .sec-head{display:flex; align-items:baseline; gap:var(--s3); margin-bottom:var(--s2);}
+  .sec-head .idx{font-family:var(--font-mono); font-size:14px; color:var(--accent-press); background:color-mix(in srgb, var(--accent) 22%, transparent); padding:2px 9px; border-radius:var(--r-sm); font-weight:600;}
+  .sec-head h2{font-size:22px;}
+  .sec-note{color:var(--text-secondary); font-size:14px; margin-bottom:var(--s5); max-width:70ch;}
+
+  /* ---------- tables ---------- */
+  .table-wrap{overflow-x:auto; border:1px solid var(--border); border-radius:var(--r-lg); margin:var(--s4) 0 var(--s5); box-shadow:var(--shadow-1);}
+  table{width:100%; border-collapse:collapse; background:var(--surface); font-size:13.4px; min-width:560px;}
+  thead th{
+    text-align:left; font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--text-secondary); font-weight:600; padding:10px 14px; border-bottom:1px solid var(--border-strong);
+    background:var(--surface-2); white-space:nowrap;
+  }
+  tbody td{padding:10px 14px; border-bottom:1px solid var(--border); vertical-align:top; color:var(--text-primary);}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover td{background:var(--surface-2);}
+  td .mono, th .mono{font-size:12.6px;}
+  td.sub{color:var(--text-secondary); font-size:12.8px;}
+
+  /* ---------- pills / status ---------- */
+  .pill{
+    display:inline-flex; align-items:center; gap:5px; font-family:var(--font-mono); font-size:10.8px;
+    letter-spacing:.03em; text-transform:uppercase; padding:3px 9px; border-radius:var(--r-pill);
+    border:1px solid transparent; white-space:nowrap; font-weight:600;
+  }
+  .pill--danger{background:color-mix(in srgb, var(--danger) 14%, transparent); color:var(--danger); border-color:color-mix(in srgb, var(--danger) 35%, transparent);}
+  .pill--accent{background:color-mix(in srgb, var(--accent) 22%, transparent); color:var(--accent-press); border-color:color-mix(in srgb, var(--accent) 45%, transparent);}
+  .pill--success{background:color-mix(in srgb, var(--success) 14%, transparent); color:var(--success); border-color:color-mix(in srgb, var(--success) 35%, transparent);}
+  .pill--info{background:color-mix(in srgb, var(--info) 12%, transparent); color:var(--info); border-color:color-mix(in srgb, var(--info) 32%, transparent);}
+  .pill--muted{background:var(--surface-2); color:var(--text-secondary); border-color:var(--border);}
+
+  /* ---------- callouts ---------- */
+  .callout{border-radius:var(--r-md); padding:var(--s4) var(--s5); margin:var(--s4) 0; font-size:14px;}
+  .callout p:last-child{margin-bottom:0;}
+  .callout-label{display:block; font-family:var(--font-mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; margin-bottom:6px;}
+  .callout--fix{background:color-mix(in srgb, var(--danger) 7%, var(--surface)); border:1px solid color-mix(in srgb, var(--danger) 30%, transparent);}
+  .callout--fix .callout-label{color:var(--danger);}
+  .callout--unverified{background:var(--surface-2); border:1px dashed var(--border-strong);}
+  .callout--unverified .callout-label{color:var(--text-secondary);}
+
+  /* open questions list */
+  .oq-list{display:flex; flex-direction:column; gap:var(--s3); margin:var(--s4) 0 var(--s5);}
+  .oq{
+    display:flex; gap:var(--s4); background:var(--surface); border:1px solid var(--border);
+    border-radius:var(--r-lg); padding:var(--s4) var(--s5); box-shadow:var(--shadow-1);
+  }
+  .oq .oq-num{font-family:var(--font-mono); font-size:20px; font-weight:700; color:var(--accent-press); flex:0 0 auto; line-height:1.2;}
+  .oq-body p{margin-bottom:var(--s2); font-size:14px;}
+  .oq-body p:last-child{margin-bottom:0;}
+  .oq-body .oq-title{font-weight:700; color:var(--text-primary); display:block; margin-bottom:4px;}
+
+  /* diagram figure */
+  figure.diagram{margin:var(--s5) 0 var(--s6); padding:0;}
+  .diagram-frame{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--r-lg);
+    padding:var(--s5); box-shadow:var(--shadow-1); overflow-x:auto;
+  }
+  .diagram-frame svg{display:block; max-width:100%; height:auto; color:var(--text-primary);}
+  figcaption{font-size:13px; color:var(--text-secondary); margin-top:var(--s3); max-width:70ch;}
+
+  hr.rule{border:none; border-top:1px solid var(--border); margin:var(--s7) 0;}
+
+  footer.doc-foot{
+    margin-top:var(--s8); padding-top:var(--s5); border-top:1px solid var(--border);
+    font-size:12.5px; color:var(--text-tertiary); display:flex; justify-content:space-between; gap:var(--s4); flex-wrap:wrap;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    *{transition:none !important; animation:none !important;}
+  }
+</style>
+
+<a class="skip-link" href="#main">Vai al contenuto</a>
+
+<div class="shell">
+  <aside class="rail" aria-label="Indice del documento">
+    <div class="rail-brand">
+      <span class="rail-eyebrow">MAAT · piattaforma</span>
+      <span class="rail-title">Confini di sistema</span>
+      <span class="rail-sub">Come <span class="mono">apps/web</span>, <span class="mono">apps/mobile</span> e l'estensione parlano col backend — per Databros.</span>
+    </div>
+    <nav id="toc">
+      <a class="rail-link" data-target="s00" href="#s00"><span class="n">00</span><span>Cos'è questo documento</span></a>
+      <a class="rail-link" data-target="s01" href="#s01"><span class="n">01</span><span>Mappa d'insieme</span></a>
+      <a class="rail-link" data-target="s02" href="#s02"><span class="n">02</span><span>I 4 percorsi di apps/web</span></a>
+      <a class="rail-link" data-target="s03" href="#s03"><span class="n">03</span><span>Contratto per chiamata</span></a>
+      <a class="rail-link" data-target="s04" href="#s04"><span class="n">04</span><span>Endpoint services/backend</span></a>
+      <a class="rail-link" data-target="s05" href="#s05"><span class="n">05</span><span>services/worker, due runtime</span></a>
+      <a class="rail-link" data-target="s06" href="#s06"><span class="n">06</span><span>services/cv</span></a>
+      <a class="rail-link" data-target="s07" href="#s07"><span class="n">07</span><span>extension-vinted, due host</span></a>
+      <a class="rail-link" data-target="s08" href="#s08"><span class="n">08</span><span>Le porte d'accesso</span></a>
+      <a class="rail-link" data-target="s09" href="#s09"><span class="n">09</span><span>Divergenze dai doc esistenti</span></a>
+      <a class="rail-link" data-target="s10" href="#s10"><span class="n">10</span><span>Domande aperte per Databros</span></a>
+      <a class="rail-link" data-target="s11" href="#s11"><span class="n">11</span><span>Cosa non è verificato</span></a>
+    </nav>
+    <div class="rail-foot">
+      <div><span class="mono">docs/technical/13-confini-frontend-backend.md</span></div>
+      <div style="margin-top:4px;">draft · 2026-09-02 · owner <span class="mono">Federico D'Orsi</span></div>
+    </div>
+  </aside>
+
+  <main class="main" id="main">
+    <div class="content">
+
+      <header class="hero">
+        <div class="hero-eyebrow">MAAT — audit read-only del codice, 2026-09-02</div>
+        <h1>Confini frontend↔backend</h1>
+        <p class="lede">Per ogni confine tra un frontend (<span class="mono">apps/web</span>, <span class="mono">apps/mobile</span>, <span class="mono">apps/extension-vinted</span>) e il resto del sistema: come si chiama davvero, con che autorizzazione, cosa scambia. Non priorità di lavoro (→ <span class="mono">10</span>), non vocabolario dati (→ <span class="mono">08</span>) — la fotografia esaustiva che manca in entrambi.</p>
+
+        <div class="meta-row">
+          <span class="meta-chip">Audience <b>Databros</b> (Checco, Giorgio) + team MAAT</span>
+          <span class="meta-chip">Metodo <b>lettura statica del codice su main</b>, citazioni file:linea</span>
+          <span class="meta-chip">Stato <b>draft</b>, aggiornare quando cambia il codice</span>
+        </div>
+
+        <div class="stat-grid">
+          <div class="stat"><div class="num">4</div><div class="lbl">percorsi reali di scrittura/lettura da apps/web</div></div>
+          <div class="stat"><div class="num">2</div><div class="lbl">runtime distinti dentro services/worker</div></div>
+          <div class="stat"><div class="num">7</div><div class="lbl">endpoint REST propri di services/backend</div></div>
+          <div class="stat"><div class="num">5</div><div class="lbl">domande aperte, non decise qui</div></div>
+        </div>
+      </header>
+
+      <div class="legend" aria-label="Legenda simboli usati nel documento">
+        <span class="legend-item"><span class="pill pill--success">Risolto</span> chiuso, verificato nel codice</span>
+        <span class="legend-item"><span class="pill pill--accent">Decisione aperta</span> serve un ADR del team, non un bug</span>
+        <span class="legend-item"><span class="pill pill--danger">Gap / rotto</span> non raggiungibile o contraddittorio oggi</span>
+        <span class="legend-item"><span class="pill pill--muted">Non verificato a runtime</span> dedotto dal codice, da confermare</span>
+      </div>
+
+      <!-- 00 ---------------------------------------------------------- -->
+      <section class="doc-section" id="s00">
+        <div class="sec-head"><span class="idx">00</span><h2>Cos'è questo documento</h2></div>
+        <div class="framing">
+          <p>Non è <strong>10-audit-plug-and-play.md</strong> (priorità e rischio di ogni confine, ordine di lavoro) né <strong>08-contratti-dati.md</strong> (vocabolario e schema dei dati). Questo documento fotografa, confine per confine, tre cose: <strong>come si chiama davvero</strong> il collegamento (protocollo, path, porta), <strong>con che autorizzazione</strong>, e <strong>cosa scambia</strong>.</p>
+          <p>Serve perché nessun documento esistente elenca in un posto solo tutti gli accessi reali: <span class="mono">10</span> §2 ha una topologia compatta di 5 righe, utile per il rischio ma non per rispondere "questo endpoint esiste? con che auth? chi lo chiama oggi?".</p>
+          <p>Dove un fatto è dedotto dalla lettura statica e non osservato a runtime, è segnalato esplicitamente (§11). In caso di conflitto fra questo documento e il codice, <strong>vince il codice</strong>.</p>
+        </div>
+      </section>
+
+      <!-- 01 ---------------------------------------------------------- -->
+      <section class="doc-section" id="s01">
+        <div class="sec-head"><span class="idx">01</span><h2>Mappa d'insieme</h2></div>
+        <p class="sec-note">Postgres/Supabase è l'unica fonte di verità comune. Nessun frontend legge o scrive <span class="mono">services/cv</span> direttamente: lo vede solo attraverso il risultato che <span class="mono">services/worker</span> scrive su <span class="mono">items</span>.</p>
+
+        <figure class="diagram">
+          <div class="diagram-frame">
+            <svg viewBox="0 0 1120 660" role="img" aria-label="Topologia MAAT: apps/web, apps/mobile ed extension-vinted collegati a services/backend, ai due runtime di services/worker, a services/cv e a Postgres/Supabase, con R2 per lo storage foto e Vinted come sistema esterno.">
+              <defs>
+                <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+                </marker>
+                <marker id="arrDanger" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path d="M0,0 L10,5 L0,10 z" fill="#C6323A"/>
+                </marker>
+              </defs>
+              <style>
+                .box{fill:none; stroke:currentColor; stroke-width:1.4; opacity:.85;}
+                .boxfill{fill:currentColor; opacity:.045;}
+                .lbl{font-family:'JetBrains Mono',monospace; font-size:12px; fill:currentColor;}
+                .lbl2{font-family:'Manrope',sans-serif; font-weight:700; font-size:13px; fill:currentColor;}
+                .sub{font-family:'JetBrains Mono',monospace; font-size:10px; fill:currentColor; opacity:.6;}
+                .edge{fill:none; stroke:currentColor; stroke-width:1.3; opacity:.55;}
+                .edgelbl{font-family:'JetBrains Mono',monospace; font-size:10px; fill:currentColor; opacity:.75;}
+                .danger{stroke:#C6323A; opacity:.9;}
+                .dangerlbl{fill:#C6323A; opacity:1; font-weight:600;}
+                .dash{stroke-dasharray:4 4;}
+              </style>
+
+              <!-- FRONTENDS row -->
+              <rect class="box boxfill" x="40" y="30" width="190" height="60" rx="10"/>
+              <text class="lbl2" x="60" y="56">apps/web</text>
+              <text class="sub" x="60" y="74">Next.js · Federico</text>
+
+              <rect class="box boxfill" x="270" y="30" width="190" height="60" rx="10"/>
+              <text class="lbl2" x="290" y="56">apps/mobile</text>
+              <text class="sub" x="290" y="74">Expo · tester</text>
+
+              <rect class="box boxfill" x="500" y="30" width="220" height="60" rx="10"/>
+              <text class="lbl2" x="520" y="56">apps/extension-vinted</text>
+              <text class="sub" x="520" y="74">Chrome MV3</text>
+
+              <!-- external Vinted -->
+              <rect class="box" x="900" y="30" width="180" height="60" rx="10" stroke-dasharray="3 3" opacity=".5"/>
+              <text class="lbl2" x="920" y="56" opacity=".7">Vinted</text>
+              <text class="sub" x="920" y="74">esterno</text>
+
+              <!-- BACKEND row -->
+              <rect class="box boxfill" x="40" y="220" width="230" height="70" rx="10"/>
+              <text class="lbl2" x="60" y="248">services/backend</text>
+              <text class="sub" x="60" y="266">"maat-app" · BFF Next.js</text>
+
+              <rect class="box boxfill" x="320" y="220" width="190" height="70" rx="10"/>
+              <text class="lbl2" x="340" y="248">consumer.ts</text>
+              <text class="sub" x="340" y="266">services/worker</text>
+
+              <rect class="box boxfill" x="550" y="220" width="190" height="70" rx="10"/>
+              <text class="lbl2" x="570" y="248">server.ts</text>
+              <text class="sub" x="570" y="266">worker · Express legacy</text>
+
+              <rect class="box boxfill" x="900" y="220" width="180" height="70" rx="10"/>
+              <text class="lbl2" x="920" y="248">services/cv</text>
+              <text class="sub" x="920" y="266">FastAPI · :8000</text>
+
+              <!-- STORAGE row -->
+              <rect class="box boxfill" x="180" y="420" width="360" height="70" rx="10"/>
+              <text class="lbl2" x="200" y="448">Postgres / Supabase</text>
+              <text class="sub" x="200" y="466">RLS multi-tenant · fonte di verità</text>
+
+              <rect class="box boxfill" x="620" y="420" width="180" height="70" rx="10"/>
+              <text class="lbl2" x="640" y="448">R2 storage</text>
+              <text class="sub" x="640" y="466">foto</text>
+
+              <!-- edges: apps/web -->
+              <path class="edge" marker-end="url(#arr)" d="M135,90 L155,220"/>
+              <text class="edgelbl" x="140" y="150">rewrite /api/bff/*</text>
+              <text class="edgelbl" x="140" y="163">+ fetch diretto /provision</text>
+
+              <path class="edge" marker-end="url(#arr)" d="M110,90 C60,220 200,340 300,420"/>
+              <text class="edgelbl" x="30" y="345">Supabase client (RLS)</text>
+              <text class="edgelbl" x="30" y="358">+ pg diretto (bff_writer)</text>
+
+              <!-- apps/mobile -> server.ts -->
+              <path class="edge" marker-end="url(#arr)" d="M370,90 L620,220"/>
+              <text class="edgelbl" x="430" y="150">Bearer JWT</text>
+
+              <!-- extension -> Vinted -->
+              <path class="edge" marker-end="url(#arr)" d="M760,60 L900,60"/>
+              <text class="edgelbl" x="775" y="50">sessione venditore</text>
+
+              <!-- extension -> backend(s), ambiguous -->
+              <path class="edge danger dash" marker-end="url(#arrDanger)" d="M600,90 L640,220"/>
+              <text class="dangerlbl edgelbl" x="605" y="150">maat_backend_url</text>
+              <text class="dangerlbl edgelbl" x="605" y="163">non canonico → §07</text>
+
+              <!-- backend -> postgres -->
+              <path class="edge" marker-end="url(#arr)" d="M180,290 L320,420"/>
+              <text class="edgelbl" x="170" y="365">REST · bff_writer</text>
+
+              <!-- backend -> R2 -->
+              <path class="edge" marker-end="url(#arr)" d="M260,290 L650,420"/>
+              <text class="edgelbl" x="430" y="380">storage / signed URL</text>
+
+              <!-- consumer -> postgres RPC -->
+              <path class="edge" marker-end="url(#arr)" d="M400,290 L400,420"/>
+              <text class="edgelbl" x="410" y="360">RPC · n8n_worker</text>
+
+              <!-- postgres -> consumer (trigger loop) -->
+              <path class="edge dash" marker-end="url(#arr)" d="M450,420 C480,360 450,320 415,292"/>
+              <text class="edgelbl" x="452" y="345">trigger → coda q_new_draft</text>
+
+              <!-- consumer -> cv -->
+              <path class="edge" marker-end="url(#arr)" d="M510,240 L900,248"/>
+              <text class="edgelbl" x="650" y="232">HTTP · misure</text>
+
+              <!-- server.ts -> cv -->
+              <path class="edge" marker-end="url(#arr)" d="M740,255 L900,262"/>
+
+              <!-- server.ts -> postgres (proprio pool) -->
+              <path class="edge" marker-end="url(#arr)" d="M600,290 L480,420"/>
+              <text class="edgelbl" x="560" y="365">pg pool proprio</text>
+
+            </svg>
+          </div>
+          <figcaption>Tratteggio rosso = collegamento non canonico/ambiguo (§07). Tratteggio neutro = trigger asincrono via coda, non chiamata diretta. <span class="mono">Gemini</span> è chiamato in HTTP da entrambi i runtime di <span class="mono">services/worker</span> insieme a <span class="mono">services/cv</span>, omesso qui per leggibilità.</figcaption>
+        </figure>
+      </section>
+
+      <!-- 02 ---------------------------------------------------------- -->
+      <section class="doc-section" id="s02">
+        <div class="sec-head"><span class="idx">02</span><h2>I 4 percorsi reali di <span class="mono">apps/web</span></h2></div>
+        <p class="sec-note">Il rewrite esiste perché i cookie di sessione Supabase sono <span class="mono">SameSite=Lax</span>: una fetch cross-origin non li porterebbe. Il rewrite mantiene il browser same-origin, Next inoltra la richiesta server-side coi cookie inclusi.</p>
+
+        <figure class="diagram">
+          <div class="diagram-frame">
+            <svg viewBox="0 0 900 300" role="img" aria-label="apps/web ha quattro percorsi reali verso il backend: letture Supabase dirette, scritture via rewrite verso services/backend, provisioning via fetch diretto, e conferma item via connessione Postgres diretta come ruolo bff_writer.">
+              <defs>
+                <marker id="arr2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                  <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+                </marker>
+              </defs>
+              <style>
+                .box2{fill:none; stroke:currentColor; stroke-width:1.4; opacity:.85;}
+                .fill2{fill:currentColor; opacity:.045;}
+                .t2{font-family:'Manrope',sans-serif; font-weight:700; font-size:13px; fill:currentColor;}
+                .m2{font-family:'JetBrains Mono',monospace; font-size:11px; fill:currentColor;}
+                .e2{fill:none; stroke:currentColor; stroke-width:1.3; opacity:.6;}
+                .n2{font-family:'JetBrains Mono',monospace; font-size:20px; font-weight:700; fill:currentColor;}
+              </style>
+              <rect class="box2 fill2" x="20" y="110" width="170" height="80" rx="10"/>
+              <text class="t2" x="40" y="145">apps/web</text>
+              <text class="m2" x="40" y="164" opacity=".6">browser + server</text>
+
+              <rect class="box2 fill2" x="640" y="10" width="240" height="55" rx="9"/>
+              <text class="m2" x="660" y="43">Postgres · letture RLS</text>
+              <text class="n2" x="600" y="45">1</text>
+
+              <rect class="box2 fill2" x="640" y="90" width="240" height="55" rx="9"/>
+              <text class="m2" x="660" y="123">services/backend REST</text>
+              <text class="n2" x="600" y="125">2</text>
+
+              <rect class="box2 fill2" x="640" y="170" width="240" height="55" rx="9"/>
+              <text class="m2" x="660" y="203">services/backend /provision</text>
+              <text class="n2" x="600" y="205">3</text>
+
+              <rect class="box2 fill2" x="640" y="250" width="240" height="55" rx="9"/>
+              <text class="m2" x="660" y="283">Postgres · bff_writer diretto</text>
+              <text class="n2" x="600" y="285">4</text>
+
+              <path class="e2" marker-end="url(#arr2)" d="M190,130 C400,130 500,38 640,38"/>
+              <path class="e2" marker-end="url(#arr2)" d="M190,145 C400,145 500,118 640,118"/>
+              <path class="e2" marker-end="url(#arr2)" d="M190,160 C400,160 500,198 640,198"/>
+              <path class="e2" marker-end="url(#arr2)" d="M190,175 C400,175 500,278 640,278"/>
+            </svg>
+          </div>
+          <figcaption>Numeri = ordine delle righe nella tabella sotto, non priorità.</figcaption>
+        </figure>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>#</th><th>Percorso</th><th>Meccanismo</th><th>Auth</th><th>File</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">1</td><td>Letture</td><td><span class="mono">supabase.from(...)</span> — mai <span class="mono">supabase.rpc()</span>, nessuna trovata in apps/web</td><td>anon key + sessione JWT, RLS</td><td class="mono sub">lib/inventory-data.ts:58-66<br>lib/review-data.ts:78-86</td></tr>
+              <tr><td class="mono">2</td><td>Scritture item/foto</td><td><span class="mono">lib/bff.ts</span> → rewrite <span class="mono">/api/bff/*</span> → services/backend</td><td>cookie di sessione, same-origin</td><td class="mono sub">lib/bff.ts:51-79</td></tr>
+              <tr><td class="mono">3</td><td>Provisioning tenant</td><td>fetch server-to-server diretto (non passa dal rewrite)</td><td><span class="mono">Bearer PROVISION_SECRET</span> condiviso</td><td class="mono sub">app/api/provision/route.ts</td></tr>
+              <tr><td class="mono">4</td><td>Conferma item</td><td>pg diretto, ruolo <span class="mono">bff_writer</span>, claim tenant iniettato per-transazione</td><td>sessione → claim <span class="mono">tenant_id</span>/<span class="mono">role</span></td><td class="mono sub">lib/db/bff-writer.ts:64-76</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout callout--fix">
+          <span class="callout-label">Correzione a un'assunzione precedente</span>
+          <p>Il percorso 4 (<span class="mono">confirmItemAsBff</span>) <strong>non</strong> è "in attesa di setup Databros". È già agganciato: <span class="mono">lib/actions/review.ts:41</span> lo chiama dentro <span class="mono">confirmDraft</span>. Il commento in <span class="mono">bff-writer.ts:18</span> ("finché questi non ci sono, questo modulo NON va importato da confirmDraft") è <strong>stale</strong>. Confermato anche da <span class="mono">apps/web/CLAUDE.md:35</span> e <span class="mono">HANDOFF.md:66-67,107</span>, già tracciato come secondo BFF parallelo in <span class="mono">11</span> #2 e <span class="mono">10</span> §3.2 <span class="pill pill--accent" style="margin-left:4px;">ADR da fare</span>, non un blocco tecnico.</p>
+        </div>
+      </section>
+
+      <!-- 03 ---------------------------------------------------------- -->
+      <section class="doc-section" id="s03">
+        <div class="sec-head"><span class="idx">03</span><h2>Contratto per ogni chiamata</h2></div>
+
+        <p class="sec-note"><strong>Via rewrite <span class="mono">/api/bff/*</span> → services/backend.</strong> <span class="mono">lib/bff.ts</span> non espone altre funzioni di rete oltre queste due (file letto per intero, 115 righe).</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Metodo</th><th>Path browser</th><th>Richiesta</th><th>Risposta</th><th>Sorgente</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">POST</td><td class="mono">/api/bff/items</td><td class="mono sub">{}</td><td class="mono sub">{item:{id,...}}</td><td class="mono sub">lib/bff.ts:51-62 → items/route.ts:45-80</td></tr>
+              <tr><td class="mono">POST</td><td class="mono">/api/bff/photos</td><td class="mono sub">multipart: file, item_id, role, position</td><td class="mono sub">{ok:true,key,photo} 201 / 422 / 404 / 500</td><td class="mono sub">lib/bff.ts:64-79 → photos/route.ts:17-103</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p class="sec-note"><strong>Route propria di apps/web.</strong></p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Metodo</th><th>Path</th><th>Auth</th><th>Cosa fa</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">POST</td><td class="mono">/api/provision</td><td>sessione</td><td>Se manca <span class="mono">tenant_id</span>, proxy a <span class="mono">/api/tenants/provision</span> con <span class="mono">Bearer PROVISION_SECRET</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p class="sec-note"><strong>Letture Supabase dirette.</strong></p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Tabella</th><th>Colonne / join</th><th>Sorgente</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">items + listings + photos</td><td class="sub">id, catalog_ref, brand, category, size, title, status, purchase_price_cents, attributes, listings(marketplace,per_listing_status,price_cents), photos(storage_path,role,position)</td><td class="mono sub">lib/inventory-data.ts:58-66</td></tr>
+              <tr><td class="mono">items + photos + ai_extractions</td><td class="sub">id, catalog_ref, status, brand, category, size, condition, color, material, era, attributes, photos(...), ai_extractions(raw_output,confidence,status,created_at)</td><td class="mono sub">lib/review-data.ts:78-86</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p class="sec-note"><strong>Scrittura diretta bff_writer.</strong></p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Funzione</th><th>Cosa scrive</th><th>Sorgente</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">confirmItemAsBff(itemId,{tenant_id,role})</td><td class="mono sub">UPDATE items SET status='confirmed' WHERE id=$1, RLS-scoped via claim iniettato</td><td class="mono sub">lib/db/bff-writer.ts:64-76 ← lib/actions/review.ts:41</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 04 ---------------------------------------------------------- -->
+      <section class="doc-section" id="s04">
+        <div class="sec-head"><span class="idx">04</span><h2>Endpoint REST di <span class="mono">services/backend</span></h2></div>
+        <p class="sec-note">Package <span class="mono">maat-app</span>, Next.js separato, deploy Vercel. Owner: Databros.</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Metodo</th><th>Path</th><th>Auth</th><th>Note</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">POST</td><td class="mono">/api/items</td><td>sessione (cookie inoltrato dal rewrite)</td><td>Crea item <span class="mono">draft</span>. L'insert fa scattare il trigger <span class="mono">items_new_draft_outbox</span> (§05)</td></tr>
+              <tr><td class="mono">GET/PATCH</td><td class="mono">/api/items/[id]</td><td>sessione</td><td>—</td></tr>
+              <tr><td class="mono">POST</td><td class="mono">/api/items/[id]/confirm</td><td>sessione</td><td>Percorso REST del confirm, alternativo al <span class="mono">bff_writer</span> diretto (§02.4)</td></tr>
+              <tr><td class="mono">POST</td><td class="mono">/api/photos</td><td>sessione</td><td><span class="mono">lib/storage.ts</span>: magic-byte, re-encode/strip EXIF, put su R2, signed URL</td></tr>
+              <tr><td class="mono">GET</td><td class="mono">/api/photos/url</td><td>sessione</td><td>—</td></tr>
+              <tr><td class="mono">POST</td><td class="mono">/api/tenants/provision</td><td class="mono">Bearer PROVISION_SECRET</td><td>Chiamata da <span class="mono">apps/web</span>'s <span class="mono">/api/provision</span>. Usa <span class="mono">service_role</span> per <span class="mono">provision_tenant()</span> + <span class="mono">auth.admin.updateUserById</span>; gestisce il retry idempotente su <span class="mono">slug_already_exists</span></td></tr>
+              <tr><td class="mono">POST</td><td class="mono">/api/dev/login</td><td>—</td><td>Dev-only</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout callout--fix">
+          <span class="callout-label">Gap trovato</span>
+          <p><span class="mono">app/api/publishing/publishingApp.ts</span> e <span class="mono">publishingPanel.ts</span> <strong>esistono ma non hanno nessuna route.ts che li monti</strong>. Nessun frontend può raggiungerli su Vercel oggi — l'unico punto che li istanzia è <span class="mono">test/publishing.test.ts</span>, che apre un <span class="mono">http.Server</span> proprio per il test, fuori da Next. Impatto su <span class="mono">apps/extension-vinted</span> in §07. <span class="pill pill--danger" style="margin-left:2px;">non raggiungibile</span></p>
+        </div>
+      </section>
+
+      <!-- 05 ---------------------------------------------------------- -->
+      <section class="doc-section" id="s05">
+        <div class="sec-head"><span class="idx">05</span><h2><span class="mono">services/worker</span> — due runtime distinti</h2></div>
+        <p class="sec-note">Non un solo processo: due entry point che condividono codice ma girano separati, con deploy diversi o assenti.</p>
+
+        <h3 style="font-size:15px; margin:var(--s5) 0 var(--s2);"><span class="mono">consumer.ts</span> — il consumer P2C</h3>
+        <p>Parla <strong>solo</strong> a Postgres, e solo tramite 3 RPC <span class="mono">SECURITY DEFINER</span> (nessun grant diretto su tabelle, <span class="mono">_sql/21_n8n_worker.sql:41-142</span>): <span class="mono">worker_next_draft(p_vt)</span>, <span class="mono">worker_write_extraction(...)</span> (13 argomenti), <span class="mono">worker_ack_draft(msg_id)</span>. Ruolo <span class="mono">n8n_worker</span>, Supavisor porta 6543.</p>
+        <p>Oltre a Postgres chiama in HTTP diretto Gemini e <span class="mono">services/cv</span> — non è vero che "parla solo a Postgres" in senso assoluto, lo è nel suo rapporto col resto della piattaforma MAAT.</p>
+        <p>Trigger che lo alimenta: <span class="mono">_sql/09_pgmq_outbox.sql:43-47</span>, <span class="mono">AFTER INSERT ON items WHEN (NEW.status='draft')</span> → <span class="mono">notify_new_draft()</span> → <span class="mono">pgmq.send</span>. È il collegamento end-to-end reale fra la creazione item da <span class="mono">apps/web</span> e la pipeline AI.</p>
+
+        <div class="callout callout--fix">
+          <span class="callout-label">Gap non presente in 07-12</span>
+          <p><span class="mono">railway.json:7</span> deploya <span class="mono">node src/server.ts</span>, <strong>non</strong> <span class="mono">consumer.ts</span>. Non risulta nessun deploy (Railway, cron, processo persistente) per <span class="mono">consumer.ts</span>. Da chiedere: gira in produzione da qualche parte, o l'unica prova è un <span class="mono">npm run consumer --once</span> manuale? (domanda 1, §10)</p>
+        </div>
+
+        <h3 style="font-size:15px; margin:var(--s6) 0 var(--s2);"><span class="mono">server.ts</span> — Express legacy (Railway)</h3>
+        <p>Ascolta su <span class="mono">PORT</span> (default 3000). Espone 14 endpoint propri (<span class="mono">src/api/app.ts</span>): <span class="mono">GET /health</span>, <span class="mono">GET /me</span>, <span class="mono">POST /processing</span>, <span class="mono">POST/GET /drafts</span>, <span class="mono">GET /catalog</span>, <span class="mono">GET/PATCH /items/:id</span>, <span class="mono">POST /items/:id/confirm</span>, <span class="mono">DELETE /drafts/:id</span>, <span class="mono">POST/DELETE /drafts/:id/photos</span>, <span class="mono">POST /drafts/:id/reprocess</span>, <span class="mono">POST/DELETE /drafts/:id/aruco</span>, <span class="mono">POST /drafts/:id/remeasure</span>.</p>
+        <p>Auth Bearer JWT (<span class="mono">devVerifier</span> HS256 o <span class="mono">supabaseVerifier</span>). DB via pool <span class="mono">pg</span> proprio, separato da quello di <span class="mono">services/backend</span>.</p>
+        <p><strong>È questo che chiama <span class="mono">apps/mobile</span></strong>, non <span class="mono">services/backend</span>: <span class="mono">EXPO_PUBLIC_API_BASE</span> punta qui. Path e modello foto diversi da <span class="mono">services/backend</span> (7 slot tipizzati contro l'enum <span class="mono">role</span>), coerente con <span class="mono">08</span> §4. Monta anche una copia di <span class="mono">publishingRouter</span> — vedi §07.</p>
+      </section>
+
+      <!-- 06 ---------------------------------------------------------- -->
+      <section class="doc-section" id="s06">
+        <div class="sec-head"><span class="idx">06</span><h2><span class="mono">services/cv</span></h2></div>
+        <p>FastAPI: <span class="mono">GET /health</span>, <span class="mono">POST /measure</span>, <span class="mono">POST /measure_overlay</span>. Locale su <span class="mono">:8000</span>, deployato come HuggingFace Space (<span class="mono">mpalomba/maat-cv</span>).</p>
+        <p>Chiamato <strong>solo</strong> da <span class="mono">services/worker</span> (entrambi i runtime, stesso adapter <span class="mono">cvMeasurePort.ts:29-64</span>): download foto ArUco da R2, <span class="mono">POST multipart</span> a <span class="mono">${CV_SERVICE_URL}/measure</span>. Nessun riferimento al servizio in <span class="mono">apps/web</span> o <span class="mono">services/backend</span> (grep sull'intero repo) — il frontend non lo vede mai direttamente, solo il risultato scritto in <span class="mono">items.attributes/measurements</span>.</p>
+        <p>Stub reale ma parziale: il servizio risponde, ma <span class="mono">landmarks.py</span>'s <span class="mono">measure_points_advanced</span>/<span class="mono">measure_pants_points</span> sono dichiarati stub — senza, capi top/bottom hanno solo misure approssimate.</p>
+      </section>
+
+      <!-- 07 ---------------------------------------------------------- -->
+      <section class="doc-section" id="s07">
+        <div class="sec-head"><span class="idx">07</span><h2><span class="mono">apps/extension-vinted</span> — due host, uno non canonico</h2></div>
+        <p class="sec-note">Due backend completamente separati (<span class="mono">CLAUDE.md:3-8</span>: PUBLISHER vs SENSORE, "comando e stato vivono sempre in MAAT, non qui").</p>
+
+        <figure class="diagram">
+          <div class="diagram-frame">
+            <svg viewBox="0 0 880 260" role="img" aria-label="L'estensione Vinted ha due backend: Vinted stessa, chiamata direttamente con la sessione del venditore, e un URL MAAT configurabile a mano che dovrebbe puntare a services/backend ma è oggi raggiungibile solo sul deploy legacy di services/worker.">
+              <defs>
+                <marker id="arr3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker>
+                <marker id="arr3d" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#C6323A"/></marker>
+              </defs>
+              <style>
+                .b3{fill:none; stroke:currentColor; stroke-width:1.4; opacity:.85;}
+                .f3{fill:currentColor; opacity:.045;}
+                .t3{font-family:'Manrope',sans-serif; font-weight:700; font-size:13px; fill:currentColor;}
+                .m3{font-family:'JetBrains Mono',monospace; font-size:10.5px; fill:currentColor; opacity:.65;}
+                .e3{fill:none; stroke:currentColor; stroke-width:1.3; opacity:.6;}
+              </style>
+              <rect class="b3 f3" x="30" y="90" width="220" height="70" rx="10"/>
+              <text class="t3" x="50" y="120">extension-vinted</text>
+              <text class="m3" x="50" y="138">service-worker.js</text>
+
+              <rect class="b3 f3" x="480" y="20" width="200" height="55" rx="9"/>
+              <text class="t3" x="500" y="53">Vinted</text>
+              <text class="m3" x="500" y="67" opacity=".8">sessione venditore, diretto</text>
+
+              <rect class="b3 f3" x="480" y="105" width="200" height="55" rx="9" stroke-dasharray="3 3" opacity=".55"/>
+              <text class="t3" x="500" y="128" opacity=".7">services/backend</text>
+              <text class="m3" x="500" y="142">publishingApp senza route.ts</text>
+
+              <rect class="b3 f3" x="480" y="190" width="200" height="55" rx="9"/>
+              <text class="t3" x="500" y="213">worker/server.ts</text>
+              <text class="m3" x="500" y="227">raggiungibile, non designato</text>
+
+              <path class="e3" marker-end="url(#arr3)" d="M250,110 L480,45"/>
+              <path style="stroke:#C6323A; stroke-dasharray:4 4; fill:none; stroke-width:1.3;" marker-end="url(#arr3d)" d="M250,125 L480,132"/>
+              <path style="stroke:#C6323A; stroke-dasharray:4 4; fill:none; stroke-width:1.3;" marker-end="url(#arr3d)" d="M250,140 L480,217"/>
+              <text class="m3" x="255" y="103" style="fill:#C6323A; opacity:1; font-weight:600;">maat_backend_url →</text>
+            </svg>
+          </div>
+          <figcaption>Le due frecce rosse verso i due possibili backend rappresentano la stessa variabile <span class="mono">maat_backend_url</span>: nessuno dei due è formalmente designato come corretto senza ambiguità.</figcaption>
+        </figure>
+
+        <p><strong>1. Vinted stessa</strong>, chiamata diretta dai content script su <span class="mono">*.vinted.&lt;tld&gt;</span>, sessione del venditore (<span class="mono">credentials:'include'</span>): <span class="mono">POST /api/v2/photos</span>, delete/hide draft, gestione offerte, risposte conversazione (<span class="mono">src/content/publisher.js</span>).</p>
+        <p><strong>2. Un URL backend MAAT configurabile a mano</strong>: <span class="mono">maat_backend_url</span> + <span class="mono">maat_token</span> in <span class="mono">chrome.storage.local</span>, nessun default hardcoded (<span class="mono">src/options/options.js:19-25</span>). Chiama <span class="mono">GET /queue</span>, <span class="mono">POST /outcome</span>, <span class="mono">POST /observe</span>, offerte/thread/like-outreach.</p>
+
+        <div class="callout callout--fix">
+          <span class="callout-label">Il problema</span>
+          <p>Quale deploy dovrebbe essere <span class="mono">maat_backend_url</span> non è mai stato deciso operativamente. <span class="mono">RICHIESTA-2026-08-02-blocco-6-schema-e-port.md:264-266</span> ("Decisione 2") designa <span class="mono">services/backend</span> come destinazione concettuale, ma lì il router non ha route che lo monti (§04). L'unico deploy dove <span class="mono">publishingRouter</span> è davvero raggiungibile oggi è <span class="mono">services/worker/src/server.ts</span> (Railway) — raggiungibile, ma non quello designato. Le due copie del codice sono quasi identiche riga per riga (unica differenza: import di <span class="mono">PhotoSigner</span>/<span class="mono">PhotoUploader</span>). Il consolidamento proposto in <span class="mono">RICHIESTA-2026-08-02</span> Parte 4/5 <strong>non risulta applicato</strong> su main.</p>
+        </div>
+      </section>
+
+      <!-- 08 ---------------------------------------------------------- -->
+      <section class="doc-section" id="s08">
+        <div class="sec-head"><span class="idx">08</span><h2>Le porte d'accesso</h2></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Servizio</th><th>Variabile</th><th>Tipo</th><th>Consumata da</th></tr></thead>
+            <tbody>
+              <tr><td>Supabase Postgres</td><td class="mono">NEXT_PUBLIC_SUPABASE_URL / _ANON_KEY</td><td class="sub">connessione pubblica + chiave anon</td><td class="mono sub">apps/web, services/backend</td></tr>
+              <tr><td>Postgres (bff_writer)</td><td class="mono">BFF_WRITER_DATABASE_URL</td><td class="sub">Supavisor <strong>porta 6543</strong>, transaction mode</td><td class="mono sub">lib/db/bff-writer.ts:24</td></tr>
+              <tr><td>Postgres (n8n_worker)</td><td class="mono">WORKER_DATABASE_URL</td><td class="sub">stesso pooler :6543 — solo in commento, non in .env.example</td><td class="mono sub">consumer.ts:5-14</td></tr>
+              <tr><td>Supabase Auth</td><td class="mono">SUPABASE_SERVICE_ROLE</td><td class="sub">segreto "ASSOLUTO", solo server</td><td class="mono sub">services/backend (provisioning, DR)</td></tr>
+              <tr><td>BFF rewrite</td><td class="mono">BFF_URL</td><td class="sub">origine di services/backend, default :3000</td><td class="mono sub">next.config.mjs:17</td></tr>
+              <tr><td>Provisioning</td><td class="mono">PROVISION_SECRET</td><td class="sub">bearer condiviso fra apps/web e services/backend</td><td class="mono sub">entrambi</td></tr>
+              <tr><td>R2 storage</td><td class="mono">R2_ENDPOINT / BUCKET / ACCESS_KEY_ID / SECRET_ACCESS_KEY</td><td class="sub">connessione + chiavi</td><td class="mono sub">services/backend (full); apps/web solo signed-URL</td></tr>
+              <tr><td>CV service</td><td class="mono">CV_SERVICE_URL + CV_SERVICE_TOKEN</td><td class="sub">HTTP, :8000 locale / HF Space in produzione</td><td class="mono sub">services/worker (entrambi i runtime)</td></tr>
+              <tr><td>Worker legacy</td><td class="mono">PORT (default 3000), JWT_SECRET</td><td class="sub">porta HTTP + segreto dev</td><td class="mono sub">services/worker/src/server.ts</td></tr>
+              <tr><td>Mobile</td><td class="mono">EXPO_PUBLIC_API_BASE</td><td class="sub">punta a server.ts, non a services/backend</td><td class="mono sub">apps/mobile/src/api.ts</td></tr>
+              <tr><td>Extension</td><td class="mono">maat_backend_url + maat_token</td><td class="sub">configurabile a mano, nessun default</td><td class="mono sub">apps/extension-vinted (§07)</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout callout--fix">
+          <span class="callout-label">Collisione locale nota</span>
+          <p><span class="mono">services/backend</span> e <span class="mono">apps/web</span> hanno entrambi default <span class="mono">:3000</span> — in sviluppo locale <span class="mono">apps/web</span> va avviato su un'altra porta (<span class="mono">pnpm dev --port 3001</span>).</p>
+        </div>
+        <div class="callout callout--fix">
+          <span class="callout-label">.env.example stale</span>
+          <p><span class="mono">services/worker/.env.example</span> documenta solo il vecchio flusso locale Docker (<span class="mono">postgres://maat:maat@localhost:5544/maat_p2c</span>) e non dichiara <span class="mono">WORKER_DATABASE_URL</span>, <span class="mono">CV_SERVICE_URL</span>, <span class="mono">CV_SERVICE_TOKEN</span>, che il codice reale usa.</p>
+        </div>
+      </section>
+
+      <!-- 09 ---------------------------------------------------------- -->
+      <section class="doc-section" id="s09">
+        <div class="sec-head"><span class="idx">09</span><h2>Divergenze dai documenti esistenti</h2></div>
+        <div class="oq-list">
+          <div class="oq"><span class="oq-num">·</span><div class="oq-body"><span class="oq-title"><span class="mono">10-audit-plug-and-play.md</span> §2</span><p>La sua topologia mostra <span class="mono">apps/web ──REST──▶ services/backend</span> come un arco unico, che in realtà passa per un rewrite Next, non una REST call diretta dal browser. Scritta l'01/08, prima che il terzo percorso fosse formalizzato in <span class="mono">11</span> ("da 02/08 sono tre, non due").</p></div></div>
+          <div class="oq"><span class="oq-num">·</span><div class="oq-body"><span class="oq-title"><span class="mono">07-stato-implementazione.md</span> — "50 migrazioni"</span><p>Sul main attuale: <span class="mono">supabase/migrations/</span> ne ha <strong>36 applicate</strong>, <span class="mono">_sql/</span> <strong>43</strong> in staging — coerente con <span class="mono">12-data-model.md:14</span> ("43 file SQL", 03/08). Il 50 è precedente alla rimozione di 13 migrazioni vinted il 03/08 (<span class="mono">e53eb03</span>/<span class="mono">e460fe4</span>). <span class="mono">07</span> va aggiornato a 36/43.</p></div></div>
+          <div class="oq"><span class="oq-num">·</span><div class="oq-body"><span class="oq-title"><span class="mono">bff-writer.ts:18</span> — commento stale</span><p>Dice "non ancora importato da confirmDraft", ma <span class="mono">lib/actions/review.ts:41</span> lo fa già (§02). Vale correggerlo nel codice, non solo qui: chi legge solo quel file si costruisce un'idea sbagliata dello stato del quarto percorso.</p></div></div>
+          <div class="oq"><span class="oq-num">·</span><div class="oq-body"><span class="oq-title">Superficie REST di <span class="mono">server.ts</span></span><p>Nessun documento 07-12 enumera i 14 endpoint di <span class="mono">services/worker/src/server.ts</span> né il gap di deploy di <span class="mono">consumer.ts</span> (§05): trattati solo genericamente come "Express legacy del worker".</p></div></div>
+        </div>
+      </section>
+
+      <!-- 10 ---------------------------------------------------------- -->
+      <section class="doc-section" id="s10">
+        <div class="sec-head"><span class="idx">10</span><h2>Domande aperte per Databros</h2></div>
+        <p class="sec-note">Fotografia, non prescrizione: sono decisioni del team, non imposte da qui.</p>
+        <div class="oq-list">
+          <div class="oq"><span class="oq-num">1</span><div class="oq-body"><span class="oq-title">Dove gira consumer.ts in produzione</span><p>Se gira da qualche parte, dato che Railway deploya <span class="mono">server.ts</span> e non risulta nessun altro deploy configurato (§05).</p></div></div>
+          <div class="oq"><span class="oq-num">2</span><div class="oq-body"><span class="oq-title">Quale deploy deve essere il valore canonico di maat_backend_url</span><p><span class="mono">services/backend</span> (destinazione concettuale, ma senza route.ts) o <span class="mono">services/worker/server.ts</span> (raggiungibile, ma non designato)? (§07)</p></div></div>
+          <div class="oq"><span class="oq-num">3</span><div class="oq-body"><span class="oq-title">Consolidamento delle due copie di publishingApp.ts</span><p>Risulta ancora fatto per metà rispetto al piano in <span class="mono">RICHIESTA-2026-08-02-blocco-6-schema-e-port.md</span> — è ancora la direzione giusta o è cambiata?</p></div></div>
+          <div class="oq"><span class="oq-num">4</span><div class="oq-body"><span class="oq-title">Verifica live: 401 vs redirect 307 su /api/bff/*</span><p>Il middleware di <span class="mono">apps/web</span> (redirect 307 a <span class="mono">/login</span>, nessuna eccezione per <span class="mono">/api/*</span>) e quello di <span class="mono">services/backend</span> (401 JSON pulito, con eccezione esplicita) sembrano comportarsi diversamente sullo stesso confine. Se confermato, un fetch non autenticato riceverebbe una pagina HTML 200 invece di un 401, e il ramo "sessione scaduta" di <span class="mono">humanMessage()</span> risulterebbe morto per questo percorso. <span class="pill pill--muted">non verificato a runtime</span></p></div></div>
+          <div class="oq"><span class="oq-num">5</span><div class="oq-body"><span class="oq-title">services/worker/.env.example va aggiornato?</span><p>Con le variabili che il codice reale usa (§08), o resta intenzionalmente solo la guida al flusso locale Docker?</p></div></div>
+        </div>
+      </section>
+
+      <!-- 11 ---------------------------------------------------------- -->
+      <section class="doc-section" id="s11">
+        <div class="sec-head"><span class="idx">11</span><h2>Cosa non è stato verificato in questo giro</h2></div>
+        <div class="callout callout--unverified">
+          <span class="callout-label">Limiti dell'audit</span>
+          <p>Nessuna richiesta HTTP reale contro un deploy vivo: tutto viene da lettura statica del codice su <span class="mono">main</span>. §10.4 in particolare è un'ipotesi da confronto di due file di middleware, non un'osservazione diretta.</p>
+          <p>Non controllato cosa c'è oggi, di fatto, nel campo <span class="mono">maat_backend_url</span> configurato sull'estensione installata (§07).</p>
+          <p>Non verificato se <span class="mono">BFF_WRITER_DATABASE_URL</span> sia popolata in un ambiente reale oltre al test locale (<span class="mono">apps/web/test-bff-writer.mjs</span> esiste ma non è stato eseguito qui).</p>
+          <p>Non aperta la dashboard Vercel/Railway: tutto in §08 viene dai file <span class="mono">.env.example</span> e dai commenti nel codice.</p>
+        </div>
+      </section>
+
+      <footer class="doc-foot">
+        <span>docs/technical/13-confini-frontend-backend.md · draft · owner Federico D'Orsi</span>
+        <span>In caso di conflitto fra questo documento e il codice, vince il codice.</span>
+      </footer>
+
+    </div>
+  </main>
+</div>
+
+<script>
+  (function(){
+    var links = Array.prototype.slice.call(document.querySelectorAll('.rail-link'));
+    var sections = links.map(function(l){ return document.getElementById(l.dataset.target); }).filter(Boolean);
+    if(!('IntersectionObserver' in window) || !sections.length) return;
+    var current = null;
+    function setActive(id){
+      if(id === current) return;
+      current = id;
+      links.forEach(function(l){ l.classList.toggle('active', l.dataset.target === id); });
+    }
+    var io = new IntersectionObserver(function(entries){
+      var visible = entries.filter(function(e){ return e.isIntersecting; });
+      if(visible.length){
+        visible.sort(function(a,b){ return a.boundingClientRect.top - b.boundingClientRect.top; });
+        setActive(visible[0].target.id);
+      }
+    }, { rootMargin: '-10% 0px -70% 0px', threshold: 0 });
+    sections.forEach(function(s){ io.observe(s); });
+    setActive('s00');
+  })();
+</script>

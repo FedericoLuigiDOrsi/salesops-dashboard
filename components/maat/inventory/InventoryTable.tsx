@@ -1,18 +1,27 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowDown, ArrowUp, Check, ChevronRight, Pencil, Trash2, X } from "lucide-react";
+import { motion, type Variants, useReducedMotion } from "framer-motion";
+import { ArrowUp, ChevronRight, Pencil, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/maat/StatusBadge";
 import { SegmentedFilter } from "@/components/maat/SegmentedFilter";
 import { ChannelDots } from "@/components/maat/inventory/ChannelDots";
+import {
+  RowCheckbox,
+  RowHoverActions,
+  RowActionButton,
+  SortHeaderCell,
+  TABLE_CARD_CLASS,
+} from "@/components/maat/table/TableChrome";
 import { cn, formatEUR } from "@/lib/utils";
 import type { InventoryItem, InventoryStatus } from "@/lib/inventory-mock";
 import { COLUMN_DEFS, type ColumnKey, type PlatformKey } from "@/lib/inventory-columns";
 import { useInventoryColumns } from "@/lib/inventory-columns-store";
+import { itemHref } from "@/lib/inventory-nav";
+import { EmptyState } from "@/components/maat/EmptyState";
 
-type Density = "comoda" | "compatta";
 type ViewMode = "elenco" | "per-stato";
 
 // Larghezza fissa per colonna (px) o flessibile per "capo" (spec design handoff).
@@ -83,35 +92,6 @@ function compareItems(a: InventoryItem, b: InventoryItem, key: ColumnKey): numbe
   }
 }
 
-function RowCheckbox({
-  checked,
-  onChange,
-  ariaLabel,
-}: {
-  checked: boolean;
-  onChange: () => void;
-  ariaLabel: string;
-}) {
-  return (
-    <button
-      type="button"
-      role="checkbox"
-      aria-checked={checked}
-      aria-label={ariaLabel}
-      onClick={(e) => {
-        e.stopPropagation();
-        onChange();
-      }}
-      className={cn(
-        "flex size-5 shrink-0 items-center justify-center rounded-[6px] border-[1.5px] transition-colors",
-        checked ? "border-primary bg-primary" : "border-border bg-card"
-      )}
-    >
-      {checked && <Check className="size-3.5" style={{ color: "var(--primary-foreground)" }} />}
-    </button>
-  );
-}
-
 /** Stato "venduto" usa una pill scura dedicata (spec), gli altri stati riusano StatusBadge di sistema. */
 function StatoCell({ status }: { status: InventoryStatus }) {
   if (status === "sold") {
@@ -126,39 +106,6 @@ function StatoCell({ status }: { status: InventoryStatus }) {
     );
   }
   return <StatusBadge status={status} className="text-[11px]" />;
-}
-
-function SortHeaderCell({
-  label,
-  align,
-  active,
-  dir,
-  onClick,
-}: {
-  label: string;
-  align?: "right";
-  active: boolean;
-  dir: 1 | -1;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "flex items-center gap-1 font-mono text-[11px] font-bold uppercase tracking-[.12em] text-muted-foreground transition-colors hover:text-foreground",
-        align === "right" && "justify-end"
-      )}
-    >
-      {label}
-      {active &&
-        (dir === 1 ? (
-          <ArrowUp className="size-2.5 text-foreground" />
-        ) : (
-          <ArrowDown className="size-2.5 text-foreground" />
-        ))}
-    </button>
-  );
 }
 
 function HeaderRow({
@@ -247,33 +194,38 @@ function Row({
   item,
   orderedColumns,
   gridTemplateColumns,
-  density,
   selected,
   hovered,
+  variants,
   onToggleSelect,
   onHoverChange,
-  onEdit,
+  onOpen,
   onDeleteOne,
   onToggleChannel,
 }: {
   item: InventoryItem;
   orderedColumns: ColumnKey[];
   gridTemplateColumns: string;
-  density: Density;
   selected: boolean;
   hovered: boolean;
+  variants: Variants;
   onToggleSelect: (id: string) => void;
   onHoverChange: (id: string | null) => void;
-  onEdit: (id: string) => void;
+  onOpen: (item: InventoryItem) => void;
   onDeleteOne: (id: string) => void;
   onToggleChannel: (id: string, platform: PlatformKey) => void;
 }) {
   return (
-    <div
-      className={cn(
-        "relative grid items-center gap-x-3 border-t border-border pl-4 pr-5",
-        density === "comoda" ? "py-[15px]" : "py-[9px]"
-      )}
+    // Tutta la riga e' cliccabile: checkbox, ChannelDots e azioni hover fermano la propagazione.
+    <motion.div
+      variants={variants}
+      role="link"
+      tabIndex={0}
+      onClick={() => onOpen(item)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") onOpen(item);
+      }}
+      className="relative grid cursor-pointer items-center gap-x-3 border-t border-border py-[9px] pl-4 pr-5"
       style={{ gridTemplateColumns, ...(selected ? { boxShadow: "inset 3px 0 0 var(--primary)" } : {}) }}
       onMouseEnter={() => onHoverChange(item.id)}
       onMouseLeave={() => onHoverChange(null)}
@@ -291,33 +243,12 @@ function Row({
       ))}
 
       {hovered && (
-        <div className="absolute right-3.5 top-1/2 flex -translate-y-1/2 gap-1 rounded-[11px] border border-border bg-card p-1 shadow-e2">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onEdit(item.id);
-            }}
-            aria-label="Modifica"
-            className="flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-          >
-            <Pencil className="size-4" />
-          </button>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onDeleteOne(item.id);
-            }}
-            aria-label="Elimina"
-            className="flex size-8 items-center justify-center rounded-lg transition-colors hover:bg-destructive/10"
-            style={{ color: "var(--destructive)" }}
-          >
-            <Trash2 className="size-4" />
-          </button>
-        </div>
+        <RowHoverActions>
+          <RowActionButton icon={Pencil} label="Apri" onClick={() => onOpen(item)} />
+          <RowActionButton icon={Trash2} label="Elimina" tone="destructive" onClick={() => onDeleteOne(item.id)} />
+        </RowHoverActions>
       )}
-    </div>
+    </motion.div>
   );
 }
 
@@ -354,8 +285,6 @@ function LaneHeader({
 function SelectionBar({
   total,
   selectedCount,
-  density,
-  onDensityChange,
   viewMode,
   onViewModeChange,
   onBulkPublish,
@@ -364,8 +293,6 @@ function SelectionBar({
 }: {
   total: number;
   selectedCount: number;
-  density: Density;
-  onDensityChange: (d: Density) => void;
   viewMode: ViewMode;
   onViewModeChange: (v: ViewMode) => void;
   onBulkPublish: () => void;
@@ -405,29 +332,16 @@ function SelectionBar({
       <span className="font-mono text-[13px]">
         <span className="font-bold text-foreground">{total}</span> <span className="text-muted-foreground">capi</span>
       </span>
-      <div className="ml-auto flex items-center gap-4">
-        <div className="flex items-center gap-2">
-          <span className="font-mono text-[10px] uppercase tracking-[.12em] text-text-3">Vista</span>
-          <SegmentedFilter
-            options={[
-              { value: "elenco", label: "Elenco" },
-              { value: "per-stato", label: "Per stato" },
-            ]}
-            active={viewMode}
-            onChange={onViewModeChange}
-          />
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="font-mono text-[10px] uppercase tracking-[.12em] text-text-3">Densità</span>
-          <SegmentedFilter
-            options={[
-              { value: "comoda", label: "Comoda" },
-              { value: "compatta", label: "Compatta" },
-            ]}
-            active={density}
-            onChange={onDensityChange}
-          />
-        </div>
+      <div className="ml-auto flex items-center gap-2">
+        <span className="font-mono text-[10px] uppercase tracking-[.12em] text-text-3">Vista</span>
+        <SegmentedFilter
+          options={[
+            { value: "elenco", label: "Elenco" },
+            { value: "per-stato", label: "Per stato" },
+          ]}
+          active={viewMode}
+          onChange={onViewModeChange}
+        />
       </div>
     </div>
   );
@@ -442,6 +356,22 @@ interface InventoryTableProps {
 
 export function InventoryTable({ items, onPublish, onDelete, onToggleChannel }: InventoryTableProps) {
   const router = useRouter();
+  const shouldReduceMotion = useReducedMotion();
+  const listVariants: Variants = useMemo(
+    () => ({ hidden: {}, show: { transition: { staggerChildren: shouldReduceMotion ? 0 : 0.04 } } }),
+    [shouldReduceMotion]
+  );
+  const rowVariants: Variants = useMemo(
+    () => ({
+      hidden: shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 8 },
+      show: {
+        opacity: 1,
+        y: 0,
+        transition: shouldReduceMotion ? { duration: 0 } : { type: "spring", stiffness: 300, damping: 28 },
+      },
+    }),
+    [shouldReduceMotion]
+  );
   const { visibleColumns } = useInventoryColumns();
   const orderedColumns = useMemo<ColumnKey[]>(() => ["capo", ...visibleColumns], [visibleColumns]);
   const gridTemplateColumns = useMemo(
@@ -451,20 +381,20 @@ export function InventoryTable({ items, onPublish, onDelete, onToggleChannel }: 
   const [sortKey, setSortKey] = useState<ColumnKey | null>(null);
   const [sortDir, setSortDir] = useState<1 | -1>(1);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [density, setDensity] = useState<Density>("comoda");
   const [viewMode, setViewMode] = useState<ViewMode>("elenco");
   const [collapsedLanes, setCollapsedLanes] = useState<Set<InventoryStatus>>(new Set());
   const [hoveredRowId, setHoveredRowId] = useState<string | null>(null);
 
-  // Se la colonna ordinata viene nascosta da ColumnManager, l'ordinamento non ha più senso.
-  useEffect(() => {
-    if (sortKey && !orderedColumns.includes(sortKey)) setSortKey(null);
-  }, [orderedColumns, sortKey]);
+  // Se la colonna ordinata viene nascosta da ColumnManager, l'ordinamento non ha
+  // più senso. Derivato in render invece che azzerato in un effect: così non c'è
+  // il frame intermedio in cui la tabella è ancora ordinata su una colonna che
+  // non esiste più, e riattivando la colonna l'ordinamento torna com'era.
+  const effectiveSortKey = sortKey && orderedColumns.includes(sortKey) ? sortKey : null;
 
   const sortedItems = useMemo(() => {
-    if (!sortKey) return items;
-    return [...items].sort((a, b) => compareItems(a, b, sortKey) * sortDir);
-  }, [items, sortKey, sortDir]);
+    if (!effectiveSortKey) return items;
+    return [...items].sort((a, b) => compareItems(a, b, effectiveSortKey) * sortDir);
+  }, [items, effectiveSortKey, sortDir]);
 
   const laneGroups = useMemo(() => {
     const present = new Set(sortedItems.map((i) => i.status));
@@ -479,7 +409,7 @@ export function InventoryTable({ items, onPublish, onDelete, onToggleChannel }: 
   const allSelected = sortedItems.length > 0 && selectedIds.size === sortedItems.length;
 
   function handleSort(key: ColumnKey) {
-    if (sortKey === key) setSortDir((d) => (d === 1 ? -1 : 1));
+    if (effectiveSortKey === key) setSortDir((d) => (d === 1 ? -1 : 1));
     else {
       setSortKey(key);
       setSortDir(1);
@@ -508,8 +438,9 @@ export function InventoryTable({ items, onPublish, onDelete, onToggleChannel }: 
     });
   }
 
-  function handleEdit(id: string) {
-    router.push(`/capi/${id}`);
+  // I pre-catalogo aprono la Review (meta' operatore del loop P2C), gli altri il dettaglio.
+  function handleOpen(item: InventoryItem) {
+    router.push(itemHref(item));
   }
 
   function handleDeleteOne(id: string) {
@@ -533,12 +464,10 @@ export function InventoryTable({ items, onPublish, onDelete, onToggleChannel }: 
   }
 
   return (
-    <div className="overflow-hidden rounded-[14px] border border-border bg-card shadow-e1">
+    <div className={TABLE_CARD_CLASS}>
       <SelectionBar
         total={sortedItems.length}
         selectedCount={selectedIds.size}
-        density={density}
-        onDensityChange={setDensity}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         onBulkPublish={handleBulkPublish}
@@ -551,57 +480,58 @@ export function InventoryTable({ items, onPublish, onDelete, onToggleChannel }: 
         gridTemplateColumns={gridTemplateColumns}
         allSelected={allSelected}
         onToggleSelectAll={toggleSelectAll}
-        sortKey={sortKey}
+        sortKey={effectiveSortKey}
         sortDir={sortDir}
         onSort={handleSort}
       />
 
       {sortedItems.length === 0 ? (
-        <div className="px-5 py-10 text-center text-sm text-muted-foreground">
-          Nessun capo corrisponde ai filtri selezionati.
-        </div>
+        <EmptyState tone="no-match" title="Nessun capo con questi filtri" subtitle="Cambia i filtri o azzerali dalla barra qui sopra." />
       ) : viewMode === "elenco" ? (
-        <div>
+        <motion.div variants={listVariants} initial="hidden" animate="show">
           {sortedItems.map((item) => (
             <Row
               key={item.id}
               item={item}
               orderedColumns={orderedColumns}
               gridTemplateColumns={gridTemplateColumns}
-              density={density}
               selected={selectedIds.has(item.id)}
               hovered={hoveredRowId === item.id}
+              variants={rowVariants}
               onToggleSelect={toggleSelected}
               onHoverChange={setHoveredRowId}
-              onEdit={handleEdit}
+              onOpen={handleOpen}
               onDeleteOne={handleDeleteOne}
               onToggleChannel={onToggleChannel}
             />
           ))}
-        </div>
+        </motion.div>
       ) : (
         laneGroups.map(({ status, items: laneItems }) => {
           const open = !collapsedLanes.has(status);
           return (
             <div key={status}>
               <LaneHeader status={status} count={laneItems.length} open={open} onToggle={() => toggleLane(status)} />
-              {open &&
-                laneItems.map((item) => (
-                  <Row
-                    key={item.id}
-                    item={item}
-                    orderedColumns={orderedColumns}
-                    gridTemplateColumns={gridTemplateColumns}
-                    density={density}
-                    selected={selectedIds.has(item.id)}
-                    hovered={hoveredRowId === item.id}
-                    onToggleSelect={toggleSelected}
-                    onHoverChange={setHoveredRowId}
-                    onEdit={handleEdit}
-                    onDeleteOne={handleDeleteOne}
-                    onToggleChannel={onToggleChannel}
-                  />
-                ))}
+              {open && (
+                <motion.div variants={listVariants} initial="hidden" animate="show">
+                  {laneItems.map((item) => (
+                    <Row
+                      key={item.id}
+                      item={item}
+                      orderedColumns={orderedColumns}
+                      gridTemplateColumns={gridTemplateColumns}
+                              selected={selectedIds.has(item.id)}
+                      hovered={hoveredRowId === item.id}
+                      variants={rowVariants}
+                      onToggleSelect={toggleSelected}
+                      onHoverChange={setHoveredRowId}
+                      onOpen={handleOpen}
+                      onDeleteOne={handleDeleteOne}
+                      onToggleChannel={onToggleChannel}
+                    />
+                  ))}
+                </motion.div>
+              )}
             </div>
           );
         })

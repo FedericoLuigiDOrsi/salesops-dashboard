@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -17,8 +17,8 @@ import {
 import { cn } from "@/lib/utils";
 import { useNotifications } from "@/lib/notifications-store";
 import { useSettings } from "@/lib/settings-store";
-import { useOverlays } from "@/lib/overlays-store";
 import { mockUserProfile } from "@/lib/tenant-mock";
+import { usePersistentString } from "@/lib/use-persistent-state";
 import { SettingsModal } from "@/components/maat/SettingsModal";
 import { OverlayHost } from "@/components/maat/OverlayHost";
 import {
@@ -38,7 +38,7 @@ const NAV_ITEMS = [
   { href: "/logistica", label: "Logistica", icon: Truck },
 ] as const;
 
-const CREA_CAPO_HREF = "/capi/nuovo/foto/fronte";
+const CREA_CAPO_HREF = "/capi/nuovo";
 const RAIL_COLLAPSED_KEY = "maat:rail-collapsed";
 
 interface AppShellProps {
@@ -51,24 +51,16 @@ export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const { unreadCount } = useNotifications();
   const { open: openSettings } = useSettings();
-  const { openNotifications } = useOverlays();
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsedRaw, setCollapsedRaw] = usePersistentString(RAIL_COLLAPSED_KEY, "0");
+  const collapsed = collapsedRaw === "1";
   const [moreOpen, setMoreOpen] = useState(false);
 
   const PRIMARY_MOBILE = ["/", "/inventario", "/notifiche"];
   const overflowItems = NAV_ITEMS.filter((item) => !PRIMARY_MOBILE.includes(item.href));
   const isOverflowActive = overflowItems.some((item) => pathname.startsWith(item.href));
 
-  useEffect(() => {
-    setCollapsed(window.localStorage.getItem(RAIL_COLLAPSED_KEY) === "1");
-  }, []);
-
   function toggleCollapsed() {
-    setCollapsed((prev) => {
-      const next = !prev;
-      window.localStorage.setItem(RAIL_COLLAPSED_KEY, next ? "1" : "0");
-      return next;
-    });
+    setCollapsedRaw(collapsed ? "0" : "1");
   }
 
   // Route pre-login: nessuna sidebar/nav, solo il contenuto full-screen.
@@ -195,15 +187,6 @@ export function AppShell({ children }: AppShellProps) {
           <span className="flex-1" />
           <button
             type="button"
-            onClick={openNotifications}
-            aria-label="Notifiche"
-            className="relative flex size-11 items-center justify-center rounded-full hover:bg-accent"
-          >
-            <Bell className="size-4.5" />
-            {unreadCount > 0 && <span className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-primary" />}
-          </button>
-          <button
-            type="button"
             onClick={() => openSettings("account")}
             aria-label="Account"
             className="flex size-11 items-center justify-center rounded-full bg-primary font-mono text-xs font-semibold text-primary-foreground"
@@ -211,18 +194,6 @@ export function AppShell({ children }: AppShellProps) {
             {mockUserProfile.iniziali}
           </button>
         </header>
-
-        <button
-          type="button"
-          onClick={openNotifications}
-          aria-label="Notifiche"
-          className="fixed top-5 right-6 z-30 hidden size-10 items-center justify-center rounded-[10px] bg-foreground/[.05] text-foreground transition-colors hover:bg-foreground/[.09] md:flex"
-        >
-          <Bell className="size-4.5" />
-          {unreadCount > 0 && (
-            <span className="absolute right-2 top-2 size-2 rounded-full bg-primary ring-2 ring-background" />
-          )}
-        </button>
 
         <main className="min-h-0 flex-1 bg-background pb-[calc(66px+env(safe-area-inset-bottom))] md:pb-0">
           {children}

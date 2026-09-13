@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import {
   DndContext,
@@ -18,7 +18,6 @@ import {
   sortableKeyboardCoordinates,
   useSortable,
 } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import { motion } from "framer-motion";
 import { Check, LayoutGrid, PackagePlus, Plus, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -27,27 +26,117 @@ import { cn } from "@/lib/utils";
 import { EmptyState } from "@/components/maat/EmptyState";
 import { WidgetShell } from "@/components/maat/widgets/WidgetShell";
 import { HOME_WIDGETS, getWidget } from "@/components/maat/widgets/registry";
+import { PanoramicaWidget } from "@/components/maat/widgets/PanoramicaWidget";
 import { HomeLayoutProvider, useHomeLayout, type WidgetKey } from "@/lib/home-layout-store";
 import { WIDGET_TIER_GRID_CLASS } from "@/lib/tiers";
+import { DEFAULT_MODULE_DIMS, clampModuleDims, type ModuleDims } from "@/lib/widget-sizes";
+
+/** Unità di riga della griglia Home: grid-auto-rows (200px) + gap (24px, gap-6). */
+const ROW_UNIT_PX = 224;
+
+/**
+ * Panoramica è l'unico widget che non segue la griglia a moduli: è sempre la
+ * prima fascia, a tutta larghezza, nello spazio dedicato ai widget — scorre
+ * con la pagina come gli altri, semplicemente non è mai trascinabile/rimovibile
+ * né si affianca a nessun altro modulo.
+ */
+const BAR_WIDGET_KEY: WidgetKey = "panoramica";
+
+/**
+ * Maniglia di resize in edit mode: si trascina dall'angolo in basso a destra,
+ * l'angolo in alto a sinistra del widget resta fermo (crescere/rimpicciolire
+ * cambia solo quanti moduli il widget occupa a destra e in basso, mai la sua
+ * posizione di partenza in griglia).
+ */
+function ResizeHandle({
+  dims,
+  widgetRef,
+  onChange,
+}: {
+  dims: ModuleDims;
+  widgetRef: React.RefObject<HTMLDivElement | null>;
+  onChange: (dims: ModuleDims) => void;
+}) {
+  function handlePointerDown(e: React.PointerEvent) {
+    e.stopPropagation();
+    e.preventDefault();
+    const rect = widgetRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const colUnitPx = rect.width / dims.w;
+    let last = dims;
+
+    function handleMove(ev: PointerEvent) {
+      const nextW = Math.round(dims.w + (ev.clientX - startX) / colUnitPx);
+      const nextH = Math.round(dims.h + (ev.clientY - startY) / ROW_UNIT_PX);
+      const next = clampModuleDims({ w: nextW, h: nextH });
+      if (next.w !== last.w || next.h !== last.h) {
+        last = next;
+        onChange(next);
+      }
+    }
+    function handleUp() {
+      window.removeEventListener("pointermove", handleMove);
+      window.removeEventListener("pointerup", handleUp);
+    }
+    window.addEventListener("pointermove", handleMove);
+    window.addEventListener("pointerup", handleUp);
+  }
+
+  return (
+    <button
+      type="button"
+      aria-label="Ridimensiona widget"
+      onPointerDown={handlePointerDown}
+      className="absolute -bottom-2 -right-2 z-10 flex size-7 cursor-nwse-resize touch-none items-center justify-center rounded-full border border-border bg-background text-muted-foreground shadow-sm hover:text-foreground"
+    >
+      <svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
+        <path d="M9.5 1.5 1.5 9.5M9.5 5.5 5.5 9.5M9.5 9.5v0" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+      </svg>
+    </button>
+  );
+}
 
 /** Widget trascinabile della bento grid: shell + componente dalla registry. */
 function SortableWidget({ widgetKey, editing }: { widgetKey: WidgetKey; editing: boolean }) {
   const def = getWidget(widgetKey);
-  const { removeWidget } = useHomeLayout();
+  const { removeWidget, widgetSizes, setWidgetSize } = useHomeLayout();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: widgetKey,
     disabled: !editing,
   });
+  const nodeRef = useRef<HTMLDivElement | null>(null);
+  function setRefs(node: HTMLDivElement | null) {
+    nodeRef.current = node;
+    setNodeRef(node);
+  }
+
+  const dims = def.resizable ? widgetSizes[widgetKey] ?? DEFAULT_MODULE_DIMS : null;
 
   return (
     <div
-      ref={setNodeRef}
+      ref={setRefs}
       style={{
-        transform: CSS.Transform.toString(transform),
-        transition: transition ?? "transform 320ms cubic-bezier(0.22, 1, 0.36, 1)",
+        // Solo il widget afferrato riceve la transform (segue il puntatore).
+        // Applicarla anche agli altri per "anticipare" il riordino li fa
+        // scivolare nel posto sbagliato appena la griglia è densa e a moduli
+        // di dimensioni diverse: l'accavallamento fantasma durante il drag.
+        // L'ordine reale cambia solo al rilascio (handleDragEnd).
+        //
+        // Solo traslazione, MAI lo scaleX/scaleY che dnd-kit calcola per
+        // l'anteprima di riordino (CSS.Transform.toString li includerebbe):
+        // in una griglia densa a moduli diversi quel fattore è quasi sempre
+        // sbagliato e schiaccia/stira il widget trascinato in modo visibile.
+        transform: isDragging && transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
+        transition: isDragging ? undefined : transition ?? "transform 320ms cubic-bezier(0.22, 1, 0.36, 1)",
+        // Larghezza/altezza in moduli per i widget ridimensionabili: l'angolo
+        // in alto a sinistra resta il punto di ancoraggio nella griglia,
+        // crescere occupa sempre e solo colonne/righe verso destra e in basso.
+        ...(dims ? ({ "--w": dims.w, "--h": dims.h } as React.CSSProperties) : {}),
       }}
       className={cn(
-        WIDGET_TIER_GRID_CLASS[def.tier],
+        dims ? "col-span-1 row-span-1 lg:[grid-column:span_var(--w)] lg:[grid-row:span_var(--h)]" : WIDGET_TIER_GRID_CLASS[def.tier],
         editing && "cursor-grab touch-none active:cursor-grabbing",
         isDragging && "z-10"
       )}
@@ -55,11 +144,15 @@ function SortableWidget({ widgetKey, editing }: { widgetKey: WidgetKey; editing:
       {...(editing ? listeners : {})}
     >
       <motion.div
+        layout={!isDragging}
         animate={{ scale: isDragging ? 1.035 : 1 }}
-        transition={{ type: "spring", stiffness: 350, damping: 25 }}
+        transition={{ layout: { type: "spring", stiffness: 500, damping: 40 }, default: { type: "spring", stiffness: 350, damping: 25 } }}
         style={{ boxShadow: isDragging ? "0 20px 40px -15px rgba(0,0,0,0.25)" : "none" }}
-        className="h-full rounded-xl"
+        className="relative h-full rounded-xl"
       >
+        {editing && dims ? (
+          <ResizeHandle dims={dims} widgetRef={nodeRef} onChange={(next) => setWidgetSize(widgetKey, next)} />
+        ) : null}
         <WidgetShell
           editing={editing}
           onRemove={() => removeWidget(widgetKey)}
@@ -76,7 +169,7 @@ function SortableWidget({ widgetKey, editing }: { widgetKey: WidgetKey; editing:
 /** Erede dello "Spazio disponibile" del mockup: tile per aggiungere widget dal catalogo. */
 function AddWidgetTile() {
   const { layout, addWidget } = useHomeLayout();
-  const available = HOME_WIDGETS.filter((w) => !layout.includes(w.key));
+  const available = HOME_WIDGETS.filter((w) => w.key !== BAR_WIDGET_KEY && !layout.includes(w.key));
 
   return (
     <Popover>
@@ -142,6 +235,8 @@ function HomeDashboardInner() {
     window.setTimeout(() => setRefreshing(false), 500);
   }
 
+  const gridLayout = layout.filter((key) => key !== BAR_WIDGET_KEY);
+
   return (
     <div className="relative mx-auto max-w-[1400px] px-6 py-8 sm:px-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -177,15 +272,20 @@ function HomeDashboardInner() {
             </Link>
           </Button>
           <Button asChild size="sm">
-            <Link href="/capi/nuovo/foto/fronte">
+            <Link href="/capi/nuovo">
               <Plus /> Crea capo
             </Link>
           </Button>
         </div>
       </div>
 
-      {layout.length === 0 && !editing ? (
+      <div className="mt-6 rounded-xl border border-border bg-card p-4">
+        <PanoramicaWidget spread />
+      </div>
+
+      {gridLayout.length === 0 && !editing ? (
         <EmptyState
+          tone="first-run"
           icon={<LayoutGrid className="size-5" />}
           title="La tua dashboard è vuota"
           subtitle="Aggiungi i widget che vuoi vedere: metriche, offerte, vendite e altro."
@@ -197,9 +297,9 @@ function HomeDashboardInner() {
         />
       ) : (
         <DndContext id="home-widgets" sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <SortableContext items={layout} strategy={rectSortingStrategy}>
-            <div className="mt-6 grid grid-flow-dense grid-cols-1 gap-6 lg:grid-cols-4 lg:[grid-auto-rows:minmax(180px,auto)]">
-              {layout.map((key) => (
+          <SortableContext items={gridLayout} strategy={rectSortingStrategy}>
+            <div className="mt-6 grid grid-flow-dense grid-cols-1 gap-6 lg:grid-cols-6 lg:[grid-auto-rows:minmax(200px,auto)]">
+              {gridLayout.map((key) => (
                 <SortableWidget key={key} widgetKey={key} editing={editing} />
               ))}
               {editing ? <AddWidgetTile /> : null}

@@ -7,7 +7,7 @@ import type { CatalogEntryStatus } from "@/types/maat";
 export type InventoryStatus = CatalogEntryStatus;
 
 /** Stato di un annuncio su una singola piattaforma. null = mai pubblicato lì. */
-export type PlatformListingState = "active" | "pending" | "delisted" | "sold" | null;
+export type PlatformListingState = "active" | "pending" | "hidden" | "delisted" | "sold" | null;
 
 export interface InventoryItem {
   id: string;

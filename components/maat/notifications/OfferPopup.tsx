@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Shirt, ExternalLink } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -22,16 +22,12 @@ interface OfferPopupProps {
 
 export function OfferPopup({ offer, open, onOpenChange, onResolve }: OfferPopupProps) {
   const [counterMode, setCounterMode] = useState(false);
-  const [counterInput, setCounterInput] = useState("");
-
-  // Reset del popup ad ogni apertura su una nuova offerta — controfferta
-  // preimpostata alla media tra offerta e prezzo di listino, come nel mockup.
-  useEffect(() => {
-    if (open && offer) {
-      setCounterMode(false);
-      setCounterInput(String(Math.round((offer.offerCents + offer.listPriceCents) / 2 / 100)));
-    }
-  }, [open, offer]);
+  // Controfferta preimpostata alla media tra offerta e prezzo di listino, come
+  // nel mockup. Init lazy invece di un effect di reset: OverlayHost monta questo
+  // popup con `key={offer.id}`, quindi ogni offerta è un mount nuovo.
+  const [counterInput, setCounterInput] = useState(() =>
+    offer ? String(Math.round((offer.offerCents + offer.listPriceCents) / 2 / 100)) : ""
+  );
 
   if (!offer) return null;
 
@@ -104,7 +100,7 @@ export function OfferPopup({ offer, open, onOpenChange, onResolve }: OfferPopupP
 
         <Button variant="outline" className="w-full justify-center gap-1.5" asChild>
           <a href={offer.listingUrl ?? "#"} target="_blank" rel="noopener noreferrer">
-            <ExternalLink className="size-3.5" /> Vai all&apos;annuncio
+            <ExternalLink className="size-3.5" /> Vai all’annuncio
           </a>
         </Button>
 

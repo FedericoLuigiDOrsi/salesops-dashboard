@@ -26,7 +26,7 @@ function RowIcon({ unread, children }: { unread: boolean; children: ReactNode })
     <span
       className={cn(
         "relative flex size-9 shrink-0 items-center justify-center rounded-md",
-        unread ? "bg-primary/25 text-[#7a7000]" : "bg-foreground/[.06] text-muted-foreground"
+        unread ? "bg-primary/25 text-accent-ink" : "bg-foreground/[.06] text-muted-foreground"
       )}
     >
       {children}
@@ -115,7 +115,7 @@ export function SaleNotificationRow({
 const OFFER_BADGE: Record<"accepted" | "rejected" | "counter", { label: string; className: string }> = {
   accepted: { label: "Accettata", className: "bg-[color-mix(in_oklab,var(--chart-2)_16%,transparent)] text-[var(--chart-2)]" },
   rejected: { label: "Rifiutata", className: "bg-muted text-muted-foreground" },
-  counter: { label: "Controfferta inviata", className: "bg-primary/25 text-[#7a7000]" },
+  counter: { label: "Controfferta inviata", className: "bg-primary/25 text-accent-ink" },
 };
 
 export function OfferNotificationRow({

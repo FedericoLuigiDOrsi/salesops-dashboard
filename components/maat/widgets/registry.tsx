@@ -27,6 +27,12 @@ export interface WidgetDef {
   component: ComponentType;
   /** Il widget porta la propria card (hero dark full-bleed): salta il chrome standard della shell. */
   bleed?: boolean;
+  /**
+   * true = supporta il sistema a moduli (taglie piccolo/medio/grande scelte
+   * dall'utente, vedi lib/widget-sizes.ts) invece della Tier fissa. Per ora
+   * solo "offerte": gli altri non hanno ancora un design per ogni taglia.
+   */
+  resizable?: boolean;
 }
 
 export const HOME_WIDGETS: WidgetDef[] = [
@@ -45,6 +51,7 @@ export const HOME_WIDGETS: WidgetDef[] = [
     icon: HandCoins,
     tier: "grande",
     component: OfferteWidget,
+    resizable: true,
   },
   {
     key: "vendite",

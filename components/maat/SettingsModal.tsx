@@ -24,7 +24,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -180,7 +179,7 @@ export function SettingsModal() {
             <div className="flex flex-col gap-6">
               <div>
                 <h2 className="text-xl font-bold tracking-tight">Generale</h2>
-                <p className="text-sm text-muted-foreground">Identità del negozio e stile guidato dall&apos;AI.</p>
+                <p className="text-sm text-muted-foreground">Identità del negozio e stile guidato dall’AI.</p>
               </div>
               <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5">
                 <div className="flex flex-col gap-1.5">
@@ -243,14 +242,14 @@ export function SettingsModal() {
                   <p className="truncate text-[15px] font-semibold">{profile.nome}</p>
                   <p className="truncate text-sm text-muted-foreground">{profile.email}</p>
                 </div>
-                <label className="flex items-center gap-2 text-sm">
-                  <span className="text-muted-foreground">{profile.ruolo}</span>
-                  <Switch
-                    checked={profile.ruolo === "Admin"}
-                    onCheckedChange={(checked) => setProfile({ ...profile, ruolo: checked ? "Admin" : "Operator" })}
-                    aria-label="Cambia ruolo (dimostrativo)"
-                  />
-                </label>
+                {/* Ruolo in sola lettura. Modifica ruolo è fuori MVP per
+                    decisione esplicita, e doc 43 chiede esattamente questo
+                    cambio: uno switch invita al click e non farebbe niente
+                    di reale. Nessuna nota «Prossimamente» qui — la Fase 5 di
+                    Track C ha deciso «nessuna CTA» sulla card, quindi la
+                    scelta giusta è togliere il controllo, non annunciarlo.
+                    Stesso trattamento visivo della lista Dipendenti. */}
+                <span className="shrink-0 text-sm text-muted-foreground">{profile.ruolo}</span>
               </div>
 
               <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-5">
@@ -393,7 +392,7 @@ export function SettingsModal() {
             <div className="flex flex-col gap-6">
               <div>
                 <h2 className="text-xl font-bold tracking-tight">Metodi di pagamento</h2>
-                <p className="text-sm text-muted-foreground">Scegli come pagare l&apos;abbonamento MAAT.</p>
+                <p className="text-sm text-muted-foreground">Scegli come pagare l’abbonamento MAAT.</p>
               </div>
 
               <div role="radiogroup" aria-label="Metodo di pagamento" className="grid grid-cols-2 gap-3 sm:grid-cols-4">

@@ -1,6 +1,6 @@
 "use client";
 
-import { Clock3, MapPin, Printer, Truck, UserRound } from "lucide-react";
+import { Check, Clock3, Eye, MapPin, Printer, Truck, UserRound } from "lucide-react";
 import { placeholderPhoto } from "@/lib/placeholder-photo";
 import { cn, formatEUR } from "@/lib/utils";
 import type { Shipment } from "@/types/maat";
@@ -19,13 +19,41 @@ interface LogisticsCardProps {
   onDragStart: (id: string) => void;
   onDragEnd: () => void;
   onOpenLabel: (shipment: Shipment) => void;
+  /** Apre il dettaglio con lo storico eventi. Diverso da onOpenLabel: quella è
+      l'etichetta stampabile, due finestre diverse sullo stesso oggetto. */
+  onOpen: (shipment: Shipment) => void;
+  /**
+   * "board" (default) = comportamento di oggi: un solo pulsante che apre
+   * l'anteprima. "prep" = modalità "Prepari i pacchi": la priorità è il
+   * processo fisico (vedi, cerca, impacchetta, stampa), quindi "Stampa
+   * etichetta" stampa subito senza anteprima, l'anteprima diventa un
+   * pulsante a parte, e compare "Pacco completato".
+   */
+  variant?: "board" | "prep";
+  /** Solo variant "prep": true se l'etichetta è già stata stampata almeno una volta. */
+  printed?: boolean;
+  /** Solo variant "prep": stampa diretta, senza aprire l'anteprima. */
+  onPrint?: (shipment: Shipment) => void;
+  /** Solo variant "prep": sposta il pacco in "Fatti". */
+  onComplete?: (shipment: Shipment) => void;
 }
 
 function formatElapsed(hours: number) {
   return hours < 24 ? `${hours}h` : `${Math.round(hours / 24)}g`;
 }
 
-export function LogisticsCard({ shipment: s, dragging, onDragStart, onDragEnd, onOpenLabel }: LogisticsCardProps) {
+export function LogisticsCard({
+  shipment: s,
+  dragging,
+  onDragStart,
+  onDragEnd,
+  onOpenLabel,
+  onOpen,
+  variant = "board",
+  printed = false,
+  onPrint,
+  onComplete,
+}: LogisticsCardProps) {
   const canPrintLabel = s.status === "da_fare" || s.status === "fatti";
   const urgent = canPrintLabel && s.hoursAgo >= 24;
   const timeClass =
@@ -37,6 +65,12 @@ export function LogisticsCard({ shipment: s, dragging, onDragStart, onDragEnd, o
           ? "text-accent-ink"
           : "text-muted-foreground";
 
+  // L'accento a sinistra sugli urgenti, in "prep", è sostituito da bordo+
+  // elevazione, come la card in evidenza di "Offerte in arrivo" in Home —
+  // coerenza tra le due priorità visive dell'app, niente più barra laterale
+  // colorata. In "board" resta l'accento di prima: quella vista non cambia.
+  const prep = variant === "prep";
+
   return (
     <article
       draggable
@@ -45,17 +79,20 @@ export function LogisticsCard({ shipment: s, dragging, onDragStart, onDragEnd, o
         onDragStart(s.id);
       }}
       onDragEnd={onDragEnd}
-      style={
-        urgent
-          ? { boxShadow: "inset 3px 0 0 var(--primary), 0 1px 2px rgba(0,31,63,.04), 0 6px 20px rgba(0,31,63,.06)" }
-          : undefined
-      }
+      onClick={() => onOpen(s)}
       className={cn(
-        "cursor-grab rounded-xl border border-border bg-card p-3 shadow-e1 transition-[opacity,transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-e2 active:cursor-grabbing",
+        "cursor-grab rounded-xl border bg-card p-3 shadow-e1 transition-[opacity,transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-e2 active:cursor-grabbing",
+        prep && urgent
+          ? "border-primary/25 shadow-[0_2px_6px_rgba(0,31,63,.08),0_16px_40px_rgba(0,31,63,.10)]"
+          : "border-border",
+        !prep && urgent && "shadow-[inset_3px_0_0_var(--primary),0_1px_2px_rgba(0,31,63,.04),0_6px_20px_rgba(0,31,63,.06)]",
         dragging && "opacity-35"
       )}
     >
       <div className="flex items-stretch gap-3">
+        {/* placeholderPhoto() ritorna un data:image/svg+xml generato in locale e
+            next.config.mjs ha già images.unoptimized: next/image non ottimizza nulla qui. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={placeholderPhoto(s.id, s.itemLabel)}
           alt={s.itemLabel}
@@ -108,7 +145,7 @@ export function LogisticsCard({ shipment: s, dragging, onDragStart, onDragEnd, o
         )}
       </div>
 
-      {canPrintLabel && (
+      {canPrintLabel && variant === "board" && (
         <button
           type="button"
           draggable={false}
@@ -128,6 +165,63 @@ export function LogisticsCard({ shipment: s, dragging, onDragStart, onDragEnd, o
           <Printer className="size-3.5" strokeWidth={1.8} />
           {s.status === "da_fare" ? "Stampa etichetta" : "Ristampa etichetta"}
         </button>
+      )}
+
+      {canPrintLabel && variant === "prep" && (
+        <>
+          <div className="mt-2.5 grid grid-cols-[minmax(0,1fr)_auto] gap-1.5">
+            <button
+              type="button"
+              draggable={false}
+              onClick={(event) => {
+                event.stopPropagation();
+                onPrint?.(s);
+              }}
+              onDragStart={(event) => event.stopPropagation()}
+              className="flex h-8 items-center justify-center gap-1.5 rounded-[8px] bg-primary text-[11px] font-semibold text-primary-foreground outline-none transition-[background-color,transform] hover:bg-accent-pressed focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:translate-y-px"
+              aria-label={`${printed ? "Ristampa" : "Stampa"} etichetta per ${s.itemLabel}`}
+            >
+              <Printer className="size-3.5" strokeWidth={1.8} />
+              {printed ? "Ristampa etichetta" : "Stampa etichetta"}
+            </button>
+            <button
+              type="button"
+              draggable={false}
+              onClick={(event) => {
+                event.stopPropagation();
+                onOpenLabel(s);
+              }}
+              onDragStart={(event) => event.stopPropagation()}
+              aria-label={`Anteprima etichetta per ${s.itemLabel}`}
+              title="Anteprima etichetta"
+              className="flex h-8 w-8 items-center justify-center rounded-[8px] border border-border-strong bg-background text-foreground outline-none transition-colors hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:translate-y-px"
+            >
+              <Eye className="size-3.5" strokeWidth={1.8} />
+            </button>
+          </div>
+
+          {s.status === "da_fare" && (
+            <button
+              type="button"
+              draggable={false}
+              onClick={(event) => {
+                event.stopPropagation();
+                onComplete?.(s);
+              }}
+              onDragStart={(event) => event.stopPropagation()}
+              className={cn(
+                "mt-1.5 flex h-8 w-full items-center justify-center gap-1.5 rounded-[8px] text-[11px] font-semibold outline-none transition-[background-color,transform] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:translate-y-px",
+                printed
+                  ? "bg-success text-white hover:bg-success/90"
+                  : "bg-secondary text-muted-foreground hover:bg-secondary/70"
+              )}
+              aria-label={`Segna pacco completato per ${s.itemLabel}`}
+            >
+              <Check className="size-3.5" strokeWidth={1.8} />
+              Pacco completato
+            </button>
+          )}
+        </>
       )}
     </article>
   );

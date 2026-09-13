@@ -12,9 +12,11 @@ const BARCODE_BARS = [
 interface ShippingLabelDialogProps {
   shipment: Shipment | null;
   onOpenChange: (open: boolean) => void;
+  /** Chiamato quando si stampa dal pannello: segna l'etichetta come stampata (Stampa → Ristampa). */
+  onPrint?: (shipment: Shipment) => void;
 }
 
-export function ShippingLabelDialog({ shipment: s, onOpenChange }: ShippingLabelDialogProps) {
+export function ShippingLabelDialog({ shipment: s, onOpenChange, onPrint }: ShippingLabelDialogProps) {
   return (
     <Dialog open={Boolean(s)} onOpenChange={onOpenChange}>
       {s && (
@@ -24,7 +26,7 @@ export function ShippingLabelDialog({ shipment: s, onOpenChange }: ShippingLabel
         >
           <DialogTitle className="sr-only">Etichetta di spedizione per {s.itemLabel}</DialogTitle>
           <DialogDescription className="sr-only">
-            Anteprima stampabile dell&apos;etichetta {s.trackingCode}
+            Anteprima stampabile dell’etichetta {s.trackingCode}
           </DialogDescription>
 
           <div className="grid md:grid-cols-[minmax(0,1fr)_250px]">
@@ -51,6 +53,8 @@ export function ShippingLabelDialog({ shipment: s, onOpenChange }: ShippingLabel
               </div>
 
               <div className="mt-6 flex items-center gap-3">
+                {/* data:image/svg+xml locale, vedi LogisticsCard */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={placeholderPhoto(s.id, s.itemLabel)}
                   alt={s.itemLabel}
@@ -87,7 +91,10 @@ export function ShippingLabelDialog({ shipment: s, onOpenChange }: ShippingLabel
               <div className="mt-auto flex flex-col gap-2 pt-6">
                 <button
                   type="button"
-                  onClick={() => window.print()}
+                  onClick={() => {
+                    onPrint?.(s);
+                    window.print();
+                  }}
                   className="flex h-10 items-center justify-center gap-2 rounded-[9px] bg-primary text-sm font-semibold text-primary-foreground transition-[background-color,transform] hover:bg-accent-pressed active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 >
                   <Printer className="size-4" />
@@ -109,7 +116,7 @@ export function ShippingLabelDialog({ shipment: s, onOpenChange }: ShippingLabel
   );
 }
 
-function ShippingLabel({ shipment: s }: { shipment: Shipment }) {
+export function ShippingLabel({ shipment: s }: { shipment: Shipment }) {
   return (
     <section
       aria-label={`Etichetta di spedizione ${s.trackingCode}`}

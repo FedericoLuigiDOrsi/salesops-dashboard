@@ -87,6 +87,17 @@ export interface Notification {
 
 export type Marketplace = "vinted" | "depop" | "grailed" | "vestiaire" | "ebay";
 
+/**
+ * I cinque marketplace, in ordine di rilevanza commerciale.
+ *
+ * Serve dove l'elenco va percorso e non solo indicizzato. `PLATFORM_KEYS`
+ * (lib/inventory-columns) ne copre solo tre ed è legato alle colonne della
+ * tabella inventario: non è la lista dei marketplace, è la lista delle colonne
+ * che oggi esistono. Usare quella per iterare sui marketplace è lo stesso
+ * errore che teneva MarketplaceBadge fermo a tre su cinque.
+ */
+export const MARKETPLACES: Marketplace[] = ["vinted", "depop", "grailed", "vestiaire", "ebay"];
+
 export const MARKETPLACE_LABELS: Record<Marketplace, string> = {
   vinted: "Vinted",
   depop: "Depop",
@@ -160,6 +171,117 @@ export interface Lot {
 
 // Pipeline di fulfillment (board Kanban Logistica): da_fare/fatti precedono la
 // spedizione vera e propria, spediti/consegnati la seguono.
+// ---------------------------------------------------------------------------
+// Listing — l'annuncio di un capo su UN marketplace.
+//
+// È l'oggetto che l'OOUX Round 1 delle aree operative ha trovato MANCANTE:
+// Pubblicazione era una vista filtrata di Catalog Entry, e `publishing-mock.ts`
+// esportava sei funzioni e zero tipi. Ma un capo su tre marketplace ha TRE
+// annunci, con prezzo e stato indipendenti.
+//
+// Spec: docs/technical/ooux/10-object-guide-listing-shipment.md (Fase 2),
+// contratto dati in 09-mcsfd-aree-operative.md (Fase 1).
+
+/**
+ * Stato di UN annuncio, non del capo. Il capo diventa `sold`, l'annuncio no:
+ * è la divergenza che la Fase 3 ha trovato in ChannelDots, dove `sold` era
+ * usato come stato per-listing.
+ */
+export type ListingStatus = "active" | "pending_manual" | "error" | "delisted";
+
+export const LISTING_STATUS_LABELS: Record<ListingStatus, string> = {
+  active: "Online",
+  pending_manual: "In corso",
+  error: "Errore",
+  delisted: "Ritirato",
+};
+
+export interface Listing {
+  id: string;
+  /** Il capo di cui questo è l'annuncio. Il Listing non ha un nome proprio. */
+  itemId: string;
+  itemLabel: string;
+  sku: string;
+  marketplace: Marketplace;
+  status: ListingStatus;
+  priceCents: number;
+  negotiable: boolean;
+  /** Null finché non è mai stato pubblicato davvero. */
+  externalUrl: string | null;
+  publishedAt: string | null;
+  delistedAt: string | null;
+  /** Popolato solo su `status: "error"`. Null = la piattaforma non ha detto perché. */
+  errorReason: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ---------------------------------------------------------------------------
+// Fulfillment event — una riga dello storico di una spedizione.
+//
+// `carrier`, `trackingCode` ed `expectedDeliveryAt` sono PER EVENTO, non per
+// spedizione: un valore diverso per riga è possibile e non è un errore di dati
+// (verificato sullo schema per il brief 14).
+//
+// Il destinatario NON sta qui: è PII e vive in `personal_data`. Lo Shipment
+// Detail mostra la città, non nome e indirizzo — quelli restano a
+// ShippingLabelDialog.
+
+export type FulfillmentStage = "packing" | "ready" | "shipped" | "in_transit" | "delivered";
+
+export const FULFILLMENT_STAGE_LABELS: Record<FulfillmentStage, string> = {
+  packing: "In preparazione",
+  ready: "Pronto al ritiro",
+  shipped: "Spedito",
+  in_transit: "In transito",
+  delivered: "Consegnato",
+};
+
+export interface FulfillmentEvent {
+  id: string;
+  shipmentId: string;
+  stage: FulfillmentStage;
+  occurredAt: string;
+  carrier: string | null;
+  trackingCode: string | null;
+  expectedDeliveryAt: string | null;
+  note: string | null;
+}
+
+// ---------------------------------------------------------------------------
+// Marketplace Account — il collegamento autorizzato fra il tenant e UN
+// marketplace esterno. Non riguarda un capo: è l'infrastruttura che rende un
+// intero marketplace utilizzabile. Un tenant ne ha al più uno per marketplace,
+// cinque in tutto, e zero è lo stato iniziale di ogni tenant nuovo.
+//
+// `secret_ref` del canonico NON compare qui, di proposito: punta a un secret nel
+// vault e non deve mai raggiungere il client, nemmeno come riferimento.
+//
+// Object Guide: docs/technical/ooux/17-object-guide-marketplace-account.md
+
+export type MarketplaceAccountStatus = "active" | "inactive" | "error";
+
+export const MARKETPLACE_ACCOUNT_STATUS_LABELS: Record<MarketplaceAccountStatus, string> = {
+  active: "Collegato",
+  inactive: "Scollegato",
+  error: "Errore",
+};
+
+export interface MarketplaceAccount {
+  id: string;
+  marketplace: Marketplace;
+  status: MarketplaceAccountStatus;
+  connectedAt: string | null;
+  /** Quando il collegamento è stato verificato l'ultima volta. */
+  checkedAt: string | null;
+  /**
+   * Perché è rotto, quando lo è. Non è nel canonico: è messaggistica.
+   * `error` e `inactive` bloccano la pubblicazione allo stesso modo — la
+   * differenza è solo in cosa si dice all'utente, non nel comportamento.
+   */
+  errorReason: string | null;
+}
+
 export type ShipmentStatus = "da_fare" | "fatti" | "spediti" | "consegnati";
 
 export const SHIPMENT_STATUS_LABELS: Record<ShipmentStatus, string> = {

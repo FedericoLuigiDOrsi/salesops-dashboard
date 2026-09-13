@@ -34,7 +34,7 @@ const PERIODS = [
 const METRIC_BY_KEY = new Map(HOME_METRICS.map((m) => [m.key, m]));
 
 const ACTIONABLE_HREF: Record<string, string> = {
-  bozze: "/capi",
+  bozze: "/inventario",
   offerte: "/notifiche",
 };
 
@@ -85,10 +85,28 @@ function ActionableTile({ metric }: { metric: HomeMetric }) {
   );
 }
 
+/** Variante verticale dell'ActionableTile: stessa sagoma di HeroTile/TrendTile,
+ * così nella fascia Panoramica tutti i moduli condividono la stessa riga della
+ * griglia e nessuno lascia spazio vuoto sotto agli altri. */
+function ActionableTileCompact({ metric }: { metric: HomeMetric }) {
+  return (
+    <Link
+      href={ACTIONABLE_HREF[metric.key] ?? "/"}
+      className="group flex flex-col justify-between rounded-lg bg-accent-soft px-4 py-3 transition-colors hover:bg-accent-soft/70"
+    >
+      <div className="flex items-start justify-between gap-2">
+        <span className="font-mono text-2xl font-semibold leading-none tabular-nums">{metric.value}</span>
+        <ArrowRight className="mt-1 size-3.5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+      </div>
+      <p className="mt-1.5 text-[13px] font-medium text-muted-foreground">{metric.label}</p>
+    </Link>
+  );
+}
+
 function HeroTile({ metric }: { metric: HomeMetric }) {
   const spark = sparkPoints(metric.spark, 140, 40);
   return (
-    <div className="col-span-2 flex flex-col justify-between rounded-lg border border-border bg-card px-4 py-3.5">
+    <div className="col-span-2 flex flex-col justify-between rounded-lg border border-border bg-card px-4 py-3">
       <div className="flex items-center justify-between gap-2">
         <span className="text-[13px] font-medium text-muted-foreground">{metric.label}</span>
         {metric.delta ? <DeltaBadge delta={metric.delta} up={metric.up} /> : null}
@@ -130,7 +148,7 @@ function HeroTile({ metric }: { metric: HomeMetric }) {
 function TrendTile({ metric }: { metric: HomeMetric }) {
   const spark = sparkPoints(metric.spark, 100, 20);
   return (
-    <div className="flex flex-col justify-between rounded-lg border border-border bg-card px-4 py-3.5">
+    <div className="flex flex-col justify-between rounded-lg border border-border bg-card px-4 py-3">
       <div className="flex items-start justify-between gap-2">
         <span className="font-mono text-2xl font-semibold leading-none tabular-nums">
           {metric.value}
@@ -263,7 +281,7 @@ function SortableRowList({
 }
 
 /** Metriche chiave configurabili: il box "Panoramica" del mockup, come widget. */
-export function PanoramicaWidget() {
+export function PanoramicaWidget({ spread = false }: { spread?: boolean } = {}) {
   const { metrics, pinnedMetrics, setMetrics, setPinnedMetrics } = useHomeLayout();
   const [editMode, setEditMode] = useState(false);
   const [period, setPeriod] = useState<(typeof PERIODS)[number]["value"]>("settimana");
@@ -320,7 +338,7 @@ export function PanoramicaWidget() {
 
   return (
     <div>
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <p className="font-mono text-[11px] font-semibold uppercase tracking-[.12em] text-muted-foreground">
           Panoramica
         </p>
@@ -416,6 +434,16 @@ export function PanoramicaWidget() {
         <p className="py-8 text-center text-[13px] text-muted-foreground">
           Nessuna informazione selezionata. Usa &ldquo;Modifica&rdquo;.
         </p>
+      ) : spread ? (
+        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 lg:grid-cols-8">
+          {toDo.map((m) => (
+            <ActionableTileCompact key={m.key} metric={m} />
+          ))}
+          {hero ? <HeroTile metric={hero} /> : null}
+          {trend.map((m) => (
+            <TrendTile key={m.key} metric={m} />
+          ))}
+        </div>
       ) : (
         <div className="flex flex-col gap-4">
           {toDo.length > 0 ? (

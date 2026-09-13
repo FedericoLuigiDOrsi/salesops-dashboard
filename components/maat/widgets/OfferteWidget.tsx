@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion, type Variants } from "framer-motion";
 import { ArrowRight, Check, RefreshCw, RotateCcw, Shirt, X, type LucideIcon } from "lucide-react";
@@ -11,17 +11,6 @@ import { useOverlays } from "@/lib/overlays-store";
 import type { Offer, OfferStatus } from "@/types/maat";
 
 const SECONDARY_VISIBLE = 3;
-
-/** Toast minimale e autonomo: niente provider esterni da montare in layout. */
-function useLocalToast() {
-  const [message, setMessage] = useState<string | null>(null);
-  useEffect(() => {
-    if (!message) return;
-    const id = window.setTimeout(() => setMessage(null), 2400);
-    return () => window.clearTimeout(id);
-  }, [message]);
-  return { message, notify: setMessage };
-}
 
 const RESOLVED_BANNER: Record<
   Exclude<OfferStatus, "pending">,
@@ -44,7 +33,7 @@ const RESOLVED_BANNER: Record<
   },
   counter: {
     icon: RefreshCw,
-    iconBg: "bg-primary/25 text-[#7a7000]",
+    iconBg: "bg-primary/25 text-accent-ink",
     bannerBg: "bg-primary/10",
     ring: "shadow-[inset_3px_0_0_var(--primary)]",
     label: (o, _marginLabel, counterCents) => `Controfferta a ${formatEUR(counterCents ?? o.offerCents)} · ${o.sku}`,
@@ -65,10 +54,20 @@ function offerDelta(offer: Offer) {
   return Math.round(((offer.offerCents - offer.listPriceCents) / offer.listPriceCents) * 100);
 }
 
+function offerDeltaEUR(offer: Offer) {
+  const diffCents = offer.offerCents - offer.listPriceCents;
+  const sign = diffCents >= 0 ? "+" : "−";
+  return `${sign}${formatEUR(Math.abs(diffCents))}`;
+}
+
 /** Coda prioritaria: l'offerta più vecchia è in evidenza, le successive restano azionabili a colpo d'occhio. */
 export function OfferteWidget() {
   const { openOffer, offerStatus, resolveOffer } = useOverlays();
-  const { message, notify } = useLocalToast();
+  const [lastResolved, setLastResolved] = useState<{
+    id: string;
+    itemLabel: string;
+    status: "accepted" | "rejected";
+  } | null>(null);
 
   const effective = offers
     .map((offer) => {
@@ -78,16 +77,21 @@ export function OfferteWidget() {
     .sort((a, b) => new Date(a.offer.receivedAt).getTime() - new Date(b.offer.receivedAt).getTime());
 
   const pendingCount = effective.filter((entry) => entry.status === "pending").length;
-  const featured = effective[0];
-  const secondary = effective.slice(1, SECONDARY_VISIBLE + 1);
+  // Le offerte accettate/rifiutate spariscono dal flusso: restano solo pending/controproposte,
+  // l'ultima decisione resta annullabile dalla barra in fondo.
+  const visible = effective.filter((entry) => entry.status !== "accepted" && entry.status !== "rejected");
+  const featured = visible[0];
+  const secondary = visible.slice(1, SECONDARY_VISIBLE + 1);
 
   function handleResolve(offer: Offer, status: "accepted" | "rejected") {
     resolveOffer(offer.id, status);
-    notify(
-      status === "accepted"
-        ? `Offerta accettata · ${formatEUR(offer.offerCents)} · ${offer.itemLabel}`
-        : `Offerta rifiutata · ${offer.itemLabel}`
-    );
+    setLastResolved({ id: offer.id, itemLabel: offer.itemLabel, status });
+  }
+
+  function handleUndoResolved() {
+    if (!lastResolved) return;
+    resolveOffer(lastResolved.id, "pending");
+    setLastResolved(null);
   }
 
   function renderResolved(
@@ -183,57 +187,64 @@ export function OfferteWidget() {
                 key={featured.offer.id}
                 layout
                 variants={itemVariants}
-                className="my-2 rounded-xl bg-gradient-to-br from-primary/20 via-primary/[.06] to-transparent p-4 shadow-[inset_3px_0_0_var(--primary)]"
+                className="my-2 rounded-xl border border-primary/25 bg-gradient-to-br from-primary/20 via-primary/[.06] to-transparent p-4 shadow-[0_2px_6px_rgba(0,31,63,.08),0_16px_40px_rgba(0,31,63,.10)]"
               >
-                <div className="flex gap-3.5">
-                  <span className="flex h-[94px] w-[78px] shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground/50 max-[460px]:h-[72px] max-[460px]:w-[58px]">
-                    <Shirt className="size-6" strokeWidth={1.5} />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-[15px] font-semibold leading-tight">{featured.offer.itemLabel}</p>
-                    <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px] text-muted-foreground">
-                      <span className="rounded bg-foreground/[.06] px-1.5 py-0.5 font-semibold uppercase tracking-[.08em]">
-                        {featured.offer.marketplace}
-                      </span>
-                      <span className="font-mono">{featured.offer.sku}</span>
-                      <span>ricevuta {featured.offer.time}</span>
-                    </div>
-                    <div className="mt-2.5 flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                      <span className="font-mono text-[24px] font-semibold tracking-[-.045em]">
-                        {formatEUR(featured.offer.offerCents)}
-                      </span>
-                      <span className="font-mono text-[11px] text-muted-foreground">
-                        listino {formatEUR(featured.offer.listPriceCents)}
-                      </span>
-                      <span className="rounded bg-foreground/[.06] px-1.5 py-1 font-mono text-[10px] font-semibold text-muted-foreground">
-                        {offerDelta(featured.offer)}% dal listino
-                      </span>
+                <div className="flex gap-3.5 max-[460px]:flex-col">
+                  <div className="flex min-w-0 flex-1 gap-3.5">
+                    <span className="flex h-[94px] w-[78px] shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground/50 max-[460px]:h-[72px] max-[460px]:w-[58px]">
+                      <Shirt className="size-6" strokeWidth={1.5} />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[15px] font-semibold leading-tight">{featured.offer.itemLabel}</p>
+                      <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px] text-muted-foreground">
+                        <span className="rounded bg-foreground/[.06] px-1.5 py-0.5 font-semibold uppercase tracking-[.08em]">
+                          {featured.offer.marketplace}
+                        </span>
+                        <span className="font-mono">{featured.offer.sku}</span>
+                        <span>ricevuta {featured.offer.time}</span>
+                      </div>
+                      <div className="mt-2.5 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                        <span className="font-mono text-[24px] font-semibold tracking-[-.045em]">
+                          {formatEUR(featured.offer.offerCents)}
+                        </span>
+                        <span className="font-mono text-[18px] font-semibold tracking-[-.02em] text-foreground/75">
+                          {offerDeltaEUR(featured.offer)}
+                        </span>
+                      </div>
+                      <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-muted-foreground">
+                        <span className="font-mono font-semibold">{offerDelta(featured.offer)}% dal listino</span>
+                        <span className="font-mono">listino {formatEUR(featured.offer.listPriceCents)}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="mt-3 grid grid-cols-[1fr_1fr_auto] gap-2 max-[460px]:grid-cols-2">
-                  <button
-                    type="button"
-                    onClick={() => handleResolve(featured.offer, "accepted")}
-                    className="flex min-h-11 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-[12px] font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
-                  >
-                    <Check className="size-4" /> Accetta
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => openOffer(featured.offer.id)}
-                    className="min-h-11 rounded-lg border border-border bg-card px-3 text-[12px] font-semibold transition-colors hover:bg-foreground/[.04]"
-                  >
-                    Controproposta
-                  </button>
-                  <button
-                    type="button"
-                    aria-label={`Rifiuta offerta ${featured.offer.itemLabel}`}
-                    onClick={() => handleResolve(featured.offer, "rejected")}
-                    className="flex min-h-11 items-center justify-center gap-1.5 rounded-lg px-3 text-[12px] font-semibold text-destructive transition-colors hover:bg-destructive/10 max-[460px]:col-span-2"
-                  >
-                    <X className="size-4" /> Rifiuta
-                  </button>
+
+                  {/* Tre azioni identiche per forma (rettangoli larghi e bassi): impilate a
+                      destra sopra i 460px, in riga sotto — mai una gerarchia di dimensione
+                      diversa da quella di colore (il verde su Accetta basta). */}
+                  <div className="flex w-[132px] shrink-0 flex-col gap-2 max-[460px]:w-full max-[460px]:flex-row">
+                    <button
+                      type="button"
+                      onClick={() => handleResolve(featured.offer, "accepted")}
+                      className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-success px-2 text-[12px] font-semibold text-white transition-colors hover:bg-success/90"
+                    >
+                      <Check className="size-4" /> Accetta
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => openOffer(featured.offer.id)}
+                      className="flex flex-1 items-center justify-center rounded-lg border border-border bg-card px-2 text-[12px] font-semibold transition-colors hover:bg-foreground/[.04]"
+                    >
+                      Controproposta
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={`Rifiuta offerta ${featured.offer.itemLabel}`}
+                      onClick={() => handleResolve(featured.offer, "rejected")}
+                      className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-destructive/30 px-2 text-[12px] font-semibold text-destructive transition-colors hover:bg-destructive/10"
+                    >
+                      <X className="size-4" /> Rifiuta
+                    </button>
+                  </div>
                 </div>
               </motion.section>
             )}
@@ -273,8 +284,13 @@ export function OfferteWidget() {
                       </button>
                       <div className="flex items-center gap-1.5">
                         <div className="mr-1 text-right">
-                          <span className="block font-mono text-[15px] font-semibold">{formatEUR(offer.offerCents)}</span>
-                          <span className="block font-mono text-[10px] font-semibold text-muted-foreground">{delta}%</span>
+                          <div className="flex items-baseline justify-end gap-1">
+                            <span className="font-mono text-[15px] font-semibold">{formatEUR(offer.offerCents)}</span>
+                            <span className="font-mono text-[12px] font-semibold text-foreground/70">
+                              {offerDeltaEUR(offer)}
+                            </span>
+                          </div>
+                          <span className="block font-mono text-[10px] font-medium text-muted-foreground">{delta}%</span>
                         </div>
                         <button
                           type="button"
@@ -300,6 +316,48 @@ export function OfferteWidget() {
             ) : null}
           </AnimatePresence>
 
+          <AnimatePresence>
+            {lastResolved ? (
+              <motion.div
+                key={lastResolved.id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 8 }}
+                transition={{ type: "spring", stiffness: 300, damping: 28 }}
+                className={cn(
+                  "mt-2 flex items-center justify-between gap-3 rounded-xl px-3 py-2",
+                  lastResolved.status === "accepted" ? "bg-success-soft" : "bg-destructive/10"
+                )}
+              >
+                <div className="flex min-w-0 items-center gap-2">
+                  <span
+                    className={cn(
+                      "flex size-8 shrink-0 items-center justify-center rounded-lg text-white",
+                      lastResolved.status === "accepted" ? "bg-success" : "bg-destructive"
+                    )}
+                  >
+                    {lastResolved.status === "accepted" ? (
+                      <Check className="size-4" />
+                    ) : (
+                      <X className="size-4" />
+                    )}
+                  </span>
+                  <p className="truncate text-[12px] text-foreground">
+                    {lastResolved.status === "accepted" ? "Accettata" : "Rifiutata"} ·{" "}
+                    <span className="font-semibold">{lastResolved.itemLabel}</span>
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleUndoResolved}
+                  className="flex min-h-11 shrink-0 items-center gap-1 rounded-lg px-2 text-[12px] font-semibold text-muted-foreground transition-colors hover:bg-foreground/[.04] hover:text-foreground"
+                >
+                  <RotateCcw className="size-3.5" /> Annulla
+                </button>
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
+
           <div className="mt-auto flex min-h-11 items-center justify-between gap-3 border-t border-border pt-2">
             <span className="text-[10px] font-medium text-muted-foreground">Ordinate per attesa</span>
             <Link
@@ -311,14 +369,6 @@ export function OfferteWidget() {
           </div>
         </motion.div>
       )}
-
-      {message ? (
-        <div className="pointer-events-none fixed inset-x-0 bottom-6 z-50 flex justify-center px-4">
-          <div className="pointer-events-auto rounded-full border border-border bg-popover px-4 py-2 text-[13px] font-medium text-popover-foreground shadow-lg">
-            {message}
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 }

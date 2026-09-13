@@ -1,6 +1,5 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState } from "react";
 import { LayoutGrid, List, Search, X } from "lucide-react";
 import {
   Select,
@@ -13,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { MARKETPLACE_LABELS } from "@/types/maat";
 import { PLATFORM_KEYS } from "@/lib/inventory-columns";
 import { ColumnManager } from "@/components/maat/inventory/ColumnManager";
+import { SegmentedFilter } from "@/components/maat/SegmentedFilter";
 import {
   CATEGORY_OPTIONS,
   PRICE_OPTIONS,
@@ -41,110 +41,10 @@ interface InventoryToolbarProps {
   platform: PlatformFilter;
   onPlatformChange: (v: PlatformFilter) => void;
   resultCount: number;
-  hasActiveFilters: boolean;
   onReset: () => void;
 }
 
 const OVERLINE = "font-mono text-[11px] font-semibold uppercase tracking-[.1em] text-muted-foreground";
-
-/** Segmento di stato con indicatore pill che scorre dietro alla voce attiva. */
-function StatusSegment({
-  active,
-  counts,
-  onChange,
-}: {
-  active: StatusFilter;
-  counts: Record<StatusFilter, number>;
-  onChange: (v: StatusFilter) => void;
-}) {
-  const trackRef = useRef<HTMLDivElement>(null);
-  const [ind, setInd] = useState<{ left: number; width: number } | null>(null);
-
-  // misura la voce attiva e riposiziona l'indicatore; ri-misura su cambio stato,
-  // conteggi (la larghezza del badge cambia) e resize della track.
-  useLayoutEffect(() => {
-    const track = trackRef.current;
-    if (!track) return;
-    const measure = () => {
-      const el = track.querySelector<HTMLElement>('[data-active="true"]');
-      if (el) setInd({ left: el.offsetLeft, width: el.offsetWidth });
-    };
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(track);
-    document.fonts?.ready.then(measure).catch(() => {});
-    return () => ro.disconnect();
-  }, [active, counts]);
-
-  return (
-    <div
-      ref={trackRef}
-      className="relative inline-flex items-center gap-0.5 rounded-full bg-secondary p-1"
-    >
-      <span
-        aria-hidden
-        className="pointer-events-none absolute inset-y-1 left-0 rounded-full bg-foreground shadow-[0_2px_8px_rgba(0,31,63,.20)] transition-[transform,width] duration-[380ms] ease-[cubic-bezier(.22,1,.36,1)]"
-        style={ind ? { width: ind.width, transform: `translateX(${ind.left}px)` } : { width: 0, opacity: 0 }}
-      />
-      {STATUS_SEGMENTS.map((s) => {
-        const on = active === s.value;
-        return (
-          <button
-            key={s.value}
-            type="button"
-            aria-pressed={on}
-            data-active={on}
-            onClick={() => onChange(s.value)}
-            className={cn(
-              "relative z-10 inline-flex items-center gap-2 whitespace-nowrap rounded-full px-3.5 py-2 text-sm transition-colors duration-200",
-              on ? "font-bold text-text-on-dark" : "font-medium text-muted-foreground hover:text-foreground"
-            )}
-          >
-            {s.label}
-            <span
-              className={cn(
-                "inline-flex h-5 min-w-[22px] items-center justify-center rounded-full px-1.5 font-mono text-xs font-semibold tabular-nums transition-colors duration-200",
-                on ? "bg-[rgba(246,247,237,.20)] text-text-on-dark" : "bg-card text-muted-foreground"
-              )}
-            >
-              {counts[s.value]}
-            </span>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-/** Toggle Tabella / Griglia sulla stessa pill-track. */
-function ViewToggle({ view, onChange }: { view: ViewMode; onChange: (v: ViewMode) => void }) {
-  const items: { value: ViewMode; label: string; Icon: typeof List }[] = [
-    { value: "table", label: "Tabella", Icon: List },
-    { value: "grid", label: "Griglia", Icon: LayoutGrid },
-  ];
-  return (
-    <div className="inline-flex items-center gap-0.5 rounded-full bg-secondary p-1">
-      {items.map(({ value, label, Icon }) => {
-        const on = view === value;
-        return (
-          <button
-            key={value}
-            type="button"
-            aria-pressed={on}
-            onClick={() => onChange(value)}
-            className={cn(
-              "inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-[13px] transition-colors duration-200",
-              on ? "bg-foreground font-semibold text-text-on-dark" : "font-medium text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <Icon className="size-[17px]" />
-            {label}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
 
 /** Select attributo: overline mono + trigger a slot con dropdown animato (shadcn/Radix). */
 function AttributeSelect({
@@ -216,8 +116,6 @@ export function InventoryToolbar(props: InventoryToolbarProps) {
     onPriceChange,
     platform,
     onPlatformChange,
-    resultCount,
-    hasActiveFilters,
     onReset,
   } = props;
 
@@ -243,7 +141,7 @@ export function InventoryToolbar(props: InventoryToolbarProps) {
   return (
     <div className="overflow-hidden rounded-lg border border-border bg-card shadow-e1">
       {/* fascia primaria: ricerca · stato · vista */}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-3 px-5 py-4">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 py-2.5">
         <div className="group flex w-full items-center gap-2.5 rounded-full border border-border bg-card px-4 py-2.5 transition-[width,box-shadow,border-color] duration-300 ease-[cubic-bezier(.22,1,.36,1)] focus-within:border-primary focus-within:shadow-[0_0_0_3px_rgba(219,230,76,.45)] sm:w-[300px] sm:focus-within:w-[440px]">
           <Search className="size-[18px] shrink-0 text-foreground/45" />
           <input
@@ -258,15 +156,26 @@ export function InventoryToolbar(props: InventoryToolbarProps) {
 
         <div className="hidden flex-1 sm:block" />
 
-        <StatusSegment active={statusFilter} counts={statusCounts} onChange={onStatusChange} />
+        <SegmentedFilter
+          options={STATUS_SEGMENTS.map((s) => ({ ...s, count: statusCounts[s.value] }))}
+          active={statusFilter}
+          onChange={onStatusChange}
+        />
         <div className="hidden h-[26px] w-px bg-border sm:block" />
-        <ViewToggle view={view} onChange={onViewChange} />
+        <SegmentedFilter
+          options={[
+            { value: "table" as ViewMode, label: "Tabella", icon: <List className="size-[17px]" /> },
+            { value: "grid" as ViewMode, label: "Griglia", icon: <LayoutGrid className="size-[17px]" /> },
+          ]}
+          active={view}
+          onChange={onViewChange}
+        />
       </div>
 
       <div className="h-px bg-border" />
 
-      {/* fascia secondaria: filtri attributo · colonne · contatore */}
-      <div className="flex flex-wrap items-center gap-x-[18px] gap-y-3 px-5 py-3.5">
+      {/* fascia secondaria: filtri attributo · colonne */}
+      <div className="flex flex-wrap items-center gap-x-[18px] gap-y-2 px-5 py-2.5">
         <AttributeSelect label="Categoria" value={category} defaultValue="all" options={categoryOpts} onChange={onCategoryChange} />
         <AttributeSelect label="Taglia" value={size} defaultValue="all" options={sizeOpts} onChange={onSizeChange} />
         <AttributeSelect
@@ -285,15 +194,6 @@ export function InventoryToolbar(props: InventoryToolbarProps) {
         />
 
         {view === "table" && <ColumnManager />}
-
-        <div className="flex items-baseline gap-1.5 font-mono tabular-nums sm:ml-auto">
-          <span className="inline-block overflow-hidden">
-            <span key={resultCount} className="inline-block animate-tick text-[21px] font-semibold text-foreground">
-              {resultCount}
-            </span>
-          </span>
-          <span className="text-[13px] text-muted-foreground">capi</span>
-        </div>
       </div>
 
       {/* riga chip filtri attivi */}

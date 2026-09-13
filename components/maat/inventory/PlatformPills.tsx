@@ -10,6 +10,9 @@ import type { InventoryItem, PlatformListingState } from "@/lib/inventory-mock";
 const STATE_DOT: Record<NonNullable<PlatformListingState>, string> = {
   active: "var(--success)",
   pending: "var(--accent-ink)",
+  // hidden != delisted: l annuncio esiste ancora sulla piattaforma ma non e
+  // visibile ai compratori. --info e un token del set, non usato altrove.
+  hidden: "var(--info)",
   delisted: "var(--muted-foreground)",
   sold: "var(--foreground)",
 };
@@ -17,6 +20,7 @@ const STATE_DOT: Record<NonNullable<PlatformListingState>, string> = {
 const STATE_LABEL: Record<NonNullable<PlatformListingState>, string> = {
   active: "attivo",
   pending: "in corso",
+  hidden: "nascosto",
   delisted: "rimosso",
   sold: "venduto",
 };

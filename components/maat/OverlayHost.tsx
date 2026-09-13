@@ -4,7 +4,7 @@ import { useOverlays } from "@/lib/overlays-store";
 import { offers } from "@/lib/activity-mock";
 import { offerToNotification } from "@/lib/notifications-mock";
 import { OfferPopup } from "@/components/maat/notifications/OfferPopup";
-import { ArticlePreview } from "@/components/maat/notifications/ArticlePreview";
+import { SaleDetail } from "@/components/maat/sales/SaleDetail";
 import { NotificationsPanel } from "@/components/maat/notifications/NotificationsPanel";
 
 /**
@@ -23,13 +23,19 @@ export function OverlayHost() {
 
   return (
     <>
-      <OfferPopup
-        offer={activeOffer}
-        open={active?.kind === "offer"}
-        onOpenChange={(open) => !open && close()}
-        onResolve={(id, status, counterCents) => resolveOffer(id, status, counterCents)}
-      />
-      <ArticlePreview sku={saleSku} open={active?.kind === "sale"} onOpenChange={(open) => !open && close()} />
+      {/* `key` sull'id: cambiare offerta rimonta il popup, che è il modo in cui
+          si azzerano controfferta e modalità senza un effect di reset. Senza
+          offerta attiva il componente renderizzava già null. */}
+      {activeOffer && (
+        <OfferPopup
+          key={activeOffer.id}
+          offer={activeOffer}
+          open={active?.kind === "offer"}
+          onOpenChange={(open) => !open && close()}
+          onResolve={(id, status, counterCents) => resolveOffer(id, status, counterCents)}
+        />
+      )}
+      <SaleDetail sku={saleSku} open={active?.kind === "sale"} onOpenChange={(open) => !open && close()} />
       <NotificationsPanel open={active?.kind === "notifications"} onOpenChange={(open) => !open && close()} />
     </>
   );

@@ -96,7 +96,7 @@ export function NotificationInboxContent({ variant = "page" }: { variant?: "page
       </div>
 
       {items.length === 0 ? (
-        <EmptyState icon={<Bell className="size-5 text-muted-foreground" />} title="Nessuna notifica" subtitle="Vendite, offerte e spedizioni appariranno qui." />
+        <EmptyState tone="first-run" icon={<Bell className="size-5 text-muted-foreground" />} title="Non è ancora arrivato niente" subtitle="Qui compaiono vendite, offerte ricevute e aggiornamenti sulle spedizioni, appena succedono." />
       ) : (
         <div className="flex flex-col gap-6" aria-live="polite">
           {visibleGroups.map((group) => {
@@ -123,7 +123,7 @@ export function NotificationInboxContent({ variant = "page" }: { variant?: "page
                             notification={n}
                             onOpen={() => {
                               markRead(n.id, n.unread);
-                              n.sku && openSale(n.sku);
+                              if (n.sku) openSale(n.sku);
                             }}
                             onToggleRead={() => toggleReadV2(n.id, n.unread)}
                             onDelete={() => removeV2(n.id)}
@@ -162,7 +162,7 @@ export function NotificationInboxContent({ variant = "page" }: { variant?: "page
           })}
 
           {visibleGroups.every((group) => items.filter(group.match).length === 0) && (
-            <EmptyState icon={<Bell className="size-5 text-muted-foreground" />} title="Nessuna notifica in questa categoria" />
+            <EmptyState tone="idle" title="Nessuna notifica in questa categoria" />
           )}
         </div>
       )}

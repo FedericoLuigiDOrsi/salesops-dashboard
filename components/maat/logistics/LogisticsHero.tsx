@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { ChevronUp } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -17,6 +18,56 @@ interface LogisticsHeroStat {
   label: string;
   count: number;
   color: string;
+}
+
+// Count-up numerico: ease-out-cubic su 600ms via requestAnimationFrame.
+// Era una copia minimale di StatTile, rimosso il 02/09 come orfano: da allora
+// questa è l'unica implementazione della curva. Se ne serve una seconda,
+// estrarla in un hook invece di ricopiarla.
+function useCountUp(target: number) {
+  const [display, setDisplay] = useState(0);
+  const prevRef = useRef(0);
+
+  useEffect(() => {
+    const from = prevRef.current;
+    const to = target;
+    const duration = 600;
+    const start = performance.now();
+
+    let frame: number;
+    function tick(now: number) {
+      const progress = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setDisplay(Math.round(from + (to - from) * eased));
+      if (progress < 1) {
+        frame = requestAnimationFrame(tick);
+      } else {
+        prevRef.current = to;
+      }
+    }
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [target]);
+
+  return display;
+}
+
+function HeroStat({ stat }: { stat: LogisticsHeroStat }) {
+  const display = useCountUp(stat.count);
+  const accent = stat.color.toUpperCase() === FLUO;
+  return (
+    <div>
+      <div className="flex items-center gap-1.5">
+        <span className={cn("size-[9px] shrink-0 rounded-[3px]", accent ? "bg-primary" : "bg-text-on-dark/25")} />
+        <span
+          className={cn("font-mono text-[26px] font-bold leading-none tabular-nums", !accent && "text-text-on-dark/70")}
+        >
+          {display}
+        </span>
+      </div>
+      <div className="mt-1.5 font-mono text-[10px] uppercase tracking-[.1em] text-text-on-dark/60">{stat.label}</div>
+    </div>
+  );
 }
 
 interface LogisticsHeroProps {
@@ -54,29 +105,9 @@ export function LogisticsHero({ stats, onClose, onCityClick }: LogisticsHeroProp
         </div>
         {/* Stessa gerarchia del widget: pastiglia fluo solo sul primo stato azionabile. */}
         <div className="flex gap-6">
-          {stats.map((s) => {
-            const accent = s.color.toUpperCase() === FLUO;
-            return (
-              <div key={s.key}>
-                <div className="flex items-center gap-1.5">
-                  <span
-                    className={cn("size-[9px] shrink-0 rounded-[3px]", accent ? "bg-primary" : "bg-text-on-dark/25")}
-                  />
-                  <span
-                    className={cn(
-                      "font-mono text-[26px] font-bold leading-none",
-                      !accent && "text-text-on-dark/70"
-                    )}
-                  >
-                    {s.count}
-                  </span>
-                </div>
-                <div className="mt-1.5 font-mono text-[10px] uppercase tracking-[.1em] text-text-on-dark/60">
-                  {s.label}
-                </div>
-              </div>
-            );
-          })}
+          {stats.map((s) => (
+            <HeroStat key={s.key} stat={s} />
+          ))}
         </div>
       </div>
       <button

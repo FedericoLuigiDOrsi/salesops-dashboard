@@ -24,12 +24,14 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { EmptyState } from "@/components/maat/EmptyState";
+import { ExtensionAlert } from "@/components/maat/ExtensionAlert";
 import { WidgetShell } from "@/components/maat/widgets/WidgetShell";
 import { HOME_WIDGETS, getWidget } from "@/components/maat/widgets/registry";
-import { PanoramicaWidget } from "@/components/maat/widgets/PanoramicaWidget";
+import { Panoramica } from "@/components/maat/home/Panoramica";
 import { HomeLayoutProvider, useHomeLayout, type WidgetKey } from "@/lib/home-layout-store";
-import { WIDGET_TIER_GRID_CLASS } from "@/lib/tiers";
-import { DEFAULT_MODULE_DIMS, clampModuleDims, type ModuleDims } from "@/lib/widget-sizes";
+import { WIDGET_CATALOG } from "@/lib/widget-catalog";
+import { clampModuleDims, isResizable, mobileSize, type ModuleDims, type WidgetSizes } from "@/lib/widget-sizes";
+import { useBelowLg } from "@/hooks/use-below-lg";
 
 const GRID_COLS = 6;
 const GRID_GAP_PX = 16; // gap-4
@@ -58,14 +60,6 @@ function useSquareRowUnit(containerRef: React.RefObject<HTMLDivElement | null>) 
 }
 
 /**
- * Panoramica è l'unico widget che non segue la griglia a moduli: è sempre la
- * prima fascia, a tutta larghezza, nello spazio dedicato ai widget — scorre
- * con la pagina come gli altri, semplicemente non è mai trascinabile/rimovibile
- * né si affianca a nessun altro modulo.
- */
-const BAR_WIDGET_KEY: WidgetKey = "panoramica";
-
-/**
  * Maniglia di resize in edit mode: si trascina dall'angolo in basso a destra,
  * l'angolo in alto a sinistra del widget resta fermo (crescere/rimpicciolire
  * cambia solo quanti moduli il widget occupa a destra e in basso, mai la sua
@@ -73,11 +67,13 @@ const BAR_WIDGET_KEY: WidgetKey = "panoramica";
  */
 function ResizeHandle({
   dims,
+  sizes,
   widgetRef,
   rowUnitPx,
   onChange,
 }: {
   dims: ModuleDims;
+  sizes: WidgetSizes;
   widgetRef: React.RefObject<HTMLDivElement | null>;
   rowUnitPx: number;
   onChange: (dims: ModuleDims) => void;
@@ -95,7 +91,7 @@ function ResizeHandle({
     function handleMove(ev: PointerEvent) {
       const nextW = Math.round(dims.w + (ev.clientX - startX) / colUnitPx);
       const nextH = Math.round(dims.h + (ev.clientY - startY) / (rowUnitPx + GRID_GAP_PX));
-      const next = clampModuleDims({ w: nextW, h: nextH });
+      const next = clampModuleDims({ w: nextW, h: nextH }, sizes);
       if (next.w !== last.w || next.h !== last.h) {
         last = next;
         onChange(next);
@@ -145,7 +141,10 @@ function SortableWidget({
     setNodeRef(node);
   }
 
-  const dims = def.resizable ? widgetSizes[widgetKey] ?? DEFAULT_MODULE_DIMS : null;
+  const { sizes } = WIDGET_CATALOG[widgetKey];
+  const belowLg = useBelowLg();
+  const dims = widgetSizes[widgetKey] ?? sizes.default;
+  const size = belowLg ? mobileSize(sizes) : dims;
 
   return (
     <div
@@ -166,10 +165,10 @@ function SortableWidget({
         // Larghezza/altezza in moduli per i widget ridimensionabili: l'angolo
         // in alto a sinistra resta il punto di ancoraggio nella griglia,
         // crescere occupa sempre e solo colonne/righe verso destra e in basso.
-        ...(dims ? ({ "--w": dims.w, "--h": dims.h } as React.CSSProperties) : {}),
+        ...({ "--w": dims.w, "--h": dims.h } as React.CSSProperties),
       }}
       className={cn(
-        dims ? "col-span-1 row-span-1 lg:[grid-column:span_var(--w)] lg:[grid-row:span_var(--h)]" : WIDGET_TIER_GRID_CLASS[def.tier],
+        "col-span-1 row-span-1 lg:[grid-column:span_var(--w)] lg:[grid-row:span_var(--h)]",
         editing && "cursor-grab touch-none active:cursor-grabbing",
         isDragging && "z-10"
       )}
@@ -183,9 +182,10 @@ function SortableWidget({
         style={{ boxShadow: isDragging ? "0 20px 40px -15px rgba(0,0,0,0.25)" : "none" }}
         className="relative h-full rounded-xl"
       >
-        {editing && dims ? (
+        {editing && isResizable(sizes) ? (
           <ResizeHandle
             dims={dims}
+            sizes={sizes}
             widgetRef={nodeRef}
             rowUnitPx={rowUnitPx}
             onChange={(next) => setWidgetSize(widgetKey, next)}
@@ -197,7 +197,7 @@ function SortableWidget({
           removeLabel={`Rimuovi widget ${def.title}`}
           bleed={def.bleed}
         >
-          <def.component />
+          <def.component size={size} />
         </WidgetShell>
       </motion.div>
     </div>
@@ -207,7 +207,7 @@ function SortableWidget({
 /** Erede dello "Spazio disponibile" del mockup: tile per aggiungere widget dal catalogo. */
 function AddWidgetTile() {
   const { layout, addWidget } = useHomeLayout();
-  const available = HOME_WIDGETS.filter((w) => w.key !== BAR_WIDGET_KEY && !layout.includes(w.key));
+  const available = HOME_WIDGETS.filter((w) => !layout.includes(w.key));
 
   return (
     <Popover>
@@ -275,8 +275,6 @@ function HomeDashboardInner() {
     window.setTimeout(() => setRefreshing(false), 500);
   }
 
-  const gridLayout = layout.filter((key) => key !== BAR_WIDGET_KEY);
-
   return (
     <div className="relative w-full px-4 py-8 sm:px-8">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -316,11 +314,13 @@ function HomeDashboardInner() {
         </div>
       </div>
 
+      <ExtensionAlert />
+
       <div className="mt-3 rounded-xl border border-border bg-card p-3">
-        <PanoramicaWidget spread />
+        <Panoramica spread />
       </div>
 
-      {gridLayout.length === 0 && !editing ? (
+      {layout.length === 0 && !editing ? (
         <EmptyState
           tone="first-run"
           icon={<LayoutGrid className="size-5" />}
@@ -334,13 +334,13 @@ function HomeDashboardInner() {
         />
       ) : (
         <DndContext id="home-widgets" sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <SortableContext items={gridLayout} strategy={rectSortingStrategy}>
+          <SortableContext items={layout} strategy={rectSortingStrategy}>
             <div
               ref={gridRef}
               style={{ "--row-unit": `${rowUnitPx}px` } as React.CSSProperties}
               className="mt-3 grid grid-flow-dense grid-cols-1 gap-4 lg:grid-cols-6 lg:[grid-auto-rows:minmax(var(--row-unit),auto)]"
             >
-              {gridLayout.map((key) => (
+              {layout.map((key) => (
                 <SortableWidget key={key} widgetKey={key} editing={editing} rowUnitPx={rowUnitPx} />
               ))}
               {editing ? <AddWidgetTile /> : null}

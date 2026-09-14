@@ -7,13 +7,15 @@ import { EmptyState } from "@/components/maat/EmptyState";
 import { SaleNotificationRow, OfferNotificationRow, ShipmentNotificationRow } from "@/components/maat/NotificationRow";
 import { notificationsV2, notificationGroups, type NotificationV2 } from "@/lib/notifications-mock";
 import { useOverlays } from "@/lib/overlays-store";
+import { useMarketplaceActions } from "@/lib/marketplace-actions-store";
+import { offerDisplayState } from "@/lib/marketplace-actions";
 import { useNotifications } from "@/lib/notifications-store";
 import { cn } from "@/lib/utils";
 
 // Corpo riusabile della inbox notifiche: segmented + gruppi + righe. Consumato
 // sia dalla pagina piena /notifiche sia dal float NotificationsPanel. Le righe
 // aprono i float globali via telecomando (overlays-store); lo stato delle
-// offerte è quello condiviso, keyed sull'id base (n-off-1 → off-1). Letto/non
+// offerte arriva dal registro delle azioni, keyed sull'id base (n-off-1 → off-1). Letto/non
 // letto ed eliminazione vivono in notifications-store — condiviso tra le due
 // istanze montate (pagina + float) e con il badge in AppShell.
 
@@ -40,7 +42,8 @@ const rowVariants: Variants = {
 };
 
 export function NotificationInboxContent({ variant = "page" }: { variant?: "page" | "panel" }) {
-  const { openOffer, openSale, offerStatus } = useOverlays();
+  const { openOffer, openSale } = useOverlays();
+  const { actionFor } = useMarketplaceActions();
   const { isUnreadV2, isDeletedV2, toggleReadV2, removeV2 } = useNotifications();
   const [filter, setFilter] = useState<FilterKey>("tutte");
 
@@ -55,12 +58,13 @@ export function NotificationInboxContent({ variant = "page" }: { variant?: "page
         .map((n) => {
           const unread = isUnreadV2(n.id, n.unread);
           if (n.type !== "offerta") return { ...n, unread };
-          const override = offerStatus[baseOfferId(n.id)];
-          return override
-            ? { ...n, unread, status: override.status, counterCents: override.counterCents ?? n.counterCents }
-            : { ...n, unread };
+          return {
+            ...n,
+            unread,
+            ...offerDisplayState(n.status, n.counterCents, actionFor({ type: "offer", id: baseOfferId(n.id) })),
+          };
         }),
-    [offerStatus, isUnreadV2, isDeletedV2]
+    [actionFor, isUnreadV2, isDeletedV2]
   );
 
   const counts = useMemo(

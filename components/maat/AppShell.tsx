@@ -21,6 +21,8 @@ import { mockUserProfile } from "@/lib/tenant-mock";
 import { usePersistentString } from "@/lib/use-persistent-state";
 import { SettingsModal } from "@/components/maat/SettingsModal";
 import { OverlayHost } from "@/components/maat/OverlayHost";
+import { ExtensionIndicator } from "@/components/maat/ExtensionIndicator";
+import { SimPanel } from "@/components/maat/dev/SimPanel";
 import { RefreshStatusFab } from "@/components/maat/RefreshStatusFab";
 import {
   Drawer,
@@ -155,11 +157,13 @@ export function AppShell({ children }: AppShellProps) {
           })}
         </nav>
 
+        <ExtensionIndicator variant="sidebar" collapsed={collapsed} />
+
         <button
           type="button"
           onClick={() => openSettings("account")}
           className={cn(
-            "flex items-center gap-2 border-t border-sidebar-border px-3 py-3.5 transition-colors hover:bg-sidebar-accent",
+            "flex items-center gap-2 px-3 py-3.5 transition-colors hover:bg-sidebar-accent",
             collapsed && "justify-center px-0"
           )}
         >
@@ -186,6 +190,7 @@ export function AppShell({ children }: AppShellProps) {
             <span className="font-mono text-sm font-semibold uppercase tracking-wide">MAAT</span>
           </Link>
           <span className="flex-1" />
+          <ExtensionIndicator variant="header" />
           <button
             type="button"
             onClick={() => openSettings("account")}
@@ -288,6 +293,7 @@ export function AppShell({ children }: AppShellProps) {
 
       <SettingsModal />
       <OverlayHost />
+      <SimPanel />
       <RefreshStatusFab />
     </div>
   );

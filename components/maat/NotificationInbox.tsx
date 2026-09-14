@@ -5,7 +5,8 @@ import { Check } from "lucide-react";
 import { ActivityModal } from "@/components/maat/notifications/ActivityModal";
 import { NotificationInboxContent } from "@/components/maat/notifications/NotificationInboxContent";
 import { notificationsV2, type OfferNotification } from "@/lib/notifications-mock";
-import { useOverlays } from "@/lib/overlays-store";
+import { useMarketplaceActions } from "@/lib/marketplace-actions-store";
+import { offerDisplayState } from "@/lib/marketplace-actions";
 import { useNotifications } from "@/lib/notifications-store";
 
 // Pagina /notifiche: la "sezione intera" per lavorare a tutte le notifiche.
@@ -18,20 +19,20 @@ function baseOfferId(notificationId: string): string {
 }
 
 export function NotificationInbox() {
-  const { offerStatus } = useOverlays();
+  const { actionFor } = useMarketplaceActions();
   const { unreadCountV2, markAllReadV2 } = useNotifications();
   const [activityOpen, setActivityOpen] = useState(false);
 
-  // Offerte con lo stato condiviso applicato — per l'ActivityModal.
+  // Offerte con lo stato visto dall'utente (base + esito del registro), per l'ActivityModal.
   const offerItems = useMemo<OfferNotification[]>(
     () =>
       notificationsV2
         .filter((n): n is OfferNotification => n.type === "offerta")
-        .map((n) => {
-          const override = offerStatus[baseOfferId(n.id)];
-          return override ? { ...n, status: override.status, counterCents: override.counterCents ?? n.counterCents } : n;
-        }),
-    [offerStatus]
+        .map((n) => ({
+          ...n,
+          ...offerDisplayState(n.status, n.counterCents, actionFor({ type: "offer", id: baseOfferId(n.id) })),
+        })),
+    [actionFor]
   );
 
   return (

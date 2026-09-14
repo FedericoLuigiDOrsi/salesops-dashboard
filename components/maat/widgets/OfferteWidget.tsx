@@ -1,44 +1,18 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion, type Variants } from "framer-motion";
-import { ArrowRight, Check, RefreshCw, RotateCcw, Shirt, X, type LucideIcon } from "lucide-react";
+import { ArrowRight, Check, RefreshCw, Shirt, X } from "lucide-react";
 import { cn, formatEUR } from "@/lib/utils";
 import { offers } from "@/lib/activity-mock";
 import { hasUrgentOffer } from "@/lib/urgency";
 import { useOverlays } from "@/lib/overlays-store";
-import type { Offer, OfferStatus } from "@/types/maat";
+import { useMarketplaceActions } from "@/lib/marketplace-actions-store";
+import { isActive, isLingering, offerActionKind, offerDisplayState } from "@/lib/marketplace-actions";
+import { ActionControls } from "@/components/maat/ActionControls";
+import type { MarketplaceAction, Offer, OfferStatus } from "@/types/maat";
 
 const SECONDARY_VISIBLE = 3;
-
-const RESOLVED_BANNER: Record<
-  Exclude<OfferStatus, "pending">,
-  { icon: LucideIcon; iconBg: string; bannerBg: string; ring: string; strike?: boolean; label: (o: Offer, marginLabel: string, counterCents?: number) => string }
-> = {
-  accepted: {
-    icon: Check,
-    iconBg: "bg-success text-white",
-    bannerBg: "bg-success-soft",
-    ring: "shadow-[inset_3px_0_0_var(--success)]",
-    label: (o, marginLabel) => `Accettata a ${formatEUR(o.offerCents)} · ${marginLabel} · ${o.sku}`,
-  },
-  rejected: {
-    icon: X,
-    iconBg: "bg-destructive/10 text-destructive",
-    bannerBg: "bg-destructive/10",
-    ring: "shadow-[inset_3px_0_0_var(--destructive)]",
-    strike: true,
-    label: (o, marginLabel) => `Rifiutata · ${formatEUR(o.offerCents)} · ${marginLabel} · ${o.sku}`,
-  },
-  counter: {
-    icon: RefreshCw,
-    iconBg: "bg-primary/25 text-accent-ink",
-    bannerBg: "bg-primary/10",
-    ring: "shadow-[inset_3px_0_0_var(--primary)]",
-    label: (o, _marginLabel, counterCents) => `Controfferta a ${formatEUR(counterCents ?? o.offerCents)} · ${o.sku}`,
-  },
-};
 
 const listVariants: Variants = {
   hidden: {},
@@ -60,51 +34,42 @@ function offerDeltaEUR(offer: Offer) {
   return `${sign}${formatEUR(Math.abs(diffCents))}`;
 }
 
+/** L'azione resta nella riga finché è attiva, fallita o appena conclusa ("Fatta" per 3 s). */
+function visibleAction(action: MarketplaceAction | null, now: number): MarketplaceAction | null {
+  if (!action) return null;
+  if (isActive(action) || action.state === "failed" || isLingering(action, now)) return action;
+  return null;
+}
+
 /** Coda prioritaria: l'offerta più vecchia è in evidenza, le successive restano azionabili a colpo d'occhio. */
 export function OfferteWidget() {
-  const { openOffer, offerStatus, resolveOffer } = useOverlays();
-  const [lastResolved, setLastResolved] = useState<{
-    id: string;
-    itemLabel: string;
-    status: "accepted" | "rejected";
-  } | null>(null);
+  const { openOffer } = useOverlays();
+  const { actionFor, enqueue, now } = useMarketplaceActions();
 
   const effective = offers
     .map((offer) => {
-      const override = offerStatus[offer.id];
-      return { offer, status: override?.status ?? offer.status, counterCents: override?.counterCents };
+      const action = actionFor({ type: "offer", id: offer.id });
+      const display = offerDisplayState(offer.status, offer.counterCents, action);
+      return { offer, action: visibleAction(action, now), status: display.status, counterCents: display.counterCents };
     })
     .sort((a, b) => new Date(a.offer.receivedAt).getTime() - new Date(b.offer.receivedAt).getTime());
 
-  const pendingCount = effective.filter((entry) => entry.status === "pending").length;
-  // Le offerte accettate/rifiutate spariscono dal flusso: restano solo pending/controproposte,
-  // l'ultima decisione resta annullabile dalla barra in fondo.
-  const visible = effective.filter((entry) => entry.status !== "accepted" && entry.status !== "rejected");
+  const pendingCount = effective.filter((entry) => entry.status === "pending" && entry.action === null).length;
+  // Accettate e rifiutate escono dal flusso dopo i 3 s della riga "Fatta".
+  const visible = effective.filter(
+    (entry) => (entry.status !== "accepted" && entry.status !== "rejected") || entry.action !== null,
+  );
   const featured = visible[0];
   const secondary = visible.slice(1, SECONDARY_VISIBLE + 1);
 
-  function handleResolve(offer: Offer, status: "accepted" | "rejected") {
-    resolveOffer(offer.id, status);
-    setLastResolved({ id: offer.id, itemLabel: offer.itemLabel, status });
+  function handleResolve(offer: Offer, status: OfferStatus) {
+    const kind = offerActionKind(status);
+    if (!kind) return;
+    enqueue({ kind, marketplace: offer.marketplace, target: { type: "offer", id: offer.id } });
   }
 
-  function handleUndoResolved() {
-    if (!lastResolved) return;
-    resolveOffer(lastResolved.id, "pending");
-    setLastResolved(null);
-  }
-
-  function renderResolved(
-    offer: Offer,
-    status: Exclude<OfferStatus, "pending">,
-    counterCents?: number,
-    compact = false
-  ) {
-    const delta = offerDelta(offer);
-    const marginLabel = `${delta >= 0 ? "+" : "−"}${Math.abs(delta)}%`;
-    const banner = RESOLVED_BANNER[status];
-    const Icon = banner.icon;
-
+  // Una controfferta inviata non si annulla più: resta come esito, senza "Annulla".
+  function renderCountered(offer: Offer, counterCents: number | undefined, compact = false) {
     return (
       <motion.div
         key={offer.id}
@@ -114,32 +79,19 @@ export function OfferteWidget() {
         animate="show"
         exit="exit"
         className={cn(
-          "flex items-center gap-3 rounded-xl",
-          compact ? "px-1 py-3" : "p-4",
-          banner.bannerBg,
-          banner.ring
+          "flex items-center gap-3 rounded-xl bg-primary/10 shadow-[inset_3px_0_0_var(--primary)]",
+          compact ? "px-1 py-3" : "p-4"
         )}
       >
-        <span className={cn("flex size-11 shrink-0 items-center justify-center rounded-lg", banner.iconBg)}>
-          <Icon className="size-5" />
+        <span className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-primary/25 text-accent-ink">
+          <RefreshCw className="size-5" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className={cn("truncate text-[14px] font-semibold", banner.strike && "text-muted-foreground line-through")}>
-            {offer.itemLabel}
-          </p>
+          <p className="truncate text-[14px] font-semibold">{offer.itemLabel}</p>
           <p className="truncate font-mono text-[10px] font-semibold text-muted-foreground">
-            {banner.label(offer, marginLabel, counterCents)}
+            Controfferta a {formatEUR(counterCents ?? offer.offerCents)} · {offer.sku}
           </p>
         </div>
-        <button
-          type="button"
-          aria-label={`Annulla azione su ${offer.itemLabel}`}
-          onClick={() => resolveOffer(offer.id, "pending")}
-          className="flex min-h-11 shrink-0 items-center gap-1 rounded-lg px-2 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-foreground/[.04] hover:text-foreground"
-        >
-          <RotateCcw className="size-3.5" />
-          <span className="hidden sm:inline">Annulla</span>
-        </button>
       </motion.div>
     );
   }
@@ -180,8 +132,8 @@ export function OfferteWidget() {
       ) : (
         <motion.div variants={listVariants} initial="hidden" animate="show" className="flex flex-1 flex-col">
           <AnimatePresence initial={false}>
-            {featured.status !== "pending" ? (
-              renderResolved(featured.offer, featured.status, featured.counterCents)
+            {featured.status === "counter" && featured.action === null ? (
+              renderCountered(featured.offer, featured.counterCents)
             ) : (
               <motion.section
                 key={featured.offer.id}
@@ -218,41 +170,45 @@ export function OfferteWidget() {
                     </div>
                   </div>
 
-                  {/* Tre azioni identiche per forma (rettangoli larghi e bassi): impilate a
-                      destra sopra i 460px, in riga sotto — mai una gerarchia di dimensione
-                      diversa da quella di colore (il verde su Accetta basta). */}
-                  <div className="flex w-[132px] shrink-0 flex-col gap-2 max-[460px]:w-full max-[460px]:flex-row">
-                    <button
-                      type="button"
-                      onClick={() => handleResolve(featured.offer, "accepted")}
-                      className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-success px-2 text-[12px] font-semibold text-white transition-colors hover:bg-success/90"
-                    >
-                      <Check className="size-4" /> Accetta
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => openOffer(featured.offer.id)}
-                      className="flex flex-1 items-center justify-center rounded-lg border border-border bg-card px-2 text-[12px] font-semibold transition-colors hover:bg-foreground/[.04]"
-                    >
-                      Controproposta
-                    </button>
-                    <button
-                      type="button"
-                      aria-label={`Rifiuta offerta ${featured.offer.itemLabel}`}
-                      onClick={() => handleResolve(featured.offer, "rejected")}
-                      className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-destructive/30 px-2 text-[12px] font-semibold text-destructive transition-colors hover:bg-destructive/10"
-                    >
-                      <X className="size-4" /> Rifiuta
-                    </button>
-                  </div>
+                  {featured.action ? (
+                    <div className="flex w-[132px] shrink-0 items-center max-[460px]:w-full">
+                      <ActionControls action={featured.action} className="flex-wrap" />
+                    </div>
+                  ) : (
+                    // Tre azioni identiche per forma: impilate a destra sopra i 460px, in riga sotto.
+                    <div className="flex w-[132px] shrink-0 flex-col gap-2 max-[460px]:w-full max-[460px]:flex-row">
+                      <button
+                        type="button"
+                        onClick={() => handleResolve(featured.offer, "accepted")}
+                        className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-success px-2 text-[12px] font-semibold text-white transition-colors hover:bg-success/90"
+                      >
+                        <Check className="size-4" /> Accetta
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => openOffer(featured.offer.id)}
+                        className="flex flex-1 items-center justify-center rounded-lg border border-border bg-card px-2 text-[12px] font-semibold transition-colors hover:bg-foreground/[.04]"
+                      >
+                        Controproposta
+                      </button>
+                      <button
+                        type="button"
+                        aria-label={`Rifiuta offerta ${featured.offer.itemLabel}`}
+                        onClick={() => handleResolve(featured.offer, "rejected")}
+                        className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-destructive/30 px-2 text-[12px] font-semibold text-destructive transition-colors hover:bg-destructive/10"
+                      >
+                        <X className="size-4" /> Rifiuta
+                      </button>
+                    </div>
+                  )}
                 </div>
               </motion.section>
             )}
 
             {secondary.length > 0 ? (
               <div className="divide-y divide-border">
-                {secondary.map(({ offer, status, counterCents }) => {
-                  if (status !== "pending") return renderResolved(offer, status, counterCents, true);
+                {secondary.map(({ offer, action, status, counterCents }) => {
+                  if (status === "counter" && action === null) return renderCountered(offer, counterCents, true);
                   const delta = offerDelta(offer);
                   return (
                     <motion.div
@@ -292,69 +248,33 @@ export function OfferteWidget() {
                           </div>
                           <span className="block font-mono text-[10px] font-medium text-muted-foreground">{delta}%</span>
                         </div>
-                        <button
-                          type="button"
-                          aria-label={`Accetta offerta ${offer.itemLabel}`}
-                          onClick={() => handleResolve(offer, "accepted")}
-                          className="flex size-11 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-success transition-colors hover:border-success/40 hover:bg-success-soft"
-                        >
-                          <Check className="size-4" />
-                        </button>
-                        <button
-                          type="button"
-                          aria-label={`Rifiuta offerta ${offer.itemLabel}`}
-                          onClick={() => handleResolve(offer, "rejected")}
-                          className="flex size-11 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-destructive transition-colors hover:border-destructive/40 hover:bg-destructive/10"
-                        >
-                          <X className="size-4" />
-                        </button>
+                        {action ? (
+                          <ActionControls action={action} />
+                        ) : (
+                          <>
+                            <button
+                              type="button"
+                              aria-label={`Accetta offerta ${offer.itemLabel}`}
+                              onClick={() => handleResolve(offer, "accepted")}
+                              className="flex size-11 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-success transition-colors hover:border-success/40 hover:bg-success-soft"
+                            >
+                              <Check className="size-4" />
+                            </button>
+                            <button
+                              type="button"
+                              aria-label={`Rifiuta offerta ${offer.itemLabel}`}
+                              onClick={() => handleResolve(offer, "rejected")}
+                              className="flex size-11 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-destructive transition-colors hover:border-destructive/40 hover:bg-destructive/10"
+                            >
+                              <X className="size-4" />
+                            </button>
+                          </>
+                        )}
                       </div>
                     </motion.div>
                   );
                 })}
               </div>
-            ) : null}
-          </AnimatePresence>
-
-          <AnimatePresence>
-            {lastResolved ? (
-              <motion.div
-                key={lastResolved.id}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 8 }}
-                transition={{ type: "spring", stiffness: 300, damping: 28 }}
-                className={cn(
-                  "mt-2 flex items-center justify-between gap-3 rounded-xl px-3 py-2",
-                  lastResolved.status === "accepted" ? "bg-success-soft" : "bg-destructive/10"
-                )}
-              >
-                <div className="flex min-w-0 items-center gap-2">
-                  <span
-                    className={cn(
-                      "flex size-8 shrink-0 items-center justify-center rounded-lg text-white",
-                      lastResolved.status === "accepted" ? "bg-success" : "bg-destructive"
-                    )}
-                  >
-                    {lastResolved.status === "accepted" ? (
-                      <Check className="size-4" />
-                    ) : (
-                      <X className="size-4" />
-                    )}
-                  </span>
-                  <p className="truncate text-[12px] text-foreground">
-                    {lastResolved.status === "accepted" ? "Accettata" : "Rifiutata"} ·{" "}
-                    <span className="font-semibold">{lastResolved.itemLabel}</span>
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleUndoResolved}
-                  className="flex min-h-11 shrink-0 items-center gap-1 rounded-lg px-2 text-[12px] font-semibold text-muted-foreground transition-colors hover:bg-foreground/[.04] hover:text-foreground"
-                >
-                  <RotateCcw className="size-3.5" /> Annulla
-                </button>
-              </motion.div>
             ) : null}
           </AnimatePresence>
 

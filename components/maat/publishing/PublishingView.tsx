@@ -98,12 +98,9 @@ function PublishingViewInner() {
   }
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 sm:px-8">
+    <div className="flex w-full flex-col gap-6 px-4 py-8 sm:px-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="font-mono text-[11px] font-semibold uppercase tracking-[.12em] text-muted-foreground/70">
-            Pubblicazione multipiattaforma
-          </p>
           <h1 className="text-[28px] font-bold tracking-tight">Pubblicazione</h1>
           <p className="max-w-md text-sm text-muted-foreground">
             La dogana tra MAAT e le piattaforme: cosa esce, cosa è già live, come si governa nel tempo.

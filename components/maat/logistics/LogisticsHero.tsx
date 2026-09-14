@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import { ChevronUp } from "lucide-react";
+import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const LogisticsGlobe = dynamic(() => import("./LogisticsGlobe").then((m) => m.LogisticsGlobe), {
@@ -10,7 +10,6 @@ const LogisticsGlobe = dynamic(() => import("./LogisticsGlobe").then((m) => m.Lo
   loading: () => <div className="size-full bg-surface-dark" />,
 });
 
-const HERO_HEIGHT = 184;
 const FLUO = "#DBE64C";
 
 interface LogisticsHeroStat {
@@ -60,7 +59,7 @@ function HeroStat({ stat }: { stat: LogisticsHeroStat }) {
       <div className="flex items-center gap-1.5">
         <span className={cn("size-[9px] shrink-0 rounded-[3px]", accent ? "bg-primary" : "bg-text-on-dark/25")} />
         <span
-          className={cn("font-mono text-[26px] font-bold leading-none tabular-nums", !accent && "text-text-on-dark/70")}
+          className={cn("font-mono text-[22px] font-bold leading-none tabular-nums", !accent && "text-text-on-dark/70")}
         >
           {display}
         </span>
@@ -70,6 +69,24 @@ function HeroStat({ stat }: { stat: LogisticsHeroStat }) {
   );
 }
 
+/** Misura l'altezza reale del pannello: il canvas del globo deve riempirla, non un valore fisso. */
+function usePanelHeight(ref: React.RefObject<HTMLDivElement | null>) {
+  const [height, setHeight] = useState(320);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const measure = () => {
+      const h = el.clientHeight;
+      if (h > 0) setHeight(h);
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [ref]);
+  return height;
+}
+
 interface LogisticsHeroProps {
   stats: LogisticsHeroStat[];
   onClose: () => void;
@@ -77,47 +94,55 @@ interface LogisticsHeroProps {
   onCityClick?: (cityName: string) => void;
 }
 
+/**
+ * Pannello "Rete di spedizioni": prima banner orizzontale in cima alla board,
+ * ora vive nella colonna destra (1/3) della board, verticale a tutta altezza —
+ * stesse informazioni, layout adattato allo spazio stretto e alto invece che
+ * largo e basso.
+ */
 export function LogisticsHero({ stats, onClose, onCityClick }: LogisticsHeroProps) {
+  const wrapRef = useRef<HTMLDivElement | null>(null);
+  const globeHeight = usePanelHeight(wrapRef);
+
   return (
-    <div
-      className="relative flex-none overflow-hidden rounded-2xl bg-surface-dark text-text-on-dark"
-      style={{ height: HERO_HEIGHT }}
-    >
+    <div ref={wrapRef} className="relative flex h-full flex-col overflow-hidden rounded-2xl bg-surface-dark text-text-on-dark">
       <div className="absolute inset-0 z-0">
-        <LogisticsGlobe height={HERO_HEIGHT} mode="hero" onCityClick={onCityClick} className="size-full" />
+        <LogisticsGlobe height={globeHeight} mode="hero" onCityClick={onCityClick} className="size-full" />
       </div>
       <div
         className="pointer-events-none absolute inset-0 z-[1]"
         style={{
           background:
-            "linear-gradient(90deg, rgba(0,26,54,.97) 0%, rgba(0,26,54,.82) 40%, rgba(0,26,54,.35) 66%, rgba(0,26,54,0) 88%)",
+            "linear-gradient(180deg, rgba(0,26,54,.30) 0%, rgba(0,26,54,.55) 42%, rgba(0,26,54,.97) 78%)",
         }}
       />
-      <div className="relative z-[2] flex h-full max-w-[640px] flex-col justify-between px-6 py-[18px]">
-        <div>
-          <div className="font-mono text-[11px] uppercase tracking-[.12em] text-text-on-dark/55">
-            Rete di spedizioni · live
+      <div className="relative z-[2] flex h-full flex-col justify-between p-4">
+        <div className="flex items-start justify-between gap-2">
+          <div>
+            <div className="font-mono text-[10.5px] uppercase tracking-[.12em] text-text-on-dark/55">
+              Rete di spedizioni · live
+            </div>
+            <div className="mt-1 text-[17px] font-bold leading-tight tracking-tight">Da Napoli al mondo</div>
+            <div className="mt-1 text-[11.5px] text-text-on-dark/60">
+              Tracce attive verso i destinatari in Italia ed Europa.
+            </div>
           </div>
-          <div className="mt-1 text-[21px] font-bold tracking-tight">Da Napoli al mondo</div>
-          <div className="mt-0.5 text-[12.5px] text-text-on-dark/60">
-            Tracce attive verso i destinatari in Italia ed Europa.
-          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            title="Nascondi mappa"
+            className="flex size-[28px] shrink-0 items-center justify-center rounded-lg bg-text-on-dark/[0.12] text-text-on-dark transition-colors hover:bg-text-on-dark/20"
+          >
+            <X className="size-3.5" strokeWidth={1.8} />
+          </button>
         </div>
         {/* Stessa gerarchia del widget: pastiglia fluo solo sul primo stato azionabile. */}
-        <div className="flex gap-6">
+        <div className="grid grid-cols-2 gap-x-3 gap-y-4">
           {stats.map((s) => (
             <HeroStat key={s.key} stat={s} />
           ))}
         </div>
       </div>
-      <button
-        type="button"
-        onClick={onClose}
-        title="Nascondi mappa"
-        className="absolute right-3 top-3 z-[3] flex size-[30px] items-center justify-center rounded-lg bg-text-on-dark/[0.12] text-text-on-dark transition-colors hover:bg-text-on-dark/20"
-      >
-        <ChevronUp className="size-4" strokeWidth={1.8} />
-      </button>
     </div>
   );
 }

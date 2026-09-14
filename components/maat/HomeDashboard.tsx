@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   DndContext,
@@ -31,8 +31,31 @@ import { HomeLayoutProvider, useHomeLayout, type WidgetKey } from "@/lib/home-la
 import { WIDGET_TIER_GRID_CLASS } from "@/lib/tiers";
 import { DEFAULT_MODULE_DIMS, clampModuleDims, type ModuleDims } from "@/lib/widget-sizes";
 
-/** Unità di riga della griglia Home: grid-auto-rows (200px) + gap (24px, gap-6). */
-const ROW_UNIT_PX = 224;
+const GRID_COLS = 6;
+const GRID_GAP_PX = 16; // gap-4
+
+/**
+ * Misura la larghezza reale di una colonna della griglia e la propone come
+ * altezza di riga — moduli davvero quadrati (1×1 = un quadrato vero, non un
+ * rettangolo) qualunque sia la larghezza dello schermo, dato che ora la
+ * griglia occupa tutta la larghezza disponibile invece di un max-width fisso.
+ */
+function useSquareRowUnit(containerRef: React.RefObject<HTMLDivElement | null>) {
+  const [unit, setUnit] = useState(160);
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const measure = () => {
+      const colWidth = (el.clientWidth - GRID_GAP_PX * (GRID_COLS - 1)) / GRID_COLS;
+      if (colWidth > 0) setUnit(Math.round(colWidth));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [containerRef]);
+  return unit;
+}
 
 /**
  * Panoramica è l'unico widget che non segue la griglia a moduli: è sempre la
@@ -51,10 +74,12 @@ const BAR_WIDGET_KEY: WidgetKey = "panoramica";
 function ResizeHandle({
   dims,
   widgetRef,
+  rowUnitPx,
   onChange,
 }: {
   dims: ModuleDims;
   widgetRef: React.RefObject<HTMLDivElement | null>;
+  rowUnitPx: number;
   onChange: (dims: ModuleDims) => void;
 }) {
   function handlePointerDown(e: React.PointerEvent) {
@@ -69,7 +94,7 @@ function ResizeHandle({
 
     function handleMove(ev: PointerEvent) {
       const nextW = Math.round(dims.w + (ev.clientX - startX) / colUnitPx);
-      const nextH = Math.round(dims.h + (ev.clientY - startY) / ROW_UNIT_PX);
+      const nextH = Math.round(dims.h + (ev.clientY - startY) / (rowUnitPx + GRID_GAP_PX));
       const next = clampModuleDims({ w: nextW, h: nextH });
       if (next.w !== last.w || next.h !== last.h) {
         last = next;
@@ -99,7 +124,15 @@ function ResizeHandle({
 }
 
 /** Widget trascinabile della bento grid: shell + componente dalla registry. */
-function SortableWidget({ widgetKey, editing }: { widgetKey: WidgetKey; editing: boolean }) {
+function SortableWidget({
+  widgetKey,
+  editing,
+  rowUnitPx,
+}: {
+  widgetKey: WidgetKey;
+  editing: boolean;
+  rowUnitPx: number;
+}) {
   const def = getWidget(widgetKey);
   const { removeWidget, widgetSizes, setWidgetSize } = useHomeLayout();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -151,7 +184,12 @@ function SortableWidget({ widgetKey, editing }: { widgetKey: WidgetKey; editing:
         className="relative h-full rounded-xl"
       >
         {editing && dims ? (
-          <ResizeHandle dims={dims} widgetRef={nodeRef} onChange={(next) => setWidgetSize(widgetKey, next)} />
+          <ResizeHandle
+            dims={dims}
+            widgetRef={nodeRef}
+            rowUnitPx={rowUnitPx}
+            onChange={(next) => setWidgetSize(widgetKey, next)}
+          />
         ) : null}
         <WidgetShell
           editing={editing}
@@ -216,6 +254,8 @@ function HomeDashboardInner() {
   const { layout, setLayout } = useHomeLayout();
   const [editing, setEditing] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const gridRef = useRef<HTMLDivElement>(null);
+  const rowUnitPx = useSquareRowUnit(gridRef);
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
@@ -238,12 +278,9 @@ function HomeDashboardInner() {
   const gridLayout = layout.filter((key) => key !== BAR_WIDGET_KEY);
 
   return (
-    <div className="relative mx-auto max-w-[1400px] px-6 py-8 sm:px-8">
-      <div className="flex flex-wrap items-end justify-between gap-4">
+    <div className="relative w-full px-4 py-8 sm:px-8">
+      <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="font-mono text-[11px] font-semibold uppercase tracking-[.12em] text-muted-foreground/70">
-            Dashboard
-          </p>
           <h1 className="text-[28px] font-bold tracking-tight">Ciao, Federico</h1>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -279,7 +316,7 @@ function HomeDashboardInner() {
         </div>
       </div>
 
-      <div className="mt-6 rounded-xl border border-border bg-card p-4">
+      <div className="mt-3 rounded-xl border border-border bg-card p-3">
         <PanoramicaWidget spread />
       </div>
 
@@ -298,9 +335,13 @@ function HomeDashboardInner() {
       ) : (
         <DndContext id="home-widgets" sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={gridLayout} strategy={rectSortingStrategy}>
-            <div className="mt-6 grid grid-flow-dense grid-cols-1 gap-6 lg:grid-cols-6 lg:[grid-auto-rows:minmax(200px,auto)]">
+            <div
+              ref={gridRef}
+              style={{ "--row-unit": `${rowUnitPx}px` } as React.CSSProperties}
+              className="mt-3 grid grid-flow-dense grid-cols-1 gap-4 lg:grid-cols-6 lg:[grid-auto-rows:minmax(var(--row-unit),auto)]"
+            >
               {gridLayout.map((key) => (
-                <SortableWidget key={key} widgetKey={key} editing={editing} />
+                <SortableWidget key={key} widgetKey={key} editing={editing} rowUnitPx={rowUnitPx} />
               ))}
               {editing ? <AddWidgetTile /> : null}
             </div>

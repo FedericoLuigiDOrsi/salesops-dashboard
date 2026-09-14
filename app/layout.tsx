@@ -1,15 +1,25 @@
 import React from "react"
 import type { Metadata } from 'next'
-import { JetBrains_Mono } from 'next/font/google'
-import { GeistSans } from 'geist/font/sans'
+import { Manrope, Source_Sans_3 } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { AppShell } from '@/components/maat/AppShell'
 import { NotificationsProvider } from '@/lib/notifications-store'
 import { SettingsProvider } from '@/lib/settings-store'
 import { OverlaysProvider } from '@/lib/overlays-store'
+import { RefreshProvider } from '@/lib/refresh-store'
 import './globals.css'
 
-const _jetbrainsMono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains-mono" });
+// PT Root UI è a pagamento (ParaType, licenza Adobe Fonts): non scaricabile qui.
+// Manrope è l'alternativa gratuita più vicina — stessa famiglia geometrica dal
+// tratto amichevole, gamma di pesi 200–800 sufficiente per non dover forzare
+// nessun peso finto (Tailwind font-bold/font-semibold restano 700/600 validi).
+const _manrope = Manrope({ subsets: ["latin"], variable: "--font-manrope" });
+
+// Source Sans Pro: Google l'ha rinominato "Source Sans 3", è lo stesso disegno.
+// Copre il ruolo prima di JetBrains Mono — numeri, SKU, badge, timestamp — ma
+// non è un monospace: l'allineamento delle cifre nelle tabelle si affida a
+// `tabular-nums`, non più alla larghezza fissa dei caratteri.
+const _sourceSans = Source_Sans_3({ subsets: ["latin"], variable: "--font-source-sans" });
 
 export const metadata: Metadata = {
   title: 'MAAT',
@@ -40,12 +50,14 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="it" className={`${GeistSans.variable} ${_jetbrainsMono.variable}`}>
+    <html lang="it" className={`${_manrope.variable} ${_sourceSans.variable}`}>
       <body className={`font-sans antialiased`}>
         <NotificationsProvider>
           <SettingsProvider>
             <OverlaysProvider>
-              <AppShell>{children}</AppShell>
+              <RefreshProvider>
+                <AppShell>{children}</AppShell>
+              </RefreshProvider>
             </OverlaysProvider>
           </SettingsProvider>
         </NotificationsProvider>

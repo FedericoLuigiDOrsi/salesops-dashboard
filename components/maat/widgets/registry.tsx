@@ -64,7 +64,7 @@ export const HOME_WIDGETS: WidgetDef[] = [
   {
     key: "azioni",
     title: "Prossime azioni",
-    description: "Bozze e offerte in sospeso, in un'unica coda per urgenza",
+    description: "Scorciatoie rapide alle attività quotidiane, con contatori",
     icon: ListChecks,
     tier: "medio",
     component: AzioniWidget,
@@ -125,6 +125,7 @@ export const HOME_WIDGETS: WidgetDef[] = [
     icon: StickyNote,
     tier: "piccolo",
     component: NoteWidget,
+    bleed: true,
   },
   {
     key: "tempo-operativo",

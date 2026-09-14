@@ -7,6 +7,8 @@ import {
   KeyboardSensor,
   PointerSensor,
   closestCenter,
+  useDraggable,
+  useDroppable,
   useSensor,
   useSensors,
   type DragEndEvent,
@@ -14,12 +16,12 @@ import {
 import {
   SortableContext,
   arrayMove,
-  verticalListSortingStrategy,
+  rectSortingStrategy,
   sortableKeyboardCoordinates,
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { ArrowRight, EyeOff, GripVertical, Pin, Plus, SlidersHorizontal } from "lucide-react";
+import { ArrowRight, SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { HOME_METRICS, type HomeMetric } from "@/lib/home-mock";
@@ -34,7 +36,7 @@ const PERIODS = [
 const METRIC_BY_KEY = new Map(HOME_METRICS.map((m) => [m.key, m]));
 
 const ACTIONABLE_HREF: Record<string, string> = {
-  bozze: "/inventario",
+  bozze: "/inventario?status=to_be_reviewed",
   offerte: "/notifiche",
 };
 
@@ -87,18 +89,31 @@ function ActionableTile({ metric }: { metric: HomeMetric }) {
 
 /** Variante verticale dell'ActionableTile: stessa sagoma di HeroTile/TrendTile,
  * così nella fascia Panoramica tutti i moduli condividono la stessa riga della
- * griglia e nessuno lascia spazio vuoto sotto agli altri. */
-function ActionableTileCompact({ metric }: { metric: HomeMetric }) {
-  return (
-    <Link
-      href={ACTIONABLE_HREF[metric.key] ?? "/"}
-      className="group flex flex-col justify-between rounded-lg bg-accent-soft px-4 py-3 transition-colors hover:bg-accent-soft/70"
-    >
+ * griglia e nessuno lascia spazio vuoto sotto agli altri.
+ *
+ * `as="div"` è la variante usata dentro `SortableMetricTile` in edit mode: la
+ * card resta trascinabile invece di navigare, il contenuto è identico. */
+function ActionableTileCompact({ metric, as = "link" }: { metric: HomeMetric; as?: "link" | "div" }) {
+  const content = (
+    <>
       <div className="flex items-start justify-between gap-2">
         <span className="font-mono text-2xl font-semibold leading-none tabular-nums">{metric.value}</span>
         <ArrowRight className="mt-1 size-3.5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
       </div>
       <p className="mt-1.5 text-[13px] font-medium text-muted-foreground">{metric.label}</p>
+    </>
+  );
+  if (as === "div") {
+    return (
+      <div className="group flex flex-col justify-between rounded-lg bg-accent-soft px-4 py-3">{content}</div>
+    );
+  }
+  return (
+    <Link
+      href={ACTIONABLE_HREF[metric.key] ?? "/"}
+      className="group flex flex-col justify-between rounded-lg bg-accent-soft px-4 py-3 transition-colors hover:bg-accent-soft/70"
+    >
+      {content}
     </Link>
   );
 }
@@ -174,17 +189,14 @@ function TrendTile({ metric }: { metric: HomeMetric }) {
   );
 }
 
-function EditRow({
-  metric,
-  pinned,
-  onTogglePin,
-  onHide,
-}: {
-  metric: HomeMetric;
-  pinned: boolean;
-  onTogglePin: () => void;
-  onHide: () => void;
-}) {
+/**
+ * Tile trascinabile della barra in edit mode: stesso contenuto (reale, non
+ * un placeholder) della tile in sola lettura, più maniglia implicita su
+ * tutta la card e una X per rimuoverla. La X ferma la propagazione al
+ * pointerdown, non al click, altrimenti dnd-kit la interpreta come inizio
+ * di un drag prima che il click scatti.
+ */
+function SortableMetricTile({ metric, onRemove }: { metric: HomeMetric; onRemove: () => void }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: metric.key });
 
   return (
@@ -192,149 +204,204 @@ function EditRow({
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn(
-        "flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2.5",
-        isDragging && "z-10 opacity-80"
+        "group/tile relative cursor-grab touch-none select-none active:cursor-grabbing",
+        isDragging && "z-10 opacity-60"
       )}
+      {...attributes}
+      {...listeners}
     >
+      {metric.kind === "actionable" ? (
+        <ActionableTileCompact metric={metric} as="div" />
+      ) : metric.kind === "hero" ? (
+        <HeroTile metric={metric} />
+      ) : (
+        <TrendTile metric={metric} />
+      )}
       <button
         type="button"
-        aria-label={`Trascina per riordinare ${metric.label}`}
-        className="flex shrink-0 cursor-grab touch-none items-center text-muted-foreground/60 active:cursor-grabbing"
-        {...attributes}
-        {...listeners}
+        aria-label={`Rimuovi ${metric.label} dalla panoramica`}
+        onClick={onRemove}
+        onPointerDown={(event) => event.stopPropagation()}
+        className="absolute -right-1.5 -top-1.5 z-10 flex size-5 items-center justify-center rounded-full border border-border bg-background text-muted-foreground opacity-0 shadow-sm transition-opacity hover:text-destructive focus-visible:opacity-100 group-hover/tile:opacity-100"
       >
-        <GripVertical className="size-4" />
-      </button>
-      <div className="min-w-0 flex-1">
-        <span className="font-mono text-lg font-semibold tabular-nums">
-          {metric.value}
-          {metric.euro ? " €" : ""}
-        </span>
-        <p className="truncate text-xs text-muted-foreground">{metric.label}</p>
-      </div>
-      <button
-        type="button"
-        aria-label={pinned ? `Sblocca ${metric.label} dalla cima` : `Fissa ${metric.label} in cima`}
-        aria-pressed={pinned}
-        onClick={onTogglePin}
-        className={cn(
-          "flex size-7 shrink-0 items-center justify-center rounded-md border transition-colors",
-          pinned ? "border-primary bg-primary text-primary-foreground" : "border-border text-muted-foreground hover:text-foreground"
-        )}
-      >
-        <Pin className="size-3.5" />
-      </button>
-      <button
-        type="button"
-        aria-label={`Nascondi ${metric.label}`}
-        onClick={onHide}
-        className="flex size-7 shrink-0 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:text-foreground"
-      >
-        <EyeOff className="size-3.5" />
+        <X className="size-3" strokeWidth={2.2} />
       </button>
     </div>
   );
 }
 
-/** Lista trascinabile di una sezione dell'edit mode ("Fissati in cima" o "Visibili"). */
-function SortableRowList({
-  metrics,
-  pinned,
-  onReorder,
-  onTogglePin,
-  onHide,
-}: {
-  metrics: HomeMetric[];
-  pinned: boolean;
-  onReorder: (from: string, to: string) => void;
-  onTogglePin: (key: string) => void;
-  onHide: (key: string) => void;
-}) {
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
-  );
-
-  function handleDragEnd(event: DragEndEvent) {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-    onReorder(active.id as string, over.id as string);
-  }
+/**
+ * Barra live in edit mode: stessa griglia della vista normale, ma ogni tile è
+ * anche una zona di drop (per le card trascinate dal cassetto sotto) e il
+ * contenitore stesso è droppable, per accogliere il rilascio su spazio vuoto
+ * o quando la barra è vuota.
+ */
+function EditableBar({ metrics, onRemove }: { metrics: HomeMetric[]; onRemove: (key: string) => void }) {
+  const { setNodeRef, isOver } = useDroppable({ id: "panorama-bar" });
 
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-      <SortableContext items={metrics.map((m) => m.key)} strategy={verticalListSortingStrategy}>
-        <div className="flex flex-col gap-2">
-          {metrics.map((m) => (
-            <EditRow
-              key={m.key}
-              metric={m}
-              pinned={pinned}
-              onTogglePin={() => onTogglePin(m.key)}
-              onHide={() => onHide(m.key)}
-            />
-          ))}
+    <div
+      ref={setNodeRef}
+      className={cn(
+        "rounded-lg transition-colors",
+        isOver && "bg-accent-soft/50",
+        metrics.length === 0 && "border border-dashed border-border p-4"
+      )}
+    >
+      {metrics.length === 0 ? (
+        <p className="text-center text-[12px] text-muted-foreground">
+          Trascina qui una card dalla tendina qui sotto.
+        </p>
+      ) : (
+        <SortableContext items={metrics.map((m) => m.key)} strategy={rectSortingStrategy}>
+          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 lg:grid-cols-8">
+            {metrics.map((m) => (
+              <SortableMetricTile key={m.key} metric={m} onRemove={() => onRemove(m.key)} />
+            ))}
+          </div>
+        </SortableContext>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Card del cassetto: non ancora nella barra. Anteprima con un rettangolo
+ * scuro al posto del valore reale — qui non c'è un numero da mostrare, solo
+ * la sagoma. Le "Azioni" (rimandano a una funzione, es. Bozze da revisionare)
+ * hanno bordo + ombra da tasto per farsi riconoscere come interagibili; i
+ * "Dati" (solo numeri) restano piatti.
+ */
+function DrawerCard({ metric }: { metric: HomeMetric }) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: metric.key });
+  const actionable = metric.kind === "actionable";
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{ transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined }}
+      className={cn(
+        "flex w-[124px] shrink-0 cursor-grab touch-none select-none flex-col gap-2.5 rounded-lg border p-3 transition-opacity active:cursor-grabbing",
+        actionable
+          ? "border-border bg-card shadow-[0_1px_2px_rgba(0,31,63,.06),0_2px_6px_rgba(0,31,63,.08)]"
+          : "border-dashed border-border/70 bg-transparent",
+        isDragging && "opacity-30"
+      )}
+      {...attributes}
+      {...listeners}
+    >
+      <span aria-hidden className="h-6 w-14 rounded-[4px] bg-foreground/50" />
+      <span className="truncate text-[11px] font-medium text-muted-foreground">{metric.label}</span>
+    </div>
+  );
+}
+
+/** Cassetto sotto la barra: solo le metriche non ancora inserite, divise Azioni/Dati. */
+function MetricDrawer({ metrics }: { metrics: HomeMetric[] }) {
+  if (metrics.length === 0) {
+    return (
+      <div className="rounded-lg border border-dashed border-border bg-muted/30 p-4 text-center text-[12px] text-muted-foreground">
+        Tutte le metriche disponibili sono già nella panoramica.
+      </div>
+    );
+  }
+  const azioni = metrics.filter((m) => m.kind === "actionable");
+  const dati = metrics.filter((m) => m.kind !== "actionable");
+
+  return (
+    <div className="rounded-lg border border-dashed border-border bg-muted/30 p-3.5">
+      <p className="mb-3 text-xs leading-relaxed text-muted-foreground">
+        Trascina una card nella barra qui sopra per aggiungerla.
+      </p>
+      {azioni.length > 0 && (
+        <div className="mb-3">
+          <p className="mb-2 font-mono text-[11px] uppercase tracking-[.12em] text-muted-foreground">
+            Azioni · {azioni.length}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {azioni.map((m) => (
+              <DrawerCard key={m.key} metric={m} />
+            ))}
+          </div>
         </div>
-      </SortableContext>
-    </DndContext>
+      )}
+      {dati.length > 0 && (
+        <div>
+          <p className="mb-2 font-mono text-[11px] uppercase tracking-[.12em] text-muted-foreground">
+            Dati · {dati.length}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {dati.map((m) => (
+              <DrawerCard key={m.key} metric={m} />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
 /** Metriche chiave configurabili: il box "Panoramica" del mockup, come widget. */
 export function PanoramicaWidget({ spread = false }: { spread?: boolean } = {}) {
-  const { metrics, pinnedMetrics, setMetrics, setPinnedMetrics } = useHomeLayout();
+  const { metrics, setMetrics } = useHomeLayout();
   const [editMode, setEditMode] = useState(false);
   const [period, setPeriod] = useState<(typeof PERIODS)[number]["value"]>("settimana");
-  const [draftPinned, setDraftPinned] = useState<string[]>([]);
-  const [draftUnpinned, setDraftUnpinned] = useState<string[]>([]);
+  const [draftMetrics, setDraftMetrics] = useState<string[]>([]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
 
   const orderedVisible = useMemo(
     () => metrics.map((k) => METRIC_BY_KEY.get(k)).filter((m): m is HomeMetric => !!m),
     [metrics]
   );
+  // Usati solo dal ramo non-spread (legacy, oggi non montato in nessuna schermata).
   const toDo = orderedVisible.filter((m) => m.kind === "actionable");
   const hero = orderedVisible.find((m) => m.kind === "hero");
   const trend = orderedVisible.filter((m) => m.kind === "trend");
 
   function enterEdit() {
-    setDraftPinned(metrics.filter((k) => pinnedMetrics.includes(k)));
-    setDraftUnpinned(metrics.filter((k) => !pinnedMetrics.includes(k)));
+    setDraftMetrics(metrics);
     setEditMode(true);
   }
   function cancelEdit() {
     setEditMode(false);
   }
   function saveEdit() {
-    setMetrics([...draftPinned, ...draftUnpinned]);
-    setPinnedMetrics(draftPinned);
+    setMetrics(draftMetrics);
     setEditMode(false);
   }
-  function togglePin(key: string) {
-    if (draftPinned.includes(key)) {
-      setDraftPinned((prev) => prev.filter((k) => k !== key));
-      setDraftUnpinned((prev) => [...prev, key]);
-    } else {
-      setDraftUnpinned((prev) => prev.filter((k) => k !== key));
-      setDraftPinned((prev) => [...prev, key]);
-    }
-  }
-  function hide(key: string) {
-    setDraftPinned((prev) => prev.filter((k) => k !== key));
-    setDraftUnpinned((prev) => prev.filter((k) => k !== key));
-  }
-  function show(key: string) {
-    setDraftUnpinned((prev) => [...prev, key]);
-  }
-  function reorderPinned(from: string, to: string) {
-    setDraftPinned((prev) => arrayMove(prev, prev.indexOf(from), prev.indexOf(to)));
-  }
-  function reorderUnpinned(from: string, to: string) {
-    setDraftUnpinned((prev) => arrayMove(prev, prev.indexOf(from), prev.indexOf(to)));
+  function removeFromDraft(key: string) {
+    setDraftMetrics((prev) => prev.filter((k) => k !== key));
   }
 
-  const draftPinnedMetrics = draftPinned.map((k) => METRIC_BY_KEY.get(k)).filter((m): m is HomeMetric => !!m);
-  const draftUnpinnedMetrics = draftUnpinned.map((k) => METRIC_BY_KEY.get(k)).filter((m): m is HomeMetric => !!m);
-  const hiddenMetrics = HOME_METRICS.filter((m) => !draftPinned.includes(m.key) && !draftUnpinned.includes(m.key));
+  // Un solo DndContext copre sia il riordino dentro la barra (sortable-to-
+  // sortable) sia l'inserimento dal cassetto (draggable-to-sortable): in
+  // entrambi i casi `active` è la card trascinata e `over` è ciò che sta
+  // sotto al rilascio, la sola differenza è se `active` è già in draftMetrics.
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over) return;
+    const activeKey = String(active.id);
+    const overKey = String(over.id);
+    if (activeKey === overKey) return;
+
+    setDraftMetrics((prev) => {
+      if (prev.includes(activeKey)) {
+        if (!prev.includes(overKey)) return prev;
+        return arrayMove(prev, prev.indexOf(activeKey), prev.indexOf(overKey));
+      }
+      const insertAt = prev.includes(overKey) ? prev.indexOf(overKey) : prev.length;
+      const next = [...prev];
+      next.splice(insertAt, 0, activeKey);
+      return next;
+    });
+  }
+
+  const draftMetricObjs = draftMetrics.map((k) => METRIC_BY_KEY.get(k)).filter((m): m is HomeMetric => !!m);
+  const availableMetrics = HOME_METRICS.filter((m) => !draftMetrics.includes(m.key));
 
   return (
     <div>
@@ -378,71 +445,27 @@ export function PanoramicaWidget({ spread = false }: { spread?: boolean } = {}) 
       </div>
 
       {editMode ? (
-        <div className="flex flex-col gap-4">
-          <p className="text-xs leading-relaxed text-muted-foreground">
-            Trascina per riordinare · fissa in cima con lo spillo · nascondi con l&rsquo;occhio.
-          </p>
-
-          {draftPinnedMetrics.length > 0 ? (
-            <div>
-              <p className="mb-2 font-mono text-[11px] uppercase tracking-[.12em] text-muted-foreground">
-                Fissati in cima
-              </p>
-              <SortableRowList
-                metrics={draftPinnedMetrics}
-                pinned
-                onReorder={reorderPinned}
-                onTogglePin={togglePin}
-                onHide={hide}
-              />
-            </div>
-          ) : null}
-
-          <div>
-            <p className="mb-2 font-mono text-[11px] uppercase tracking-[.12em] text-muted-foreground">Visibili</p>
-            <SortableRowList
-              metrics={draftUnpinnedMetrics}
-              pinned={false}
-              onReorder={reorderUnpinned}
-              onTogglePin={togglePin}
-              onHide={hide}
-            />
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <div className="flex flex-col gap-3.5">
+            <EditableBar metrics={draftMetricObjs} onRemove={removeFromDraft} />
+            <MetricDrawer metrics={availableMetrics} />
           </div>
-
-          {hiddenMetrics.length > 0 ? (
-            <div className="rounded-lg border border-dashed border-border bg-muted/40 p-3.5">
-              <p className="mb-2 font-mono text-[11px] uppercase tracking-[.12em] text-muted-foreground">
-                Nascosti · tocca per aggiungere
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {hiddenMetrics.map((m) => (
-                  <button
-                    key={m.key}
-                    type="button"
-                    onClick={() => show(m.key)}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
-                  >
-                    <Plus className="size-3" />
-                    {m.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ) : null}
-        </div>
+        </DndContext>
       ) : orderedVisible.length === 0 ? (
         <p className="py-8 text-center text-[13px] text-muted-foreground">
           Nessuna informazione selezionata. Usa &ldquo;Modifica&rdquo;.
         </p>
       ) : spread ? (
         <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 lg:grid-cols-8">
-          {toDo.map((m) => (
-            <ActionableTileCompact key={m.key} metric={m} />
-          ))}
-          {hero ? <HeroTile metric={hero} /> : null}
-          {trend.map((m) => (
-            <TrendTile key={m.key} metric={m} />
-          ))}
+          {orderedVisible.map((m) =>
+            m.kind === "actionable" ? (
+              <ActionableTileCompact key={m.key} metric={m} />
+            ) : m.kind === "hero" ? (
+              <HeroTile key={m.key} metric={m} />
+            ) : (
+              <TrendTile key={m.key} metric={m} />
+            )
+          )}
         </div>
       ) : (
         <div className="flex flex-col gap-4">

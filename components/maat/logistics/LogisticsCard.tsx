@@ -133,39 +133,19 @@ export function LogisticsCard({
           {s.carrier}
         </span>
 
-        <span className={cn("flex items-center gap-1.5 font-mono text-[10px]", timeClass)}>
-          <Clock3 className="size-3" strokeWidth={1.8} />
-          {canPrintLabel ? "In attesa da " : "In pipeline da "}
-          {formatElapsed(s.hoursAgo)}
-        </span>
-        {!canPrintLabel && (
+        {variant !== "board" && (
+          <span className={cn("flex items-center gap-1.5 font-mono text-[10px]", timeClass)}>
+            <Clock3 className="size-3" strokeWidth={1.8} />
+            {canPrintLabel ? "In attesa da " : "In pipeline da "}
+            {formatElapsed(s.hoursAgo)}
+          </span>
+        )}
+        {variant !== "board" && !canPrintLabel && (
           <span title={s.trackingCode} className="max-w-[110px] truncate font-mono text-[9.5px] text-muted-foreground">
             {s.trackingCode}
           </span>
         )}
       </div>
-
-      {canPrintLabel && variant === "board" && (
-        <button
-          type="button"
-          draggable={false}
-          onClick={(event) => {
-            event.stopPropagation();
-            onOpenLabel(s);
-          }}
-          onDragStart={(event) => event.stopPropagation()}
-          className={cn(
-            "mt-2.5 flex h-8 w-full items-center justify-center gap-1.5 rounded-[8px] text-[11px] font-semibold outline-none transition-[background-color,transform,box-shadow] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:translate-y-px",
-            s.status === "da_fare"
-              ? "bg-primary text-primary-foreground hover:bg-accent-pressed"
-              : "border border-border-strong bg-background text-foreground hover:bg-secondary"
-          )}
-          aria-label={`${s.status === "da_fare" ? "Stampa" : "Ristampa"} etichetta per ${s.itemLabel}`}
-        >
-          <Printer className="size-3.5" strokeWidth={1.8} />
-          {s.status === "da_fare" ? "Stampa etichetta" : "Ristampa etichetta"}
-        </button>
-      )}
 
       {canPrintLabel && variant === "prep" && (
         <>

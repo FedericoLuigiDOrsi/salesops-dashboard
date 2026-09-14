@@ -35,10 +35,9 @@ export function NotificationInbox() {
   );
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-8 sm:px-8">
+    <div className="w-full px-4 py-8 sm:px-8">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="font-mono text-[11px] font-semibold uppercase tracking-[.12em] text-muted-foreground/70">Inbox</p>
           <h1 className="text-[28px] font-bold tracking-tight">Notifiche</h1>
         </div>
         <div className="flex items-center gap-4">

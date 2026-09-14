@@ -235,12 +235,9 @@ export function AccountingView() {
   }
 
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-8 px-4 py-8 sm:px-8">
+    <div className="flex w-full flex-col gap-8 px-4 py-8 sm:px-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="font-mono text-[11px] font-semibold uppercase tracking-[.12em] text-muted-foreground/70">
-            Contabilità · Tenant DirtyTag
-          </p>
           <h1 className="text-[28px] font-bold tracking-tight">Contabilità</h1>
           <p className="max-w-md text-sm text-muted-foreground">
             Pannello di controllo economico: vendite, distribuzione dei canali e delle categorie, cassa e settlement.

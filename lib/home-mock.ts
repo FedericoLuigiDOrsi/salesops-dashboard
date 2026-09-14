@@ -47,14 +47,11 @@ export const HOME_METRICS: HomeMetric[] = [
 
 /** Ordine iniziale delle metriche visibili. */
 export const DEFAULT_SELECTED_METRICS: string[] = [
-  "entrate",
   "bozze",
   "offerte",
+  "entrate",
   "venduti",
   "pubblicati",
   "catalogo",
   "spedizioni",
 ];
-
-/** Metriche fissate in cima di default, coerente col design Claude Design. */
-export const DEFAULT_PINNED_METRICS: string[] = ["entrate", "bozze"];

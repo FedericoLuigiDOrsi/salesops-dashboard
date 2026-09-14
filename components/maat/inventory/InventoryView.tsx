@@ -2,6 +2,7 @@
 
 import { useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { AlertTriangle, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatEUR } from "@/lib/utils";
@@ -16,6 +17,7 @@ import { EmptyState } from "@/components/maat/EmptyState";
 import { InventoryEmpty } from "@/components/maat/inventory/InventoryEmpty";
 import {
   matchesBase,
+  STATUS_SEGMENTS,
   type PlatformFilter,
   type PriceBand,
   type StatusFilter,
@@ -46,8 +48,16 @@ export function InventoryView({
     setItems(serverItems);
   }
 
+  // "Revisiona le bozze" nel widget Prossime azioni linka qui con
+  // ?status=to_be_reviewed: la tab si apre già filtrata, non su "Tutti".
+  const searchParams = useSearchParams();
+  const statusParam = searchParams.get("status");
+  const initialStatusFilter = STATUS_SEGMENTS.some((s) => s.value === statusParam)
+    ? (statusParam as StatusFilter)
+    : "all";
+
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>(initialStatusFilter);
   const [view, setView] = useState<ViewMode>("table");
   const [category, setCategory] = useState("all");
   const [size, setSize] = useState("all");
@@ -115,7 +125,7 @@ export function InventoryView({
   }
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 sm:px-8">
+    <div className="flex w-full flex-col gap-6 px-4 py-8 sm:px-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-[28px] font-bold tracking-tight">Inventario</h1>
         <div className="flex items-center gap-2">

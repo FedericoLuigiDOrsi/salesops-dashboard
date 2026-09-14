@@ -1,13 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Package } from "lucide-react";
 import { formatEUR } from "@/lib/utils";
+import { placeholderPhoto } from "@/lib/placeholder-photo";
 import { sales } from "@/lib/activity-mock";
 import { useOverlays } from "@/lib/overlays-store";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { MARKETPLACE_LABELS, type Marketplace } from "@/types/maat";
-
-const MAX_VISIBLE_SALES = 2;
 
 const MARKETPLACE_TAG_STYLES: Record<Marketplace, string> = {
   vinted: "border-[#007782]/20 bg-[#007782]/10 text-[#006a70]",
@@ -17,73 +18,106 @@ const MARKETPLACE_TAG_STYLES: Record<Marketplace, string> = {
   ebay: "border-[#1e488f]/20 bg-[#1e488f]/[.08] text-[#1e488f]",
 };
 
-/** Vendite recenti: click su una riga apre il float (annuncio, etichetta, logistica). */
+/**
+ * Vendite: la home mostra solo quante ce ne sono, non l'elenco — il lavoro
+ * vero (impacchettare) succede in Logistica, il dettaglio ("Visualizza
+ * tutte") vive in un pannello a parte, non impegna spazio nel widget.
+ */
 export function VenditeWidget() {
   const { openSale } = useOverlays();
-  const visibleSales = sales.slice(0, MAX_VISIBLE_SALES);
+  const [allOpen, setAllOpen] = useState(false);
 
   return (
-    <div>
-      <div className="mb-1 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-1.5">
-          <p className="font-mono text-[10px] font-semibold uppercase tracking-[.12em] text-foreground">
-            Vendite
-          </p>
-          <span className="font-mono text-[10px] text-muted-foreground">{sales.length}</span>
-        </div>
-        <Link
-          href="/notifiche"
-          className="flex items-center gap-1 text-xs font-medium text-muted-foreground transition-[color,transform] hover:translate-x-0.5 hover:text-foreground active:translate-y-px"
-        >
-          Tutte <ArrowRight className="size-3" />
-        </Link>
-      </div>
+    <div className="flex h-full flex-col">
+      <p className="mb-1 font-mono text-[10px] font-semibold uppercase tracking-[.12em] text-foreground">Vendite</p>
 
       {sales.length === 0 ? (
-        <div className="flex min-h-28 items-center justify-center text-center">
+        <div className="flex flex-1 items-center justify-center text-center">
           <div>
             <p className="text-xs font-semibold">Nessuna vendita recente</p>
             <p className="mt-1 text-[11px] text-muted-foreground">Le nuove vendite appariranno qui.</p>
           </div>
         </div>
       ) : (
-        <div>
-          {visibleSales.map((sale) => (
-            <button
-              key={sale.id}
-              type="button"
-              aria-label={`Apri vendita ${sale.itemLabel}`}
-              onClick={() => openSale(sale.sku)}
-              className="grid min-h-14 w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-2.5 border-b border-border py-2.5 text-left transition-[background-color,transform] last:border-b-0 hover:bg-foreground/[.025] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:translate-y-px"
-            >
-              <span className="min-w-0">
-                <span className="block truncate text-[13px] font-semibold tracking-[-.01em]" title={sale.itemLabel}>
-                  {sale.itemLabel}
-                </span>
-                <span className="mt-1.5 flex items-center gap-1.5 whitespace-nowrap">
-                  <span
-                    className={`inline-flex h-[18px] items-center rounded-full border px-1.5 font-mono text-[8px] font-semibold uppercase tracking-[.06em] ${MARKETPLACE_TAG_STYLES[sale.marketplace]}`}
-                  >
-                    {MARKETPLACE_LABELS[sale.marketplace]}
-                  </span>
-                  <span className="font-mono text-[9px] uppercase tracking-[.025em] text-muted-foreground">
-                    {sale.sku}
-                  </span>
-                  <span aria-hidden="true" className="text-[9px] text-muted-foreground/50">
-                    ·
-                  </span>
-                  <span className="font-mono text-[9px] uppercase tracking-[.025em] text-muted-foreground">
-                    {sale.time}
-                  </span>
-                </span>
-              </span>
-              <span className="font-mono text-[13px] font-semibold tabular-nums text-foreground">
-                {formatEUR(sale.priceCents)}
-              </span>
-            </button>
-          ))}
+        <div className="flex flex-1 flex-col items-center justify-center gap-0.5 py-2 text-center">
+          <span className="font-mono text-[42px] font-bold leading-none tabular-nums text-foreground">
+            {sales.length}
+          </span>
+          <span className="text-[11px] font-medium text-muted-foreground">
+            {sales.length === 1 ? "vendita da spedire" : "vendite da spedire"}
+          </span>
         </div>
       )}
+
+      <div className="mt-auto flex items-center gap-2 border-t border-border pt-2.5">
+        <Link
+          href="/logistica?mode=prep"
+          className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary text-[12px] font-semibold text-primary-foreground transition-colors hover:bg-accent-pressed active:translate-y-px"
+        >
+          <Package className="size-3.5" strokeWidth={1.8} />
+          Prepara i pacchi
+        </Link>
+        <button
+          type="button"
+          onClick={() => setAllOpen(true)}
+          disabled={sales.length === 0}
+          className="flex h-9 shrink-0 items-center gap-1 rounded-lg border border-border px-3 text-[12px] font-medium text-muted-foreground transition-colors hover:bg-foreground/[.04] hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+        >
+          Tutte <ArrowRight className="size-3" />
+        </button>
+      </div>
+
+      <Dialog open={allOpen} onOpenChange={setAllOpen}>
+        <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Vendite · {sales.length}</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-2">
+            {sales.map((sale) => (
+              <button
+                key={sale.id}
+                type="button"
+                onClick={() => {
+                  setAllOpen(false);
+                  openSale(sale.sku);
+                }}
+                className="flex items-center gap-3 rounded-xl border border-border bg-card p-2.5 text-left transition-colors hover:border-foreground/25"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={placeholderPhoto(sale.id, sale.itemLabel)}
+                  alt=""
+                  className="h-12 w-10 shrink-0 rounded-[8px] border border-border object-cover"
+                />
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-[13px] font-semibold" title={sale.itemLabel}>
+                    {sale.itemLabel}
+                  </div>
+                  <div className="mt-1 flex items-center gap-1.5">
+                    <span
+                      className={`inline-flex h-[18px] items-center rounded-full border px-1.5 font-mono text-[8px] font-semibold uppercase tracking-[.06em] ${MARKETPLACE_TAG_STYLES[sale.marketplace]}`}
+                    >
+                      {MARKETPLACE_LABELS[sale.marketplace]}
+                    </span>
+                    <span className="font-mono text-[9px] uppercase tracking-[.025em] text-muted-foreground">
+                      {sale.sku}
+                    </span>
+                    <span aria-hidden="true" className="text-[9px] text-muted-foreground/50">
+                      ·
+                    </span>
+                    <span className="font-mono text-[9px] uppercase tracking-[.025em] text-muted-foreground">
+                      {sale.time}
+                    </span>
+                  </div>
+                </div>
+                <span className="shrink-0 font-mono text-[13px] font-semibold tabular-nums text-foreground">
+                  {formatEUR(sale.priceCents)}
+                </span>
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

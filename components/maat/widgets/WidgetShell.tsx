@@ -23,7 +23,7 @@ export function WidgetShell({ editing, onRemove, removeLabel, children, bleed }:
     <section
       className={cn(
         "relative h-full rounded-xl transition-transform",
-        bleed ? "overflow-hidden" : "border border-border bg-card p-5",
+        bleed ? "overflow-hidden" : "border border-border bg-card p-3.5",
         editing && "scale-[.98]",
         editing && !bleed && "border-dashed"
       )}

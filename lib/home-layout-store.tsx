@@ -1,9 +1,9 @@
 "use client";
 
 import { createContext, useContext, useEffect, useMemo, type ReactNode } from "react";
-import { DEFAULT_PINNED_METRICS, DEFAULT_SELECTED_METRICS } from "@/lib/home-mock";
+import { DEFAULT_SELECTED_METRICS } from "@/lib/home-mock";
 import { usePersistentState } from "@/lib/use-persistent-state";
-import { writePersisted } from "@/lib/persistent-store";
+import { readPersisted, writePersisted } from "@/lib/persistent-store";
 import { clampModuleDims, isModuleDims, DEFAULT_MODULE_DIMS, type ModuleDims } from "@/lib/widget-sizes";
 
 // Chiavi dei widget disponibili in Home. Vivono qui e non nella registry per
@@ -42,13 +42,11 @@ const LEGACY_STORAGE_KEY = "maat.home.layout.v1";
 interface HomeLayoutContextValue {
   layout: WidgetKey[];
   metrics: string[];
-  pinnedMetrics: string[];
   widgetSizes: Partial<Record<WidgetKey, ModuleDims>>;
   setLayout: (next: WidgetKey[]) => void;
   addWidget: (key: WidgetKey) => void;
   removeWidget: (key: WidgetKey) => void;
   setMetrics: (next: string[]) => void;
-  setPinnedMetrics: (next: string[]) => void;
   setWidgetSize: (key: WidgetKey, dims: ModuleDims) => void;
 }
 
@@ -65,14 +63,12 @@ function asStringArray(value: unknown): string[] {
 interface HomeLayoutState {
   layout: WidgetKey[];
   metrics: string[];
-  pinnedMetrics: string[];
   widgetSizes: Partial<Record<WidgetKey, ModuleDims>>;
 }
 
 const DEFAULT_STATE: HomeLayoutState = {
   layout: DEFAULT_LAYOUT,
   metrics: DEFAULT_SELECTED_METRICS,
-  pinnedMetrics: DEFAULT_PINNED_METRICS,
   widgetSizes: DEFAULT_WIDGET_SIZES,
 };
 
@@ -89,15 +85,11 @@ function parseHomeLayout(raw: string): HomeLayoutState | undefined {
   const saved = JSON.parse(raw) as {
     layout?: unknown[];
     metrics?: unknown[];
-    pinnedMetrics?: unknown[];
     widgetSizes?: unknown;
   };
   return {
     layout: Array.isArray(saved.layout) ? saved.layout.filter(isWidgetKey) : DEFAULT_LAYOUT,
     metrics: Array.isArray(saved.metrics) ? asStringArray(saved.metrics) : DEFAULT_SELECTED_METRICS,
-    pinnedMetrics: Array.isArray(saved.pinnedMetrics)
-      ? asStringArray(saved.pinnedMetrics)
-      : DEFAULT_PINNED_METRICS,
     widgetSizes: parseWidgetSizes(saved.widgetSizes),
   };
 }
@@ -125,13 +117,13 @@ function migrateLegacyLayout(): HomeLayoutState | null {
 
 /**
  * Store del layout personalizzabile della Home: quali widget sono in pagina,
- * in che ordine, e quali metriche mostra la Panoramica (con quali fissate in
- * cima). Persistito in localStorage (per ora niente backend, coerente col
+ * in che ordine, e quali metriche mostra la Panoramica (e in che ordine).
+ * Persistito in localStorage (per ora niente backend, coerente col
  * prototipo).
  */
 export function HomeLayoutProvider({ children }: { children: ReactNode }) {
   const [state, setState] = usePersistentState(STORAGE_KEY, parseHomeLayout, DEFAULT_STATE);
-  const { layout, metrics, pinnedMetrics, widgetSizes } = state;
+  const { layout, metrics, widgetSizes } = state;
 
   // Migrazione della chiave legacy: scrivere su un sistema esterno dentro un
   // effect è il pattern previsto, quello vietato è il setState. Gira una volta
@@ -142,23 +134,34 @@ export function HomeLayoutProvider({ children }: { children: ReactNode }) {
     if (migrated) writePersisted(STORAGE_KEY, migrated);
   }, []);
 
+  // Applica una patch partendo dal valore appena scritto in storage, non da
+  // `state` (che nel render corrente è già vecchio): due setter chiamati in
+  // sequenza nello stesso handler (es. saveEdit in PanoramicaWidget, che fa
+  // setMetrics() e poi setPinnedMetrics()) altrimenti si sovrascrivono a
+  // vicenda, perché entrambi spatterebbero lo stesso `state` catturato prima
+  // di qualsiasi scrittura. `readPersisted` legge dalla cache del modulo,
+  // aggiornata in modo sincrono da `writePersisted`, quindi il secondo setter
+  // vede già l'effetto del primo.
+  function patchState(patch: Partial<HomeLayoutState>) {
+    const current = readPersisted(STORAGE_KEY, parseHomeLayout, DEFAULT_STATE);
+    setState({ ...current, ...patch });
+  }
+
   const value = useMemo<HomeLayoutContextValue>(
     () => ({
       layout,
       metrics,
-      pinnedMetrics,
       widgetSizes,
-      setLayout: (next) => setState({ ...state, layout: next }),
+      setLayout: (next) => patchState({ layout: next }),
       addWidget: (key) =>
-        setState({ ...state, layout: layout.includes(key) ? layout : [...layout, key] }),
-      removeWidget: (key) => setState({ ...state, layout: layout.filter((k) => k !== key) }),
-      setMetrics: (next) => setState({ ...state, metrics: next }),
-      setPinnedMetrics: (next) => setState({ ...state, pinnedMetrics: next }),
+        patchState({ layout: layout.includes(key) ? layout : [...layout, key] }),
+      removeWidget: (key) => patchState({ layout: layout.filter((k) => k !== key) }),
+      setMetrics: (next) => patchState({ metrics: next }),
       setWidgetSize: (key, dims) =>
-        setState({ ...state, widgetSizes: { ...widgetSizes, [key]: clampModuleDims(dims) } }),
+        patchState({ widgetSizes: { ...widgetSizes, [key]: clampModuleDims(dims) } }),
     }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [state, layout, metrics, pinnedMetrics, widgetSizes]
+    [layout, metrics, widgetSizes]
   );
 
   return <HomeLayoutContext.Provider value={value}>{children}</HomeLayoutContext.Provider>;

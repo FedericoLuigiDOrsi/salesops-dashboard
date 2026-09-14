@@ -3,10 +3,9 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { motion, type Variants, useReducedMotion } from "framer-motion";
-import { ArrowUp, ChevronRight, Pencil, Trash2, X } from "lucide-react";
+import { ArrowUp, Pencil, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/maat/StatusBadge";
-import { SegmentedFilter } from "@/components/maat/SegmentedFilter";
 import { ChannelDots } from "@/components/maat/inventory/ChannelDots";
 import {
   RowCheckbox,
@@ -15,14 +14,12 @@ import {
   SortHeaderCell,
   TABLE_CARD_CLASS,
 } from "@/components/maat/table/TableChrome";
-import { cn, formatEUR } from "@/lib/utils";
+import { formatEUR } from "@/lib/utils";
 import type { InventoryItem, InventoryStatus } from "@/lib/inventory-mock";
 import { COLUMN_DEFS, type ColumnKey, type PlatformKey } from "@/lib/inventory-columns";
 import { useInventoryColumns } from "@/lib/inventory-columns-store";
 import { itemHref } from "@/lib/inventory-nav";
 import { EmptyState } from "@/components/maat/EmptyState";
-
-type ViewMode = "elenco" | "per-stato";
 
 // Larghezza fissa per colonna (px) o flessibile per "capo" (spec design handoff).
 // "sku" non è nello spec ma resta configurabile: eredita la larghezza di "stato".
@@ -46,27 +43,13 @@ function columnLabel(key: ColumnKey) {
   return COLUMN_LABEL[key] ?? COLUMN_DEFS[key].label;
 }
 
-// Rank per sort colonna Stato e ordine corsie "Per stato": confermato < bozza < venduto
-// (spec design handoff). "local_draft" non è nel prototipo: trattato come stadio precedente.
+// Rank per sort colonna Stato: confermato < bozza < venduto (spec design handoff).
+// "local_draft" non è nel prototipo: trattato come stadio precedente.
 const STATUS_RANK: Record<InventoryStatus, number> = {
   local_draft: 0,
   available: 1,
   to_be_reviewed: 2,
   sold: 3,
-};
-
-const STATUS_LANE_LABEL: Record<InventoryStatus, string> = {
-  local_draft: "Locale",
-  available: "Confermato",
-  to_be_reviewed: "Bozza",
-  sold: "Venduto",
-};
-
-const STATUS_LANE_DOT: Record<InventoryStatus, string> = {
-  local_draft: "var(--text-3)",
-  available: "var(--success)",
-  to_be_reviewed: "var(--primary)",
-  sold: "var(--muted-foreground)",
 };
 
 function publishedCount(item: InventoryItem) {
@@ -252,97 +235,42 @@ function Row({
   );
 }
 
-function LaneHeader({
-  status,
-  count,
-  open,
-  onToggle,
-}: {
-  status: InventoryStatus;
-  count: number;
-  open: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onToggle}
-      className="flex w-full items-center gap-2.5 py-2.5 pl-4 pr-5 text-left"
-      style={{ background: "var(--tint-ink-faint)" }}
-    >
-      <ChevronRight
-        className={cn("size-[15px] shrink-0 transition-transform", open ? "rotate-90 text-foreground" : "text-text-3")}
-      />
-      <span className="size-2 shrink-0 rounded-full" style={{ background: STATUS_LANE_DOT[status] }} />
-      <span className="font-mono text-[11px] font-semibold uppercase tracking-[.1em] text-foreground">
-        {STATUS_LANE_LABEL[status]}
-      </span>
-      <span className="font-mono text-[11px] text-text-3">{count}</span>
-    </button>
-  );
-}
-
 function SelectionBar({
-  total,
   selectedCount,
-  viewMode,
-  onViewModeChange,
   onBulkPublish,
   onBulkDelete,
   onClear,
 }: {
-  total: number;
   selectedCount: number;
-  viewMode: ViewMode;
-  onViewModeChange: (v: ViewMode) => void;
   onBulkPublish: () => void;
   onBulkDelete: () => void;
   onClear: () => void;
 }) {
-  if (selectedCount > 0) {
-    return (
-      <div
-        className="flex animate-bar-in items-center gap-2 border-b border-border px-5 py-2.5"
-        style={{ background: "var(--tint-bozza)" }}
-      >
-        <span className="font-mono text-[13px] font-bold text-foreground">{selectedCount} selezionati</span>
-        <Button size="sm" className="ml-4 gap-1.5" onClick={onBulkPublish}>
-          <ArrowUp className="size-3.5" /> Pubblica
-        </Button>
-        <Button size="sm" variant="ghost">
-          Modifica prezzo
-        </Button>
-        <Button size="sm" variant="destructive" onClick={onBulkDelete}>
-          Elimina
-        </Button>
-        <button
-          type="button"
-          onClick={onClear}
-          aria-label="Deseleziona tutto"
-          className="ml-auto flex size-8 items-center justify-center rounded-lg text-foreground/70 transition-colors hover:bg-foreground/10"
-        >
-          <X className="size-4" />
-        </button>
-      </div>
-    );
-  }
+  if (selectedCount === 0) return null;
 
   return (
-    <div className="flex flex-wrap items-center gap-4 border-b border-border px-5 py-2.5">
-      <span className="font-mono text-[13px]">
-        <span className="font-bold text-foreground">{total}</span> <span className="text-muted-foreground">capi</span>
-      </span>
-      <div className="ml-auto flex items-center gap-2">
-        <span className="font-mono text-[10px] uppercase tracking-[.12em] text-text-3">Vista</span>
-        <SegmentedFilter
-          options={[
-            { value: "elenco", label: "Elenco" },
-            { value: "per-stato", label: "Per stato" },
-          ]}
-          active={viewMode}
-          onChange={onViewModeChange}
-        />
-      </div>
+    <div
+      className="flex animate-bar-in items-center gap-2 border-b border-border px-5 py-2.5"
+      style={{ background: "var(--tint-bozza)" }}
+    >
+      <span className="font-mono text-[13px] font-bold text-foreground">{selectedCount} selezionati</span>
+      <Button size="sm" className="ml-4 gap-1.5" onClick={onBulkPublish}>
+        <ArrowUp className="size-3.5" /> Pubblica
+      </Button>
+      <Button size="sm" variant="ghost">
+        Modifica prezzo
+      </Button>
+      <Button size="sm" variant="destructive" onClick={onBulkDelete}>
+        Elimina
+      </Button>
+      <button
+        type="button"
+        onClick={onClear}
+        aria-label="Deseleziona tutto"
+        className="ml-auto flex size-8 items-center justify-center rounded-lg text-foreground/70 transition-colors hover:bg-foreground/10"
+      >
+        <X className="size-4" />
+      </button>
     </div>
   );
 }
@@ -381,8 +309,6 @@ export function InventoryTable({ items, onPublish, onDelete, onToggleChannel }: 
   const [sortKey, setSortKey] = useState<ColumnKey | null>(null);
   const [sortDir, setSortDir] = useState<1 | -1>(1);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [viewMode, setViewMode] = useState<ViewMode>("elenco");
-  const [collapsedLanes, setCollapsedLanes] = useState<Set<InventoryStatus>>(new Set());
   const [hoveredRowId, setHoveredRowId] = useState<string | null>(null);
 
   // Se la colonna ordinata viene nascosta da ColumnManager, l'ordinamento non ha
@@ -395,16 +321,6 @@ export function InventoryTable({ items, onPublish, onDelete, onToggleChannel }: 
     if (!effectiveSortKey) return items;
     return [...items].sort((a, b) => compareItems(a, b, effectiveSortKey) * sortDir);
   }, [items, effectiveSortKey, sortDir]);
-
-  const laneGroups = useMemo(() => {
-    const present = new Set(sortedItems.map((i) => i.status));
-    const order = (Object.keys(STATUS_RANK) as InventoryStatus[]).sort(
-      (a, b) => STATUS_RANK[a] - STATUS_RANK[b]
-    );
-    return order
-      .filter((status) => present.has(status))
-      .map((status) => ({ status, items: sortedItems.filter((i) => i.status === status) }));
-  }, [sortedItems]);
 
   const allSelected = sortedItems.length > 0 && selectedIds.size === sortedItems.length;
 
@@ -427,15 +343,6 @@ export function InventoryTable({ items, onPublish, onDelete, onToggleChannel }: 
 
   function toggleSelectAll() {
     setSelectedIds((prev) => (prev.size === sortedItems.length ? new Set() : new Set(sortedItems.map((i) => i.id))));
-  }
-
-  function toggleLane(status: InventoryStatus) {
-    setCollapsedLanes((prev) => {
-      const next = new Set(prev);
-      if (next.has(status)) next.delete(status);
-      else next.add(status);
-      return next;
-    });
   }
 
   // I pre-catalogo aprono la Review (meta' operatore del loop P2C), gli altri il dettaglio.
@@ -466,10 +373,7 @@ export function InventoryTable({ items, onPublish, onDelete, onToggleChannel }: 
   return (
     <div className={TABLE_CARD_CLASS}>
       <SelectionBar
-        total={sortedItems.length}
         selectedCount={selectedIds.size}
-        viewMode={viewMode}
-        onViewModeChange={setViewMode}
         onBulkPublish={handleBulkPublish}
         onBulkDelete={handleBulkDelete}
         onClear={() => setSelectedIds(new Set())}
@@ -487,7 +391,7 @@ export function InventoryTable({ items, onPublish, onDelete, onToggleChannel }: 
 
       {sortedItems.length === 0 ? (
         <EmptyState tone="no-match" title="Nessun capo con questi filtri" subtitle="Cambia i filtri o azzerali dalla barra qui sopra." />
-      ) : viewMode === "elenco" ? (
+      ) : (
         <motion.div variants={listVariants} initial="hidden" animate="show">
           {sortedItems.map((item) => (
             <Row
@@ -506,35 +410,6 @@ export function InventoryTable({ items, onPublish, onDelete, onToggleChannel }: 
             />
           ))}
         </motion.div>
-      ) : (
-        laneGroups.map(({ status, items: laneItems }) => {
-          const open = !collapsedLanes.has(status);
-          return (
-            <div key={status}>
-              <LaneHeader status={status} count={laneItems.length} open={open} onToggle={() => toggleLane(status)} />
-              {open && (
-                <motion.div variants={listVariants} initial="hidden" animate="show">
-                  {laneItems.map((item) => (
-                    <Row
-                      key={item.id}
-                      item={item}
-                      orderedColumns={orderedColumns}
-                      gridTemplateColumns={gridTemplateColumns}
-                              selected={selectedIds.has(item.id)}
-                      hovered={hoveredRowId === item.id}
-                      variants={rowVariants}
-                      onToggleSelect={toggleSelected}
-                      onHoverChange={setHoveredRowId}
-                      onOpen={handleOpen}
-                      onDeleteOne={handleDeleteOne}
-                      onToggleChannel={onToggleChannel}
-                    />
-                  ))}
-                </motion.div>
-              )}
-            </div>
-          );
-        })
       )}
     </div>
   );

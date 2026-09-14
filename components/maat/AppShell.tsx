@@ -21,6 +21,7 @@ import { mockUserProfile } from "@/lib/tenant-mock";
 import { usePersistentString } from "@/lib/use-persistent-state";
 import { SettingsModal } from "@/components/maat/SettingsModal";
 import { OverlayHost } from "@/components/maat/OverlayHost";
+import { RefreshStatusFab } from "@/components/maat/RefreshStatusFab";
 import {
   Drawer,
   DrawerContent,
@@ -287,6 +288,7 @@ export function AppShell({ children }: AppShellProps) {
 
       <SettingsModal />
       <OverlayHost />
+      <RefreshStatusFab />
     </div>
   );
 }

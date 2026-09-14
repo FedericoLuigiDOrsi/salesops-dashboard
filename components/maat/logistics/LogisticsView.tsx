@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Globe as GlobeIcon, Package, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SegmentedFilter } from "@/components/maat/SegmentedFilter";
@@ -8,6 +9,7 @@ import { EmptyState } from "@/components/maat/EmptyState";
 import { Button } from "@/components/ui/button";
 import { LogisticsCard } from "@/components/maat/logistics/LogisticsCard";
 import { LogisticsCompactRow } from "@/components/maat/logistics/LogisticsCompactRow";
+import { LogisticsTrackingCard } from "@/components/maat/logistics/LogisticsTrackingCard";
 import { LogisticsHero } from "@/components/maat/logistics/LogisticsHero";
 import { ShippingLabelDialog, ShippingLabel } from "@/components/maat/logistics/ShippingLabelDialog";
 import { ShipmentDetail } from "@/components/maat/logistics/ShipmentDetail";
@@ -26,6 +28,19 @@ const COLUMNS: { key: ShipmentStatus; label: string; accent: string; hot: string
 // spediti/consegnati non c'entrano con quel flusso.
 const PREP_COLUMNS = COLUMNS.filter((c) => c.key === "da_fare" || c.key === "fatti");
 
+/**
+ * Board: le quattro colonne diventano due sezioni. "Da fare"/"fatti" restano
+ * distinti nei dati (servono a "Prepari i pacchi") ma in board sono un solo
+ * gruppo "in attesa di spedizione" — chi guarda la board non deve sapere se
+ * l'etichetta è già stampata, solo se il pacco è partito o no. Stesso per
+ * "spediti"/"consegnati": un solo gruppo "Spediti", dove la card mostra
+ * l'avanzamento invece che la colonna.
+ */
+const BOARD_GROUPS: { key: "in_attesa" | "spediti"; label: string; statuses: ShipmentStatus[]; dropStatus: ShipmentStatus; accent: string; hot: string }[] = [
+  { key: "in_attesa", label: "IN ATTESA DI SPEDIZIONE", statuses: ["da_fare", "fatti"], dropStatus: "da_fare", accent: "#DBE64C", hot: "rgba(219,230,76,.20)" },
+  { key: "spediti", label: "SPEDITI", statuses: ["spediti", "consegnati"], dropStatus: "spediti", accent: "#5B6670", hot: "rgba(91,102,112,.17)" },
+];
+
 const PLATFORM_CHIPS: { key: "all" | Marketplace; label: string }[] = [
   { key: "all", label: "Tutte" },
   ...(Object.keys(MARKETPLACE_LABELS) as Marketplace[]).map((m) => ({ key: m, label: MARKETPLACE_LABELS[m] })),
@@ -35,6 +50,9 @@ type SortOrder = "urgency" | "recent";
 type ViewMode = "board" | "prep";
 
 export function LogisticsView() {
+  // Il widget Vendite della Home linka /logistica?mode=prep: apre direttamente
+  // "Prepari i pacchi" invece della board, senza un secondo click qui.
+  const searchParams = useSearchParams();
   const [shipmentList, setShipmentList] = useState<Shipment[]>(initialShipments);
   const [platform, setPlatform] = useState<"all" | Marketplace>("all");
   const [query, setQuery] = useState("");
@@ -42,8 +60,12 @@ export function LogisticsView() {
   const [heroOpen, setHeroOpen] = useState(true);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOverCol, setDragOverCol] = useState<ShipmentStatus | null>(null);
+  const [dragOverGroup, setDragOverGroup] = useState<"in_attesa" | "spediti" | null>(null);
   const [labelShipment, setLabelShipment] = useState<Shipment | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>("board");
+  // Di base si apre "Prepari i pacchi" (il lavoro quotidiano); la Board è
+  // un'opzione esplicita, non il default — coerente col fatto che il widget
+  // Vendite in Home linka qui senza bisogno di specificare ?mode=prep.
+  const [viewMode, setViewMode] = useState<ViewMode>(searchParams.get("mode") === "board" ? "board" : "prep");
   // Stampata almeno una volta: indipendente dalla colonna, decide
   // Stampa↔Ristampa e il colore di "Pacco completato" in modalità "prep".
   const [printedIds, setPrintedIds] = useState<Set<string>>(new Set());
@@ -128,14 +150,14 @@ export function LogisticsView() {
   }
 
   return (
-    <div className="flex flex-col gap-4 p-4 sm:p-6 md:h-dvh">
+    <div className="flex flex-col gap-4 px-4 py-8 sm:px-8 md:h-dvh">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex items-center gap-3">
-          <h1 className="text-[26px] font-bold tracking-tight">{viewMode === "prep" ? "Spedizioni" : "Board spedizioni"}</h1>
+          <h1 className="text-[28px] font-bold tracking-tight">Spedizioni</h1>
           <SegmentedFilter
             options={[
-              { value: "board", label: "Board" },
               { value: "prep", label: "Prepari i pacchi" },
+              { value: "board", label: "Board" },
             ]}
             active={viewMode}
             onChange={setViewMode}
@@ -197,12 +219,6 @@ export function LogisticsView() {
           </button>
         ))}
       </div>
-
-      {/* Con zero spedizioni l'hero mostrerebbe il globo senza tracce e quattro
-          zeri: un grafico vuoto non è uno stato vuoto, è un errore travestito
-          (DESIGN.md §12). Sparisce, e il pannello sotto dice la stessa cosa
-          meglio. */}
-      {heroOpen && shipmentList.length > 0 && <LogisticsHero stats={stats} onClose={() => setHeroOpen(false)} />}
 
       {/* Il vuoto della BOARD, che è diverso dal vuoto di una colonna (DESIGN.md §12).
           Quattro colonne tutte vuote non sembrano vuote, sembrano rotte. */}
@@ -340,52 +356,61 @@ export function LogisticsView() {
           })()}
         </div>
       ) : (
-      <div className="grid min-h-0 flex-1 auto-cols-[minmax(282px,1fr)] grid-flow-col gap-3.5 overflow-x-auto">
-        {COLUMNS.map((col) => {
-          const cards = filtered.filter((s) => s.status === col.key).sort(sortFn);
-          const hot = dragOverCol === col.key;
-          return (
-            <div key={col.key} className="flex min-h-0 flex-col rounded-[14px] bg-muted p-2.5">
-              <div className="flex items-center gap-2 px-1 pb-2.5">
-                <span className="size-[9px] shrink-0 rounded-[3px]" style={{ background: col.accent }} />
-                <span className="font-mono text-[11px] font-semibold tracking-[.08em]">{col.label}</span>
-                <span className="ml-auto font-mono text-xs font-semibold text-muted-foreground">{cards.length}</span>
+      <div className={cn("grid min-h-0 flex-1 gap-3.5", heroOpen ? "grid-cols-3" : "grid-cols-2")}>
+        <div className="col-span-2 grid min-h-0 grid-cols-2 gap-3.5">
+          {BOARD_GROUPS.map((group) => {
+            const cards = filtered.filter((s) => group.statuses.includes(s.status)).sort(sortFn);
+            const hot = dragOverGroup === group.key;
+            return (
+              <div key={group.key} className="flex min-h-0 flex-col rounded-[14px] bg-muted p-2.5">
+                <div className="flex items-center gap-2 px-1 pb-2.5">
+                  <span className="size-[9px] shrink-0 rounded-[3px]" style={{ background: group.accent }} />
+                  <span className="font-mono text-[11px] font-semibold tracking-[.08em]">{group.label}</span>
+                  <span className="ml-auto font-mono text-xs font-semibold text-muted-foreground">{cards.length}</span>
+                </div>
+                <div
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    if (dragOverGroup !== group.key) setDragOverGroup(group.key);
+                  }}
+                  onDragLeave={(e) => {
+                    if (e.currentTarget === e.target) setDragOverGroup((c) => (c === group.key ? null : c));
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setDragOverGroup(null);
+                    handleDrop(group.dropStatus);
+                  }}
+                  style={{ background: hot ? group.hot : "transparent", boxShadow: hot ? `inset 0 0 0 2px ${group.accent}` : "none" }}
+                  className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto rounded-[10px] p-[3px] transition-[box-shadow,background]"
+                >
+                  {cards.map((s) =>
+                    group.key === "spediti" ? (
+                      <LogisticsTrackingCard key={s.id} shipment={s} onOpen={setDetail} />
+                    ) : (
+                      <LogisticsCard
+                        key={s.id}
+                        shipment={s}
+                        dragging={draggingId === s.id}
+                        onDragStart={handleDragStart}
+                        onDragEnd={() => setDraggingId(null)}
+                        onOpenLabel={setLabelShipment}
+                        onOpen={setDetail}
+                      />
+                    )
+                  )}
+                  {/* idle: una sezione senza pacchi è uno stato normale, non un
+                      problema. Nessuna icona, nessuna azione. */}
+                  {cards.length === 0 && (
+                    <EmptyState tone="idle" title="Nessun pacco" className="min-h-[60px] flex-1 justify-center" />
+                  )}
+                </div>
               </div>
-              <div
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  if (dragOverCol !== col.key) setDragOverCol(col.key);
-                }}
-                onDragLeave={(e) => {
-                  if (e.currentTarget === e.target) setDragOverCol((c) => (c === col.key ? null : c));
-                }}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  handleDrop(col.key);
-                }}
-                style={{ background: hot ? col.hot : "transparent", boxShadow: hot ? `inset 0 0 0 2px ${col.accent}` : "none" }}
-                className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto rounded-[10px] p-[3px] transition-[box-shadow,background]"
-              >
-                {cards.map((s) => (
-                  <LogisticsCard
-                    key={s.id}
-                    shipment={s}
-                    dragging={draggingId === s.id}
-                    onDragStart={handleDragStart}
-                    onDragEnd={() => setDraggingId(null)}
-                    onOpenLabel={setLabelShipment}
-                    onOpen={setDetail}
-                  />
-                ))}
-                {/* idle: una colonna senza pacchi è uno stato normale, non un
-                    problema. Nessuna icona, nessuna azione. */}
-                {cards.length === 0 && (
-                  <EmptyState tone="idle" title="Nessun pacco" className="min-h-[60px] flex-1 justify-center" />
-                )}
-              </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
+
+        {heroOpen && <LogisticsHero stats={stats} onClose={() => setHeroOpen(false)} />}
       </div>
       )}
 

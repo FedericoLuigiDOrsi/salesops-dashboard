@@ -53,15 +53,17 @@ interface StatusPillProps<T extends string> {
   value: T;
   /** Vocabolario dello stato: ogni valore dell'enum ha label e tono. */
   config: Record<T, StatusPillEntry>;
+  /** Pallino animato con `maat-live-dot` (già spento sotto prefers-reduced-motion). */
+  live?: boolean;
   className?: string;
 }
 
-export function StatusPill<T extends string>({ value, config, className }: StatusPillProps<T>) {
+export function StatusPill<T extends string>({ value, config, live = false, className }: StatusPillProps<T>) {
   const { label, tone } = config[value];
 
   return (
     <Badge variant="outline" className={cn(BASE, STATUS_TONE_CLASS[tone], className)}>
-      <span className="size-1.5 rounded-full bg-current" />
+      <span className={cn("size-1.5 rounded-full bg-current", live && "maat-live-dot")} />
       {label}
     </Badge>
   );

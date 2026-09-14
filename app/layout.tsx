@@ -6,6 +6,7 @@ import { AppShell } from '@/components/maat/AppShell'
 import { NotificationsProvider } from '@/lib/notifications-store'
 import { SettingsProvider } from '@/lib/settings-store'
 import { OverlaysProvider } from '@/lib/overlays-store'
+import { MarketplaceActionsProvider } from '@/lib/marketplace-actions-store'
 import { RefreshProvider } from '@/lib/refresh-store'
 import './globals.css'
 
@@ -56,7 +57,9 @@ export default function RootLayout({
           <SettingsProvider>
             <OverlaysProvider>
               <RefreshProvider>
-                <AppShell>{children}</AppShell>
+                <MarketplaceActionsProvider>
+                  <AppShell>{children}</AppShell>
+                </MarketplaceActionsProvider>
               </RefreshProvider>
             </OverlaysProvider>
           </SettingsProvider>

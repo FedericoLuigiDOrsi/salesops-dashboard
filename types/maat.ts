@@ -329,6 +329,58 @@ export interface Offer {
   listingUrl?: string | null; // URL annuncio sul marketplace
 }
 
+// ─── Azioni verso le piattaforme (registro) ───────────────────────────────
+// Nomi e stati ricalcano `marketplace_actions` del Blocco 6
+// (services/backend/RICHIESTA-2026-08-03-blocco-6-decisioni-consolidate.md §2.2).
+// `cancelled` è nostro: il Blocco 6 non prevede l'annullamento.
+
+export type MarketplaceActionKind =
+  | "publish"
+  | "draft"
+  | "hide"
+  | "unhide"
+  | "delist"
+  | "offer_accept"
+  | "offer_reject"
+  | "offer_counter"
+  | "thread_reply"
+  | "like_outreach";
+
+export type MarketplaceActionState =
+  | "pending"
+  | "composing"
+  | "submitting"
+  | "throttled"
+  | "awaiting_challenge"
+  | "done"
+  | "failed"
+  | "needs_reauth"
+  | "cancelled";
+
+export type ActionPriorityClass = "conversation" | "like" | "listing";
+
+export interface ActionTarget {
+  type: "offer" | "thread" | "listing" | "item" | "liker";
+  id: string;
+}
+
+export interface MarketplaceAction {
+  id: string;
+  kind: MarketplaceActionKind;
+  marketplace: Marketplace;
+  target: ActionTarget;
+  payload?: { counterCents?: number; replyBody?: string };
+  state: MarketplaceActionState;
+  priority: ActionPriorityClass;
+  /** epoch ms: l'adattatore verso il backend converte le date. */
+  createdAt: number;
+  updatedAt: number;
+  /** Quando l'azione può essere presa dall'estensione. */
+  nextActionAt: number;
+  attempts: number;
+  lastError?: string;
+}
+
 export interface Sale {
   id: string;
   itemLabel: string;

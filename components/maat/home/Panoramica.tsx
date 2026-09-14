@@ -341,8 +341,12 @@ function MetricDrawer({ metrics }: { metrics: HomeMetric[] }) {
   );
 }
 
-/** Metriche chiave configurabili: il box "Panoramica" del mockup, come widget. */
-export function PanoramicaWidget({ spread = false }: { spread?: boolean } = {}) {
+/**
+ * Metriche chiave configurabili della Home. Non è un widget: vive fuori dal
+ * catalogo e dalla griglia, sempre in cima. Riordino drag-and-drop e scelta
+ * delle metriche da mostrare, solo KPI — nessuna azione operativa qui dentro.
+ */
+export function Panoramica({ spread = false }: { spread?: boolean } = {}) {
   const { metrics, setMetrics } = useHomeLayout();
   const [editMode, setEditMode] = useState(false);
   const [period, setPeriod] = useState<(typeof PERIODS)[number]["value"]>("settimana");

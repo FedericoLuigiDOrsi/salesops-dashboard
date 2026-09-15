@@ -8,20 +8,8 @@ import { PhotoGrid } from "@/components/maat/PhotoGrid";
 import { PriceMarginCard } from "@/components/maat/PriceMarginCard";
 import { useMaatEntry } from "@/lib/maat-store";
 import { getMeasureCategory, MEASURE_FIELDS, CATEGORY_LABELS } from "@/lib/measures";
+import { REVIEW_ATTRIBUTES } from "@/lib/review-types";
 import type { CatalogEntry } from "@/types/maat";
-
-const ATTRIBUTE_ORDER: { key: keyof CatalogEntry["attributes"]; label: string }[] = [
-  { key: "brand", label: "Brand" },
-  { key: "tipoCapo", label: "Tipo di capo" },
-  { key: "colore", label: "Colore" },
-  { key: "taglia", label: "Taglia" },
-  { key: "materiale", label: "Materiale" },
-  { key: "genere", label: "Genere" },
-  { key: "condizioni", label: "Condizioni" },
-  { key: "difetti", label: "Difetti" },
-  { key: "stile", label: "Stile" },
-  { key: "stagionalita", label: "Stagionalità" },
-];
 
 const UNCERTAIN_FIELDS = new Set<keyof CatalogEntry["attributes"]>(["stagionalita"]);
 
@@ -35,12 +23,12 @@ export function ReviewForm() {
   const router = useRouter();
   const { entry, confirmEntry, updatePrices, updateAttribute } = useMaatEntry();
 
-  const missing = ATTRIBUTE_ORDER.filter(({ key }) => entry.attributes[key] === "");
-  const uncertain = ATTRIBUTE_ORDER.filter(({ key }) => UNCERTAIN_FIELDS.has(key) && entry.attributes[key] !== "");
-  const confident = ATTRIBUTE_ORDER.filter(
+  const missing = REVIEW_ATTRIBUTES.filter(({ key }) => entry.attributes[key] === "");
+  const uncertain = REVIEW_ATTRIBUTES.filter(({ key }) => UNCERTAIN_FIELDS.has(key) && entry.attributes[key] !== "");
+  const confident = REVIEW_ATTRIBUTES.filter(
     ({ key }) => entry.attributes[key] !== "" && !UNCERTAIN_FIELDS.has(key)
   );
-  const reviewedCount = ATTRIBUTE_ORDER.length - missing.length - uncertain.length;
+  const reviewedCount = REVIEW_ATTRIBUTES.length - missing.length - uncertain.length;
 
   const missingPhotoLabels = REQUIRED_LABELS.filter(({ key }) => {
     const photo = entry.photos.find((p) => p.label === key);
@@ -80,7 +68,7 @@ export function ReviewForm() {
           </p>
         </div>
         <div className="rounded-full bg-card px-3 py-1.5 font-mono text-xs font-semibold">
-          {reviewedCount} / {ATTRIBUTE_ORDER.length}
+          {reviewedCount} / {REVIEW_ATTRIBUTES.length}
         </div>
       </div>
 

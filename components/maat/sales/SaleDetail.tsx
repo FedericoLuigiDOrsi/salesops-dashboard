@@ -1,18 +1,19 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { ExternalLink, Truck, Undo2 } from "lucide-react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { MarketplaceBadge } from "@/components/maat/MarketplaceBadge";
 import { DelistOutcomeBadge } from "@/components/maat/DelistOutcomeBadge";
+import { ActionControls } from "@/components/maat/ActionControls";
 import { EmptyState } from "@/components/maat/EmptyState";
 import { ComingSoonNote } from "@/components/maat/ComingSoonNote";
 import { formatEUR } from "@/lib/utils";
 import { sales } from "@/lib/activity-mock";
-import { sceneForSale, type DelistRow } from "@/lib/sale-detail-mock";
-import { MARKETPLACE_LABELS } from "@/types/maat";
+import { sceneForSale, delistTargetId, displayOutcome, type DelistRow } from "@/lib/sale-detail-mock";
+import { useMarketplaceActions } from "@/lib/marketplace-actions-store";
+import { MARKETPLACE_LABELS, type MarketplaceAction } from "@/types/maat";
 
 /**
  * Il ritiro alla vendita: cosa è successo agli altri annunci quando il capo si
@@ -42,7 +43,15 @@ function quando(time: string) {
   return /\d/.test(time) ? `${time} fa` : time;
 }
 
-function OutcomeRow({ row, onDelist }: { row: DelistRow; onDelist: (m: DelistRow["marketplace"]) => void }) {
+function OutcomeRow({
+  row,
+  action,
+  onDelist,
+}: {
+  row: DelistRow;
+  action: MarketplaceAction | null;
+  onDelist: (m: DelistRow["marketplace"]) => void;
+}) {
   const name = MARKETPLACE_LABELS[row.marketplace];
   // `error` è azionabile quanto gli altri due: un ritiro fallito lascia
   // l'annuncio online, quindi la riga descrive un problema e senza CTA sarebbe
@@ -60,7 +69,9 @@ function OutcomeRow({ row, onDelist }: { row: DelistRow; onDelist: (m: DelistRow
         </div>
         {/* La CTA appartiene a Listing, non a Sale: è `Ritira Listing`, già
             speccata nella CTA matrix (doc 12). Qui non se ne inventa una nuova. */}
-        {azionabile ? (
+        {action ? (
+          <ActionControls action={action} />
+        ) : azionabile ? (
           <Button size="sm" variant="outline" className="shrink-0 gap-1.5" onClick={() => onDelist(row.marketplace)}>
             <Undo2 className="size-3.5" /> Ritira
           </Button>
@@ -85,10 +96,7 @@ interface SaleDetailProps {
 }
 
 export function SaleDetail({ sku, open, onOpenChange }: SaleDetailProps) {
-  // Stato locale: nessuno store possiede le scene di vendita, e inventarne uno
-  // globale per un prototipo su dati dichiarati mock sarebbe più impalcatura
-  // che valore. Il ritiro qui dà riscontro, non persiste.
-  const [ritirati, setRitirati] = useState<string[]>([]);
+  const { actionFor, enqueue } = useMarketplaceActions();
 
   const sale = sku ? sales.find((s) => s.sku === sku) : undefined;
   const scene = sku ? sceneForSale(sku) : null;
@@ -106,11 +114,11 @@ export function SaleDetail({ sku, open, onOpenChange }: SaleDetailProps) {
     );
   }
 
-  const rows = (scene?.rows ?? []).map((r) =>
-    ritirati.includes(r.marketplace) ? { ...r, outcome: "delisted" as const, detail: null } : r
-  );
+  const rows = scene?.rows ?? [];
+  const actionForRow = (r: DelistRow) => actionFor({ type: "listing", id: delistTargetId(sale.sku, r.marketplace) });
   const altrove = rows.filter((r) => r.outcome !== "sold_here");
-  const tuttoRitirato = altrove.length > 0 && altrove.every((r) => r.outcome === "delisted");
+  const tuttoRitirato =
+    altrove.length > 0 && altrove.every((r) => displayOutcome(r, actionForRow(r)) === "delisted");
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -164,13 +172,20 @@ export function SaleDetail({ sku, open, onOpenChange }: SaleDetailProps) {
                   </p>
                 ) : null}
                 <div className="mt-3 flex flex-col gap-2">
-                  {rows.map((r) => (
-                    <OutcomeRow
-                      key={r.marketplace}
-                      row={r}
-                      onDelist={(m) => setRitirati((prev) => [...prev, m])}
-                    />
-                  ))}
+                  {rows.map((r) => {
+                    const action = actionForRow(r);
+                    const outcome = displayOutcome(r, action);
+                    return (
+                      <OutcomeRow
+                        key={r.marketplace}
+                        row={outcome === r.outcome ? r : { ...r, outcome, detail: null }}
+                        action={action?.state === "done" ? null : action}
+                        onDelist={(m) =>
+                          enqueue({ kind: "delist", marketplace: m, target: { type: "listing", id: delistTargetId(sale.sku, m) } })
+                        }
+                      />
+                    );
+                  })}
                 </div>
               </>
             )}

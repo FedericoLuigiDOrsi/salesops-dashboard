@@ -6,9 +6,9 @@ import { clampModuleDims, isModuleDims, type ModuleDims } from "@/lib/widget-siz
 // (compresa la vecchia "panoramica") spariscono, le taglie tornano dentro i
 // limiti del widget, chi non ha una taglia salvata usa la predefinita del catalogo.
 
-export const NEW_WIDGET_KEYS: WidgetKey[] = ["top-performer", "inventario-fermo", "target-settimanale", "note", "tempo-operativo"];
+export const NEW_WIDGET_KEYS: WidgetKey[] = ["top-performer", "inventario-fermo", "target-settimanale", "note", "tempo-operativo", "da-ritirare", "da-spedire"];
 
-// Layout iniziale: i cinque nuovi widget restano visibili durante la fase di valutazione.
+// Layout iniziale: i nuovi widget restano visibili durante la fase di valutazione.
 export const DEFAULT_LAYOUT: WidgetKey[] = ["offerte", "vendite", "logistica", ...NEW_WIDGET_KEYS];
 
 export interface HomeLayoutState {

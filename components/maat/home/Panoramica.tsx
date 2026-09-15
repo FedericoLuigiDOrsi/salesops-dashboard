@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import {
   DndContext,
   KeyboardSensor,
@@ -21,7 +20,7 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { ArrowRight, SlidersHorizontal, X } from "lucide-react";
+import { SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { HOME_METRICS, type HomeMetric } from "@/lib/home-mock";
@@ -34,11 +33,6 @@ const PERIODS = [
 ] as const;
 
 const METRIC_BY_KEY = new Map(HOME_METRICS.map((m) => [m.key, m]));
-
-const ACTIONABLE_HREF: Record<string, string> = {
-  bozze: "/inventario?status=to_be_reviewed",
-  offerte: "/notifiche",
-};
 
 /** Converte una serie di valori grezzi in punti SVG normalizzati (min-max) su un viewBox width×height. */
 function sparkPoints(values: number[] | undefined, width: number, height: number) {
@@ -66,55 +60,6 @@ function DeltaBadge({ delta, up }: { delta: string; up?: boolean }) {
       </svg>
       {delta}
     </span>
-  );
-}
-
-function ActionableTile({ metric }: { metric: HomeMetric }) {
-  return (
-    <Link
-      href={ACTIONABLE_HREF[metric.key] ?? "/"}
-      className="group flex items-center justify-between gap-3 rounded-lg bg-accent-soft px-4 py-3.5 transition-colors hover:bg-accent-soft/70"
-    >
-      <div>
-        <span className="font-mono text-[28px] font-semibold leading-none tabular-nums">{metric.value}</span>
-        <p className="mt-1.5 text-[13px] font-medium text-muted-foreground">{metric.label}</p>
-      </div>
-      <span className="flex shrink-0 items-center gap-1 text-xs font-semibold">
-        {metric.cta}
-        <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
-      </span>
-    </Link>
-  );
-}
-
-/** Variante verticale dell'ActionableTile: stessa sagoma di HeroTile/TrendTile,
- * così nella fascia Panoramica tutti i moduli condividono la stessa riga della
- * griglia e nessuno lascia spazio vuoto sotto agli altri.
- *
- * `as="div"` è la variante usata dentro `SortableMetricTile` in edit mode: la
- * card resta trascinabile invece di navigare, il contenuto è identico. */
-function ActionableTileCompact({ metric, as = "link" }: { metric: HomeMetric; as?: "link" | "div" }) {
-  const content = (
-    <>
-      <div className="flex items-start justify-between gap-2">
-        <span className="font-mono text-2xl font-semibold leading-none tabular-nums">{metric.value}</span>
-        <ArrowRight className="mt-1 size-3.5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
-      </div>
-      <p className="mt-1.5 text-[13px] font-medium text-muted-foreground">{metric.label}</p>
-    </>
-  );
-  if (as === "div") {
-    return (
-      <div className="group flex flex-col justify-between rounded-lg bg-accent-soft px-4 py-3">{content}</div>
-    );
-  }
-  return (
-    <Link
-      href={ACTIONABLE_HREF[metric.key] ?? "/"}
-      className="group flex flex-col justify-between rounded-lg bg-accent-soft px-4 py-3 transition-colors hover:bg-accent-soft/70"
-    >
-      {content}
-    </Link>
   );
 }
 
@@ -210,13 +155,7 @@ function SortableMetricTile({ metric, onRemove }: { metric: HomeMetric; onRemove
       {...attributes}
       {...listeners}
     >
-      {metric.kind === "actionable" ? (
-        <ActionableTileCompact metric={metric} as="div" />
-      ) : metric.kind === "hero" ? (
-        <HeroTile metric={metric} />
-      ) : (
-        <TrendTile metric={metric} />
-      )}
+      {metric.kind === "hero" ? <HeroTile metric={metric} /> : <TrendTile metric={metric} />}
       <button
         type="button"
         aria-label={`Rimuovi ${metric.label} dalla panoramica`}
@@ -268,23 +207,17 @@ function EditableBar({ metrics, onRemove }: { metrics: HomeMetric[]; onRemove: (
 /**
  * Card del cassetto: non ancora nella barra. Anteprima con un rettangolo
  * scuro al posto del valore reale — qui non c'è un numero da mostrare, solo
- * la sagoma. Le "Azioni" (rimandano a una funzione, es. Bozze da revisionare)
- * hanno bordo + ombra da tasto per farsi riconoscere come interagibili; i
- * "Dati" (solo numeri) restano piatti.
+ * la sagoma.
  */
 function DrawerCard({ metric }: { metric: HomeMetric }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: metric.key });
-  const actionable = metric.kind === "actionable";
 
   return (
     <div
       ref={setNodeRef}
       style={{ transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined }}
       className={cn(
-        "flex w-[124px] shrink-0 cursor-grab touch-none select-none flex-col gap-2.5 rounded-lg border p-3 transition-opacity active:cursor-grabbing",
-        actionable
-          ? "border-border bg-card shadow-[0_1px_2px_rgba(0,31,63,.06),0_2px_6px_rgba(0,31,63,.08)]"
-          : "border-dashed border-border/70 bg-transparent",
+        "flex w-[124px] shrink-0 cursor-grab touch-none select-none flex-col gap-2.5 rounded-lg border border-dashed border-border/70 bg-transparent p-3 transition-opacity active:cursor-grabbing",
         isDragging && "opacity-30"
       )}
       {...attributes}
@@ -296,7 +229,7 @@ function DrawerCard({ metric }: { metric: HomeMetric }) {
   );
 }
 
-/** Cassetto sotto la barra: solo le metriche non ancora inserite, divise Azioni/Dati. */
+/** Cassetto sotto la barra: solo le metriche non ancora inserite. */
 function MetricDrawer({ metrics }: { metrics: HomeMetric[] }) {
   if (metrics.length === 0) {
     return (
@@ -305,38 +238,17 @@ function MetricDrawer({ metrics }: { metrics: HomeMetric[] }) {
       </div>
     );
   }
-  const azioni = metrics.filter((m) => m.kind === "actionable");
-  const dati = metrics.filter((m) => m.kind !== "actionable");
 
   return (
     <div className="rounded-lg border border-dashed border-border bg-muted/30 p-3.5">
       <p className="mb-3 text-xs leading-relaxed text-muted-foreground">
         Trascina una card nella barra qui sopra per aggiungerla.
       </p>
-      {azioni.length > 0 && (
-        <div className="mb-3">
-          <p className="mb-2 font-mono text-[11px] uppercase tracking-[.12em] text-muted-foreground">
-            Azioni · {azioni.length}
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {azioni.map((m) => (
-              <DrawerCard key={m.key} metric={m} />
-            ))}
-          </div>
-        </div>
-      )}
-      {dati.length > 0 && (
-        <div>
-          <p className="mb-2 font-mono text-[11px] uppercase tracking-[.12em] text-muted-foreground">
-            Dati · {dati.length}
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {dati.map((m) => (
-              <DrawerCard key={m.key} metric={m} />
-            ))}
-          </div>
-        </div>
-      )}
+      <div className="flex flex-wrap gap-2">
+        {metrics.map((m) => (
+          <DrawerCard key={m.key} metric={m} />
+        ))}
+      </div>
     </div>
   );
 }
@@ -362,7 +274,6 @@ export function Panoramica({ spread = false }: { spread?: boolean } = {}) {
     [metrics]
   );
   // Usati solo dal ramo non-spread (legacy, oggi non montato in nessuna schermata).
-  const toDo = orderedVisible.filter((m) => m.kind === "actionable");
   const hero = orderedVisible.find((m) => m.kind === "hero");
   const trend = orderedVisible.filter((m) => m.kind === "trend");
 
@@ -462,35 +373,11 @@ export function Panoramica({ spread = false }: { spread?: boolean } = {}) {
       ) : spread ? (
         <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4 lg:grid-cols-8">
           {orderedVisible.map((m) =>
-            m.kind === "actionable" ? (
-              <ActionableTileCompact key={m.key} metric={m} />
-            ) : m.kind === "hero" ? (
-              <HeroTile key={m.key} metric={m} />
-            ) : (
-              <TrendTile key={m.key} metric={m} />
-            )
+            m.kind === "hero" ? <HeroTile key={m.key} metric={m} /> : <TrendTile key={m.key} metric={m} />
           )}
         </div>
       ) : (
         <div className="flex flex-col gap-4">
-          {toDo.length > 0 ? (
-            <div>
-              <div className="mb-2.5 flex items-center gap-2">
-                <span className="font-mono text-[11px] font-semibold uppercase tracking-[.12em] text-muted-foreground">
-                  Da fare
-                </span>
-                <span className="rounded-full bg-primary px-2 py-0.5 font-mono text-[11px] font-semibold text-primary-foreground">
-                  {toDo.length}
-                </span>
-              </div>
-              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-                {toDo.map((m) => (
-                  <ActionableTile key={m.key} metric={m} />
-                ))}
-              </div>
-            </div>
-          ) : null}
-
           <div>
             <p className="mb-2.5 font-mono text-[11px] font-semibold uppercase tracking-[.12em] text-muted-foreground">
               Andamento · {PERIODS.find((p) => p.value === period)?.label}

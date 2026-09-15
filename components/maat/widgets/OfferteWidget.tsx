@@ -2,15 +2,15 @@
 
 import Link from "next/link";
 import { AnimatePresence, motion, type Variants } from "framer-motion";
-import { ArrowRight, Check, RefreshCw, Shirt, X } from "lucide-react";
+import { ArrowRight, Check, ChevronRight, RefreshCw, Shirt } from "lucide-react";
 import { cn, formatEUR } from "@/lib/utils";
 import { offers } from "@/lib/activity-mock";
 import { hasUrgentOffer } from "@/lib/urgency";
 import { useOverlays } from "@/lib/overlays-store";
 import { useMarketplaceActions } from "@/lib/marketplace-actions-store";
-import { isActive, isLingering, offerActionKind, offerDisplayState } from "@/lib/marketplace-actions";
+import { isActive, isLingering, offerDisplayState } from "@/lib/marketplace-actions";
 import { ActionControls } from "@/components/maat/ActionControls";
-import type { MarketplaceAction, Offer, OfferStatus } from "@/types/maat";
+import type { MarketplaceAction, Offer } from "@/types/maat";
 
 const SECONDARY_VISIBLE = 3;
 
@@ -44,7 +44,7 @@ function visibleAction(action: MarketplaceAction | null, now: number): Marketpla
 /** Coda prioritaria: l'offerta più vecchia è in evidenza, le successive restano azionabili a colpo d'occhio. */
 export function OfferteWidget() {
   const { openOffer } = useOverlays();
-  const { actionFor, enqueue, now } = useMarketplaceActions();
+  const { actionFor, now } = useMarketplaceActions();
 
   const effective = offers
     .map((offer) => {
@@ -61,12 +61,6 @@ export function OfferteWidget() {
   );
   const featured = visible[0];
   const secondary = visible.slice(1, SECONDARY_VISIBLE + 1);
-
-  function handleResolve(offer: Offer, status: OfferStatus) {
-    const kind = offerActionKind(status);
-    if (!kind) return;
-    enqueue({ kind, marketplace: offer.marketplace, target: { type: "offer", id: offer.id } });
-  }
 
   // Una controfferta inviata non si annulla più: resta come esito, senza "Annulla".
   function renderCountered(offer: Offer, counterCents: number | undefined, compact = false) {
@@ -142,64 +136,81 @@ export function OfferteWidget() {
                 className="my-2 rounded-xl border border-primary/25 bg-gradient-to-br from-primary/20 via-primary/[.06] to-transparent p-4 shadow-[0_2px_6px_rgba(0,31,63,.08),0_16px_40px_rgba(0,31,63,.10)]"
               >
                 <div className="flex gap-3.5 max-[460px]:flex-col">
-                  <div className="flex min-w-0 flex-1 gap-3.5">
-                    <span className="flex h-[94px] w-[78px] shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground/50 max-[460px]:h-[72px] max-[460px]:w-[58px]">
-                      <Shirt className="size-6" strokeWidth={1.5} />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-[15px] font-semibold leading-tight">{featured.offer.itemLabel}</p>
-                      <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px] text-muted-foreground">
-                        <span className="rounded bg-foreground/[.06] px-1.5 py-0.5 font-semibold uppercase tracking-[.08em]">
-                          {featured.offer.marketplace}
-                        </span>
-                        <span className="font-mono">{featured.offer.sku}</span>
-                        <span>ricevuta {featured.offer.time}</span>
-                      </div>
-                      <div className="mt-2.5 flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                        <span className="font-mono text-[24px] font-semibold tracking-[-.045em]">
-                          {formatEUR(featured.offer.offerCents)}
-                        </span>
-                        <span className="font-mono text-[18px] font-semibold tracking-[-.02em] text-foreground/75">
-                          {offerDeltaEUR(featured.offer)}
-                        </span>
-                      </div>
-                      <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-muted-foreground">
-                        <span className="font-mono font-semibold">{offerDelta(featured.offer)}% dal listino</span>
-                        <span className="font-mono">listino {formatEUR(featured.offer.listPriceCents)}</span>
+                  {featured.action ? (
+                    <div className="flex min-w-0 flex-1 gap-3.5">
+                      <span className="flex h-[94px] w-[78px] shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground/50 max-[460px]:h-[72px] max-[460px]:w-[58px]">
+                        <Shirt className="size-6" strokeWidth={1.5} />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-[15px] font-semibold leading-tight">{featured.offer.itemLabel}</p>
+                        <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px] text-muted-foreground">
+                          <span className="rounded bg-foreground/[.06] px-1.5 py-0.5 font-semibold uppercase tracking-[.08em]">
+                            {featured.offer.marketplace}
+                          </span>
+                          <span className="font-mono">{featured.offer.sku}</span>
+                          <span>ricevuta {featured.offer.time}</span>
+                        </div>
+                        <div className="mt-2.5 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                          <span className="font-mono text-[24px] font-semibold tracking-[-.045em]">
+                            {formatEUR(featured.offer.offerCents)}
+                          </span>
+                          <span className="font-mono text-[18px] font-semibold tracking-[-.02em] text-foreground/75">
+                            {offerDeltaEUR(featured.offer)}
+                          </span>
+                        </div>
+                        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-muted-foreground">
+                          <span className="font-mono font-semibold">{offerDelta(featured.offer)}% dal listino</span>
+                          <span className="font-mono">listino {formatEUR(featured.offer.listPriceCents)}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => openOffer(featured.offer.id)}
+                      className="flex min-w-0 flex-1 items-center gap-3.5 rounded-lg text-left transition-opacity hover:opacity-80"
+                    >
+                      <span className="flex h-[94px] w-[78px] shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground/50 max-[460px]:h-[72px] max-[460px]:w-[58px]">
+                        <Shirt className="size-6" strokeWidth={1.5} />
+                      </span>
+                      <span className="block min-w-0 flex-1">
+                        <span className="block truncate text-[15px] font-semibold leading-tight">{featured.offer.itemLabel}</span>
+                        <span className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px] text-muted-foreground">
+                          <span className="rounded bg-foreground/[.06] px-1.5 py-0.5 font-semibold uppercase tracking-[.08em]">
+                            {featured.offer.marketplace}
+                          </span>
+                          <span className="font-mono">{featured.offer.sku}</span>
+                          <span>ricevuta {featured.offer.time}</span>
+                        </span>
+                        <span className="mt-2.5 flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                          <span className="font-mono text-[24px] font-semibold tracking-[-.045em]">
+                            {formatEUR(featured.offer.offerCents)}
+                          </span>
+                          <span className="font-mono text-[18px] font-semibold tracking-[-.02em] text-foreground/75">
+                            {offerDeltaEUR(featured.offer)}
+                          </span>
+                        </span>
+                        <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-muted-foreground">
+                          <span className="font-mono font-semibold">{offerDelta(featured.offer)}% dal listino</span>
+                          <span className="font-mono">listino {formatEUR(featured.offer.listPriceCents)}</span>
+                        </span>
+                      </span>
+                    </button>
+                  )}
 
                   {featured.action ? (
                     <div className="flex w-[132px] shrink-0 items-center max-[460px]:w-full">
                       <ActionControls action={featured.action} className="flex-wrap" />
                     </div>
                   ) : (
-                    // Tre azioni identiche per forma: impilate a destra sopra i 460px, in riga sotto.
-                    <div className="flex w-[132px] shrink-0 flex-col gap-2 max-[460px]:w-full max-[460px]:flex-row">
-                      <button
-                        type="button"
-                        onClick={() => handleResolve(featured.offer, "accepted")}
-                        className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-success px-2 text-[12px] font-semibold text-white transition-colors hover:bg-success/90"
-                      >
-                        <Check className="size-4" /> Accetta
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => openOffer(featured.offer.id)}
-                        className="flex flex-1 items-center justify-center rounded-lg border border-border bg-card px-2 text-[12px] font-semibold transition-colors hover:bg-foreground/[.04]"
-                      >
-                        Controproposta
-                      </button>
-                      <button
-                        type="button"
-                        aria-label={`Rifiuta offerta ${featured.offer.itemLabel}`}
-                        onClick={() => handleResolve(featured.offer, "rejected")}
-                        className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-destructive/30 px-2 text-[12px] font-semibold text-destructive transition-colors hover:bg-destructive/10"
-                      >
-                        <X className="size-4" /> Rifiuta
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      aria-label={`Rispondi all'offerta ${featured.offer.itemLabel}`}
+                      onClick={() => openOffer(featured.offer.id)}
+                      className="flex w-11 shrink-0 items-center justify-center self-stretch rounded-lg text-muted-foreground transition-colors hover:bg-foreground/[.04] hover:text-foreground max-[460px]:w-full"
+                    >
+                      <ChevronRight className="size-5" />
+                    </button>
                   )}
                 </div>
               </motion.section>
@@ -222,7 +233,7 @@ export function OfferteWidget() {
                     >
                       <button
                         type="button"
-                        aria-label={`Apri controproposta per ${offer.itemLabel}`}
+                        aria-label={`Rispondi all'offerta ${offer.itemLabel}`}
                         onClick={() => openOffer(offer.id)}
                         className="flex min-h-11 min-w-0 items-center gap-3 rounded-lg text-left transition-colors hover:bg-foreground/[.035] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       >
@@ -251,24 +262,14 @@ export function OfferteWidget() {
                         {action ? (
                           <ActionControls action={action} />
                         ) : (
-                          <>
-                            <button
-                              type="button"
-                              aria-label={`Accetta offerta ${offer.itemLabel}`}
-                              onClick={() => handleResolve(offer, "accepted")}
-                              className="flex size-11 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-success transition-colors hover:border-success/40 hover:bg-success-soft"
-                            >
-                              <Check className="size-4" />
-                            </button>
-                            <button
-                              type="button"
-                              aria-label={`Rifiuta offerta ${offer.itemLabel}`}
-                              onClick={() => handleResolve(offer, "rejected")}
-                              className="flex size-11 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-destructive transition-colors hover:border-destructive/40 hover:bg-destructive/10"
-                            >
-                              <X className="size-4" />
-                            </button>
-                          </>
+                          <button
+                            type="button"
+                            aria-label={`Rispondi all'offerta ${offer.itemLabel}`}
+                            onClick={() => openOffer(offer.id)}
+                            className="flex size-11 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-foreground/[.04] hover:text-foreground"
+                          >
+                            <ChevronRight className="size-4" />
+                          </button>
                         )}
                       </div>
                     </motion.div>

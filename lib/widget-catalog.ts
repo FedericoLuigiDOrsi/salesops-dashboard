@@ -9,7 +9,6 @@ export const WIDGET_KEYS = [
   "vendite",
   "azioni",
   "notifiche",
-  "entrate",
   "logistica",
   "top-performer",
   "inventario-fermo",
@@ -24,7 +23,7 @@ export type WidgetKey = (typeof WIDGET_KEYS)[number];
 export type WidgetRole = "operativo" | "utilita" | "kpi";
 
 /** Unici widget ammessi con ruolo kpi: destinati alla Panoramica, la pulizia svuota l'elenco. */
-export const KPI_WIDGETS: readonly WidgetKey[] = ["entrate", "top-performer", "target-settimanale"];
+export const KPI_WIDGETS: readonly WidgetKey[] = ["top-performer", "target-settimanale"];
 
 function fixed(w: number, h: number): WidgetSizes {
   return { min: { w, h }, max: { w, h }, default: { w, h } };
@@ -40,7 +39,6 @@ export const WIDGET_CATALOG: Record<WidgetKey, { sizes: WidgetSizes; role: Widge
   vendite: { sizes: fixed(1, 1), role: "operativo" },
   azioni: { sizes: fixed(2, 2), role: "operativo" },
   notifiche: { sizes: fixed(1, 1), role: "utilita" },
-  entrate: { sizes: fixed(2, 2), role: "kpi" },
   logistica: { sizes: fixed(2, 2), role: "operativo" },
   "top-performer": { sizes: fixed(2, 2), role: "kpi" },
   "inventario-fermo": { sizes: fixed(2, 2), role: "operativo" },

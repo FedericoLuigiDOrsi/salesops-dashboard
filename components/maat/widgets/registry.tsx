@@ -1,9 +1,8 @@
 import type { ComponentType } from "react";
-import { Archive, BadgeEuro, Bell, ChartColumn, CloudSun, Globe, HandCoins, ListChecks, StickyNote, Target, Trophy, type LucideIcon } from "lucide-react";
+import { Archive, BadgeEuro, Bell, CloudSun, Globe, HandCoins, ListChecks, StickyNote, Target, Trophy, type LucideIcon } from "lucide-react";
 import type { WidgetKey } from "@/lib/widget-catalog";
 import type { ModuleDims } from "@/lib/widget-sizes";
 import { AzioniWidget } from "./AzioniWidget";
-import { EntrateWidget } from "./EntrateWidget";
 import { LogisticaWidget } from "./LogisticaWidget";
 import { NotificheWidget } from "./NotificheWidget";
 import { OfferteWidget } from "./OfferteWidget";
@@ -55,13 +54,6 @@ export const HOME_WIDGETS: WidgetDef[] = [
     description: "Le ultime novità dal tuo account",
     icon: Bell,
     component: NotificheWidget,
-  },
-  {
-    key: "entrate",
-    title: "Entrate",
-    description: "Andamento ricavi delle ultime settimane",
-    icon: ChartColumn,
-    component: EntrateWidget,
   },
   {
     key: "logistica",

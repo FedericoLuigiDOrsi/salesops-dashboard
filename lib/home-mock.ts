@@ -3,7 +3,7 @@
 // in stato locale per ora); qui vive solo il dato — valori statici allineati
 // al design Claude Design "Panoramica - widget.dc.html".
 
-export type MetricKind = "hero" | "actionable" | "trend";
+export type MetricKind = "hero" | "trend";
 
 export interface HomeMetric {
   key: string;
@@ -12,8 +12,6 @@ export interface HomeMetric {
   label: string;
   /** Aggiunge il simbolo € (più piccolo) accanto al valore. */
   euro?: boolean;
-  /** Solo actionable: testo del CTA ("Revisiona", "Rispondi"). */
-  cta?: string;
   /** Solo hero/trend: variazione mostrata accanto al valore ("+12%", "+2"). */
   delta?: string;
   /** true = variazione positiva (verde), false/assente = neutra. */
@@ -36,8 +34,6 @@ export const HOME_METRICS: HomeMetric[] = [
     sub: "+287 € vs settimana scorsa",
     spark: [10, 8, 9, 15, 13, 20, 18, 26],
   },
-  { key: "bozze", kind: "actionable", value: "12", label: "Bozze da revisionare", cta: "Revisiona" },
-  { key: "offerte", kind: "actionable", value: "3", label: "Offerte in sospeso", cta: "Rispondi" },
   { key: "venduti", kind: "trend", value: "9", label: "Articoli venduti", delta: "+2", up: true, spark: [20, 17, 18, 11, 13, 4] },
   { key: "pubblicati", kind: "trend", value: "27", label: "Capi pubblicati", delta: "+5", up: true, spark: [15, 13, 16, 11, 12, 7] },
   { key: "catalogo", kind: "trend", value: "96", label: "Capi a catalogo", delta: "+4", up: false },
@@ -47,8 +43,6 @@ export const HOME_METRICS: HomeMetric[] = [
 
 /** Ordine iniziale delle metriche visibili. */
 export const DEFAULT_SELECTED_METRICS: string[] = [
-  "bozze",
-  "offerte",
   "entrate",
   "venduti",
   "pubblicati",

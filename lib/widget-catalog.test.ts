@@ -20,7 +20,7 @@ describe("WIDGET_CATALOG", () => {
   it("il ruolo kpi è ammesso solo per l'elenco fisso destinato alla Panoramica", () => {
     const kpi = WIDGET_KEYS.filter((k) => WIDGET_CATALOG[k].role === "kpi");
     expect([...kpi].sort()).toEqual([...KPI_WIDGETS].sort());
-    expect([...KPI_WIDGETS].sort()).toEqual(["entrate", "target-settimanale", "top-performer"]);
+    expect([...KPI_WIDGETS].sort()).toEqual(["target-settimanale", "top-performer"]);
   });
 
   it("primo passaggio: solo Offerte si ridimensiona, le fasce fisse sono quadrati", () => {

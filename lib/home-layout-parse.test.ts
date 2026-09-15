@@ -9,8 +9,13 @@ describe("parseHomeLayout", () => {
   });
 
   it("mantiene la taglia salvata riportandola dentro i limiti del widget", () => {
-    const raw = JSON.stringify({ layout: ["offerte"], widgetSizes: { offerte: { w: 9, h: 3 }, entrate: { w: 4, h: 4 }, panoramica: { w: 2, h: 2 } } });
-    expect(parseHomeLayout(raw)?.widgetSizes).toEqual({ offerte: { w: 4, h: 3 }, entrate: { w: 2, h: 2 } });
+    const raw = JSON.stringify({ layout: ["offerte"], widgetSizes: { offerte: { w: 9, h: 3 }, "top-performer": { w: 4, h: 4 }, panoramica: { w: 2, h: 2 } } });
+    expect(parseHomeLayout(raw)?.widgetSizes).toEqual({ offerte: { w: 4, h: 3 }, "top-performer": { w: 2, h: 2 } });
+  });
+
+  it("scarta la taglia salvata di un widget rimosso dal catalogo (entrate)", () => {
+    const raw = JSON.stringify({ layout: ["offerte"], widgetSizes: { offerte: { w: 2, h: 2 }, entrate: { w: 2, h: 2 } } });
+    expect(parseHomeLayout(raw)?.widgetSizes).toEqual({ offerte: { w: 2, h: 2 } });
   });
 
   it("usa i default quando i campi mancano o non sono array", () => {

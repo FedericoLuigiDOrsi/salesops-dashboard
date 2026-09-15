@@ -35,7 +35,7 @@ function catalogEntryFromInventoryItem(id: string): CatalogEntry | null {
   };
 }
 
-function entry(partial: Pick<CatalogEntry, "id" | "status" | "createdAt" | "attributes"> & { measures?: CatalogEntry["measures"] }): CatalogEntry {
+function entry(partial: Pick<CatalogEntry, "id" | "status" | "createdAt" | "attributes"> & { measures?: CatalogEntry["measures"]; photos?: CatalogEntry["photos"] }): CatalogEntry {
   return {
     sku: partial.status === "available" ? `MAAT-${partial.id.toUpperCase()}` : null,
     accountId: "acc-federico",
@@ -146,6 +146,11 @@ export const mockCatalogEntries: CatalogEntry[] = [
       stagionalita: "Autunno/Inverno",
     },
     measures: { spalle: 50, lunghezzaTotale: 76, lunghezzaManica: 62, larghezzaManica: 22, larghezzaTorace: 64, larghezzaVita: 60 },
+    photos: [
+      { id: "b-05-p1", label: "fronte", url: null, photoType: "standard", state: "validated", createdAt: "2026-06-30T16:15:00.000Z" },
+      { id: "b-05-p2", label: "retro", url: null, photoType: "standard", state: "validated", createdAt: "2026-06-30T16:15:00.000Z" },
+      { id: "b-05-p3", label: "brand", url: null, photoType: "standard", state: "validated", createdAt: "2026-06-30T16:15:00.000Z" },
+    ],
   }),
   entry({
     id: "b-04",

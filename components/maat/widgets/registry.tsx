@@ -1,8 +1,10 @@
 import type { ComponentType } from "react";
-import { Archive, BadgeEuro, Bell, CloudSun, Globe, HandCoins, ListChecks, StickyNote, Target, Trophy, type LucideIcon } from "lucide-react";
+import { Archive, BadgeEuro, Bell, CloudSun, Globe, HandCoins, ListChecks, StickyNote, Target, Trophy, Truck, Undo2, type LucideIcon } from "lucide-react";
 import type { WidgetKey } from "@/lib/widget-catalog";
 import type { ModuleDims } from "@/lib/widget-sizes";
 import { AzioniWidget } from "./AzioniWidget";
+import { DaRitirareWidget } from "./DaRitirareWidget";
+import { DaSpedireWidget } from "./DaSpedireWidget";
 import { LogisticaWidget } from "./LogisticaWidget";
 import { NotificheWidget } from "./NotificheWidget";
 import { OfferteWidget } from "./OfferteWidget";
@@ -62,6 +64,20 @@ export const HOME_WIDGETS: WidgetDef[] = [
     icon: Globe,
     component: LogisticaWidget,
     bleed: true,
+  },
+  {
+    key: "da-ritirare",
+    title: "Da ritirare",
+    description: "Annunci ancora online dopo una vendita altrove",
+    icon: Undo2,
+    component: DaRitirareWidget,
+  },
+  {
+    key: "da-spedire",
+    title: "Da spedire",
+    description: "Pacchi pronti da imballare, stampa l'etichetta da qui",
+    icon: Truck,
+    component: DaSpedireWidget,
   },
   {
     key: "top-performer",

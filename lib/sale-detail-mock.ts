@@ -1,4 +1,4 @@
-import type { Marketplace } from "@/types/maat";
+import type { Marketplace, MarketplaceAction } from "@/types/maat";
 
 // Il ritiro alla vendita, per ogni vendita nota.
 //
@@ -108,4 +108,31 @@ export const saleScenes: Record<string, SaleDelistScene> = {
 
 export function sceneForSale(sku: string): SaleDelistScene | null {
   return saleScenes[sku] ?? null;
+}
+
+export interface DaRitirareRow {
+  saleSku: string;
+  marketplace: Marketplace;
+  outcome: "still_online" | "manual_required";
+}
+
+/** Coda aggregata: ogni riga di ogni vendita che chiede ancora una mano, su tutte le scene. */
+export function daRitirareRows(scenes: Record<string, SaleDelistScene> = saleScenes): DaRitirareRow[] {
+  return Object.entries(scenes).flatMap(([saleSku, scene]) =>
+    scene.rows
+      .filter((r): r is DelistRow & { outcome: "still_online" | "manual_required" } =>
+        r.outcome === "still_online" || r.outcome === "manual_required"
+      )
+      .map((r) => ({ saleSku, marketplace: r.marketplace, outcome: r.outcome }))
+  );
+}
+
+/** Esito visibile di una riga: "delisted" se l'azione di ritiro corrispondente nel registro è conclusa, altrimenti l'esito del mock. */
+export function displayOutcome(row: DelistRow, action: MarketplaceAction | null): DelistOutcome {
+  return action?.state === "done" ? "delisted" : row.outcome;
+}
+
+/** Id sintetico del target `delist`: non esiste un id di listing reale nei mock. */
+export function delistTargetId(saleSku: string, marketplace: Marketplace): string {
+  return `${saleSku}:${marketplace}`;
 }

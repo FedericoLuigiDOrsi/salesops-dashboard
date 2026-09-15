@@ -16,6 +16,11 @@ export const REVIEW_ATTRIBUTES = [
 
 export type ReviewAttrKey = (typeof REVIEW_ATTRIBUTES)[number]["key"];
 
+/** Etichette leggibili per attributo, derivate da REVIEW_ATTRIBUTES — un solo posto, non duplicarle di nuovo. */
+export const ATTRIBUTE_LABELS: Record<ReviewAttrKey, string> = Object.fromEntries(
+  REVIEW_ATTRIBUTES.map((a) => [a.key, a.label])
+) as Record<ReviewAttrKey, string>;
+
 // Set minimo obbligatorio pre-confirm (TBD-10 Federico: da confermare). Gate = AND(campi + foto).
 export const REQUIRED_ATTRS: ReviewAttrKey[] = ["brand", "tipoCapo", "taglia", "condizioni"];
 export const MIN_PHOTOS = 3;

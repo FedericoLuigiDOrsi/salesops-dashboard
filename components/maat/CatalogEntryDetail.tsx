@@ -10,23 +10,11 @@ import { ArticleMediaTrack } from "@/components/maat/ArticleMediaTrack";
 import { PriceMarginCard } from "@/components/maat/PriceMarginCard";
 import { useMaatEntry } from "@/lib/maat-store";
 import { getMeasureCategory, MEASURE_FIELDS, CATEGORY_LABELS } from "@/lib/measures";
+import { ATTRIBUTE_LABELS } from "@/lib/review-types";
 import { cn } from "@/lib/utils";
 import type { CatalogEntry } from "@/types/maat";
 
 type AttrKey = keyof CatalogEntry["attributes"];
-
-const ATTRIBUTE_LABELS: Record<AttrKey, string> = {
-  brand: "Brand",
-  tipoCapo: "Tipo di capo",
-  colore: "Colore",
-  taglia: "Taglia",
-  materiale: "Materiale",
-  genere: "Genere",
-  condizioni: "Condizioni",
-  difetti: "Difetti",
-  stile: "Stile",
-  stagionalita: "Stagionalità",
-};
 
 const CLUSTERS: { name: string; keys: AttrKey[] }[] = [
   { name: "Identità", keys: ["brand", "tipoCapo", "genere", "stagionalita"] },
